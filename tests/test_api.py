@@ -76,3 +76,80 @@ class TestMaterial:
             pkc.Material(composition={"Fe": -0.5}, density=7.874)
 
 
+# --- Layer tests ---
+
+
+class TestLayer:
+    def test_void_layer(self):
+        layer = pkc.Layer(thickness=50)
+        assert layer.thickness == 50.0
+        assert layer.has_material is False
+
+    def test_material_layer(self):
+        iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+        layer = pkc.Layer(thickness=10, material=iron)
+        assert layer.thickness == 10.0
+        assert layer.has_material is True
+
+    def test_invalid_thickness(self):
+        with pytest.raises(ValueError):
+            pkc.Layer(thickness=-5)
+
+    def test_zero_thickness(self):
+        layer = pkc.Layer(thickness=0)
+        assert layer.thickness == 0.0
+
+
+# --- Transmission tests ---
+
+
+class TestTransmission:
+    def test_void_neutron(self):
+        s = pkc.Source("neutron", 14.06e6)
+        frac = pkc.calculate_transmission([pkc.Layer(thickness=100)], s)
+        assert frac == pytest.approx(1.0, abs=1e-15)
+
+    def test_void_photon(self):
+        s = pkc.Source("photon", 1e6)
+        frac = pkc.calculate_transmission([pkc.Layer(thickness=100)], s)
+        assert frac == pytest.approx(1.0, abs=1e-15)
+
+    def test_material_less_than_one(self):
+        iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+        s = pkc.Source("neutron", 14.06e6)
+        frac = pkc.calculate_transmission([pkc.Layer(thickness=10, material=iron)], s)
+        assert 0.0 < frac < 1.0
+
+    def test_thicker_less_transmission(self):
+        iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+        s = pkc.Source("neutron", 14.06e6)
+        thin = pkc.calculate_transmission([pkc.Layer(thickness=5, material=iron)], s)
+        thick = pkc.calculate_transmission([pkc.Layer(thickness=50, material=iron)], s)
+        assert thin > thick
+
+    def test_multi_layer_equals_single(self):
+        iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+        s = pkc.Source("neutron", 14.06e6)
+        single = pkc.calculate_transmission([pkc.Layer(thickness=10, material=iron)], s)
+        double = pkc.calculate_transmission(
+            [pkc.Layer(thickness=5, material=iron), pkc.Layer(thickness=5, material=iron)], s
+        )
+        assert single == pytest.approx(double, rel=1e-12)
+
+    def test_spectrum(self):
+        iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+        s = pkc.Source("photon", [(1173e3, 1.0), (1333e3, 1.0)])
+        frac = pkc.calculate_transmission([pkc.Layer(thickness=10, material=iron)], s)
+        assert 0.0 < frac < 1.0
+
+    def test_different_energies(self):
+        iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+        layers = [pkc.Layer(thickness=10, material=iron)]
+        s1 = pkc.Source("neutron", 2e6)
+        s2 = pkc.Source("neutron", 14.06e6)
+        assert pkc.calculate_transmission(layers, s1) != pytest.approx(
+            pkc.calculate_transmission(layers, s2), rel=0.01
+        )
+
+
+# --- Flux tests ---
