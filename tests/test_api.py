@@ -213,3 +213,53 @@ class TestDose:
         result = pkc.calculate_dose(1e12, layers, s, "AP")
         assert result.dose_rate > 0
 
+
+# --- Buildup model tests ---
+
+
+class TestBuildup:
+    def test_no_buildup(self):
+        iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+        s = pkc.Source("neutron", 14.06e6)
+        result = pkc.calculate_flux(1e12, [pkc.Layer(thickness=10, material=iron)], s)
+        assert result.buildup_factor == pytest.approx(1.0)
+
+    def test_linear_buildup(self):
+        iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+        layers = [pkc.Layer(thickness=10, material=iron)]
+        s = pkc.Source("neutron", 14.06e6)
+        buildup = pkc.BuildupModel.linear(a=0.5)
+        r_no = pkc.calculate_flux(1e12, layers, s)
+        r_bu = pkc.calculate_flux(1e12, layers, s, buildup=buildup)
+        assert r_bu.uncollided_flux > r_no.uncollided_flux
+
+    def test_buildup_result_auto_resolve(self):
+        iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+        layers = [pkc.Layer(thickness=10, material=iron)]
+        s = pkc.Source("neutron", 14.06e6)
+
+        br = pkc.BuildupResult()
+        br.buildup = {"flux-neutron": 2.5}
+        result = pkc.calculate_flux(1e12, layers, s, buildup=br)
+        assert result.buildup_factor == pytest.approx(2.5)
+
+    def test_interpolation_result_as_buildup(self):
+        iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+        layers = [pkc.Layer(thickness=10, material=iron)]
+        s = pkc.Source("photon", 662e3)
+
+        ir = pkc.InterpolationResult(value=3.0, sigma=0.1)
+        result = pkc.calculate_flux(1e12, layers, s, buildup=ir)
+        assert result.buildup_factor == pytest.approx(3.0)
+
+
+# --- Material fraction tests ---
+
+
+class TestMaterialFractions:
+    def test_atom_vs_mass_fraction_water(self):
+        water_atom = pkc.Material(composition={"H": 2.0, "O": 1.0}, density=1.0, fraction="atom")
+        water_mass = pkc.Material(composition={"H": 0.111898, "O": 0.888102}, density=1.0, fraction="mass")
+        s = pkc.Source("neutron", 14.06e6)
+        frac_atom = pkc.calculate_transmission([pkc.Layer(thickness=20, material=water_atom)], s)
+        frac_mass = pkc.calculate_transmission([pkc.Layer(thickness=20, material=water_mass)], s)
