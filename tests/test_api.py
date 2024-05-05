@@ -153,3 +153,63 @@ class TestTransmission:
 
 
 # --- Flux tests ---
+
+
+class TestFlux:
+    def test_inverse_square_law(self):
+        s = pkc.Source("neutron", 14.06e6)
+        r10 = pkc.calculate_flux(1e12, [pkc.Layer(thickness=10)], s)
+        r100 = pkc.calculate_flux(1e12, [pkc.Layer(thickness=100)], s)
+        assert r10.uncollided_flux / r100.uncollided_flux == pytest.approx(100.0, rel=1e-12)
+
+    def test_void_flux_formula(self):
+        s = pkc.Source("neutron", 14.06e6)
+        result = pkc.calculate_flux(1e12, [pkc.Layer(thickness=200)], s)
+        expected = 1e12 / (4 * math.pi * 200**2)
+        assert result.uncollided_flux == pytest.approx(expected, rel=1e-12)
+
+    def test_transmission_in_result(self):
+        iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+        layers = [pkc.Layer(thickness=10, material=iron)]
+        s = pkc.Source("neutron", 14.06e6)
+        flux = pkc.calculate_flux(1e12, layers, s)
+        trans = pkc.calculate_transmission(layers, s)
+        assert flux.transmission_fraction == pytest.approx(trans, rel=1e-12)
+
+
+# --- Dose tests ---
+
+
+class TestDose:
+    def test_neutron_dose(self):
+        iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+        layers = [pkc.Layer(thickness=50), pkc.Layer(thickness=10, material=iron)]
+        s = pkc.Source("neutron", 14.06e6)
+        result = pkc.calculate_dose(1e12, layers, s, "AP")
+        assert result.dose_rate > 0
+
+    def test_photon_dose(self):
+        iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+        layers = [pkc.Layer(thickness=50), pkc.Layer(thickness=10, material=iron)]
+        s = pkc.Source("photon", 1e6)
+        result = pkc.calculate_dose(1e12, layers, s, "AP")
+        assert result.dose_rate > 0
+
+    def test_all_geometries(self):
+        s = pkc.Source("neutron", 14.06e6)
+        for geo in ["AP", "PA", "RLAT", "LLAT", "ROT", "ISO"]:
+            result = pkc.calculate_dose(1e12, [pkc.Layer(thickness=100)], s, geo)
+            assert result.dose_rate > 0, f"Failed for geometry {geo}"
+
+    def test_invalid_geometry(self):
+        s = pkc.Source("neutron", 14.06e6)
+        with pytest.raises(ValueError):
+            pkc.calculate_dose(1e12, [pkc.Layer(thickness=100)], s, "INVALID")
+
+    def test_spectrum_dose(self):
+        iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+        layers = [pkc.Layer(thickness=10, material=iron)]
+        s = pkc.Source("photon", [(1173e3, 1.0), (1333e3, 1.0)])
+        result = pkc.calculate_dose(1e12, layers, s, "AP")
+        assert result.dose_rate > 0
+
