@@ -348,3 +348,116 @@ def _run_mc(layers, source, coupled, quantities, particles_per_batch, max_batche
 
     cells = []
     for i in range(len(layers)):
+        if i == 0:
+            region = -spheres[0]
+        else:
+            region = +spheres[i - 1] & -spheres[i]
+        cells.append(openmc.Cell(region=region, fill=layer_mats[i]))
+
+    omc_geometry = openmc.Geometry(openmc.Universe(cells=cells))
+
+    # --- Source ---
+    omc_source = openmc.IndependentSource()
+    omc_source.space = openmc.stats.Point((0, 0, 0))
+    omc_source.angle = openmc.stats.Isotropic()
+    omc_source.particle = source_particle
+
+    if isinstance(source_energy, (list, tuple)):
+        energies = [e for e, _ in source_energy]
+        weights = [w for _, w in source_energy]
+        omc_source.energy = openmc.stats.Discrete(energies, weights)
+    else:
+        omc_source.energy = openmc.stats.Discrete([source_energy], [1.0])
+
+    # --- Settings ---
+    settings = openmc.Settings()
+    settings.run_mode = "fixed source"
+    settings.particles = particles_per_batch
+    settings.batches = max_batches
+    settings.source = [omc_source]
+    if coupled:
+        settings.photon_transport = True
+    settings.trigger_active = True
+    settings.trigger_max_batches = max_batches
+    settings.trigger_batch_interval = 5
+
+    # --- Tallies ---
+    surface_filter = openmc.SurfaceFilter([spheres[-1]])
+    tallies_obj = openmc.Tallies()
+    tally_map = {}
+
+    for q_name, (measure, geo, is_coupled) in quantities:
+        tally_particle = "photon" if is_coupled else source_particle
+
+        particle_filter = openmc.ParticleFilter([tally_particle])
+
+        if measure == "flux":
+            tally = openmc.Tally(name=q_name)
+            tally.filters = [surface_filter, particle_filter]
+            tally.scores = ["current"]
+            tally.triggers.append(openmc.Trigger("rel_err", trigger_rel_err))
+        else:
+            energy, coeffs = openmc.data.dose_coefficients(tally_particle, geo)
+            tally = openmc.Tally(name=q_name)
+            tally.filters = [
+                surface_filter, particle_filter,
+                openmc.EnergyFunctionFilter(energy, coeffs),
+            ]
+            tally.scores = ["current"]
+            tally.triggers.append(openmc.Trigger("rel_err", trigger_rel_err))
+
+        tallies_obj.append(tally)
+        tally_map[q_name] = tally
+
+    # --- Run ---
+    model = openmc.Model(
+        geometry=omc_geometry,
+        materials=openmc.Materials(omc_materials),
+        settings=settings,
+        tallies=tallies_obj,
+    )
+
+    mc_data = {}
+    with tempfile.TemporaryDirectory() as tmpdir:
+        model.run(cwd=tmpdir, output=False, apply_tally_results=True)
+
+        for q_name, tally in tally_map.items():
+            mean = tally.mean.flatten()[0]
+            std = tally.std_dev.flatten()[0]
+
+            _, (measure, geo, _coupled) = next(
+                (qn, p) for qn, p in quantities if qn == q_name
+            )
+
+            if measure == "flux":
+                mc_data[q_name] = (mean / surface_area, std / surface_area)
+            else:
+                mc_data[q_name] = (
+                    mean / surface_area * 3600.0 * 1e-12,
+                    std / surface_area * 3600.0 * 1e-12,
+                )
+
+    return mc_data
+
+
+def _populate_result(result, layers, source, quantities, mc_data):
+    """Fill a BuildupResult with MC data, PK references, and buildup factors."""
+    from . import calculate_flux, calculate_dose
+
+    for q_name, (measure, geo, coupled) in quantities:
+        mc_val, mc_std = mc_data[q_name]
+        result.mc[q_name] = mc_val
+        result.mc_std_dev[q_name] = mc_std
+
+        # PK reference — only for primary particle quantities (not coupled secondary)
+        if not coupled:
+            if measure == "flux":
+                pk = calculate_flux(source_strength=1.0, layers=layers, source=source)
+                pk_val = pk.uncollided_flux
+            else:
+                pk = calculate_dose(source_strength=1.0, layers=layers, source=source, geometry=geo)
+                pk_val = pk.dose_rate
+
+            result.pk[q_name] = pk_val
+            if pk_val and pk_val > 0:
+                result.buildup[q_name] = mc_val / pk_val
