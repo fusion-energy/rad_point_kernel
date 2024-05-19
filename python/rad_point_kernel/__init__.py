@@ -78,3 +78,62 @@ def calculate_flux(source_strength, layers, source, buildup=None):
         source: Source object with particle type and energy.
         buildup: BuildupModel, BuildupResult, or InterpolationResult (optional).
 
+    Returns:
+        CalcResult with uncollided_flux, transmission_fraction, etc.
+    """
+    buildup = _resolve_buildup(buildup, source, "flux")
+    return _calculate_flux(source_strength, layers, source, buildup)
+
+
+def calculate_dose(source_strength, layers, source, geometry, buildup=None):
+    """Calculate dose rate at the outer surface.
+
+    Args:
+        source_strength: Source strength in particles/sec.
+        layers: List of Layer objects.
+        source: Source object with particle type and energy.
+        geometry: Dose geometry ("AP", "PA", "RLAT", "LLAT", "ROT", "ISO").
+        buildup: BuildupModel, BuildupResult, or InterpolationResult (optional).
+
+    Returns:
+        CalcResult with dose_rate in Sv/hr.
+    """
+    buildup = _resolve_buildup(buildup, source, "dose", geometry)
+    return _calculate_dose(source_strength, layers, source, geometry, buildup)
+
+
+# TODO: Consider removing from public API — coupled MC is more accurate.
+def calculate_secondary_photon_dose_rate(
+    source_strength, layers, energy_ev, geometry, neutron_buildup=None,
+):
+    """Calculate secondary photon dose rate (analytical, no MC)."""
+    if neutron_buildup is not None and not isinstance(neutron_buildup, BuildupModel):
+        if isinstance(neutron_buildup, InterpolationResult):
+            neutron_buildup = BuildupModel.constant(neutron_buildup.value)
+        elif isinstance(neutron_buildup, BuildupResult):
+            key = f"dose-{geometry}-neutron"
+            b = neutron_buildup.buildup.get(key)
+            if b is None:
+                raise ValueError(f"BuildupResult doesn't contain '{key}'")
+            neutron_buildup = BuildupModel.constant(b)
+    return _calculate_secondary_photon_dose_rate(
+        source_strength, layers, energy_ev, geometry, neutron_buildup,
+    )
+
+
+__all__ = [
+    "BuildupModel",
+    "BuildupResult",
+    "BuildupTable",
+    "CalcResult",
+    "InterpolationResult",
+    "Layer",
+    "Material",
+    "SecondaryGammaResult",
+    "Source",
+    "calculate_dose",
+    "calculate_flux",
+    "calculate_secondary_photon_dose_rate",
+    "calculate_transmission",
+    "compute_buildup",
+]
