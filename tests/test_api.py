@@ -263,3 +263,33 @@ class TestMaterialFractions:
         s = pkc.Source("neutron", 14.06e6)
         frac_atom = pkc.calculate_transmission([pkc.Layer(thickness=20, material=water_atom)], s)
         frac_mass = pkc.calculate_transmission([pkc.Layer(thickness=20, material=water_mass)], s)
+        assert frac_atom == pytest.approx(frac_mass, rel=1e-3)
+
+
+# --- Secondary photon dose tests ---
+
+
+class TestSecondaryPhotonDose:
+    def test_void_no_gammas(self):
+        result = pkc.calculate_secondary_photon_dose_rate(1e12, [pkc.Layer(thickness=100)], 14.06e6, "AP")
+        assert result.secondary_photon_dose_rate == 0.0
+        assert result.neutron_dose_rate > 0.0
+
+    def test_material_produces_gammas(self):
+        iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+        layers = [pkc.Layer(thickness=50), pkc.Layer(thickness=10, material=iron)]
+        result = pkc.calculate_secondary_photon_dose_rate(1e12, layers, 14.06e6, "AP")
+        assert result.secondary_photon_dose_rate > 0.0
+
+    def test_total_is_sum(self):
+        iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+        layers = [pkc.Layer(thickness=50), pkc.Layer(thickness=10, material=iron)]
+        result = pkc.calculate_secondary_photon_dose_rate(1e12, layers, 14.06e6, "AP")
+        assert result.total_dose_rate == pytest.approx(
+            result.neutron_dose_rate + result.secondary_photon_dose_rate, rel=1e-12
+        )
+
+    def test_neutron_dose_matches_standalone(self):
+        iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+        layers = [pkc.Layer(thickness=50), pkc.Layer(thickness=10, material=iron)]
+        coupled = pkc.calculate_secondary_photon_dose_rate(1e12, layers, 14.06e6, "AP")
