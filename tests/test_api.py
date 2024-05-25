@@ -293,3 +293,119 @@ class TestSecondaryPhotonDose:
         iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
         layers = [pkc.Layer(thickness=50), pkc.Layer(thickness=10, material=iron)]
         coupled = pkc.calculate_secondary_photon_dose_rate(1e12, layers, 14.06e6, "AP")
+        s = pkc.Source("neutron", 14.06e6)
+        standalone = pkc.calculate_dose(1e12, layers, s, "AP")
+        assert coupled.neutron_dose_rate == pytest.approx(standalone.dose_rate, rel=1e-10)
+
+
+# --- BuildupResult tests ---
+
+
+class TestBuildupResult:
+    def test_to_dict_round_trip(self):
+        r = pkc.BuildupResult()
+        r.mc = {"dose-AP-neutron": 1.5e-11}
+        r.mc_std_dev = {"dose-AP-neutron": 1e-13}
+        r.pk = {"dose-AP-neutron": 1.2e-11}
+        r.buildup = {"dose-AP-neutron": 1.25}
+        r.optical_thickness = 3.5
+        d = r.to_dict()
+        r2 = pkc.BuildupResult.from_dict(d)
+        assert r2.mc == r.mc
+        assert r2.buildup == r.buildup
+        assert r2.optical_thickness == r.optical_thickness
+
+    def test_save_load_round_trip(self, tmp_path):
+        r1 = pkc.BuildupResult()
+        r1.mc = {"flux-photon": 1e-6}
+        r1.buildup = {"flux-photon": 1.25}
+        r2 = pkc.BuildupResult()
+        r2.mc = {"flux-photon": 5e-7}
+        r2.buildup = {"flux-photon": 1.3}
+        path = tmp_path / "cache.json"
+        pkc.BuildupResult.save([r1, r2], path)
+        loaded = pkc.BuildupResult.load(path)
+        assert len(loaded) == 2
+        assert loaded[0].mc == r1.mc
+
+    def test_empty_result(self):
+        r = pkc.BuildupResult()
+        assert r.mc == {}
+        assert r.optical_thickness == 0.0
+
+
+# --- BuildupTable tests ---
+
+
+def _make_results(b_values, quantity="dose-AP-neutron"):
+    results = []
+    for b in b_values:
+        r = pkc.BuildupResult()
+        r.mc = {quantity: b * 1e-11}
+        r.mc_std_dev = {quantity: 0.001 * 1e-11}
+        r.pk = {quantity: 1e-11}
+        r.buildup = {quantity: b}
+        results.append(r)
+    return results
+
+
+class TestBuildupTable:
+    def test_1d_interpolation(self):
+        table = pkc.BuildupTable([{"t": 10}, {"t": 20}, {"t": 30}], _make_results([1.2, 1.3, 1.25]))
+        r = table.interpolate(t=20)
+        assert r.value == pytest.approx(1.3, abs=0.01)
+        assert not r.is_extrapolated
+
+    def test_1d_extrapolation_detected(self):
+        table = pkc.BuildupTable([{"t": 10}, {"t": 20}, {"t": 30}], _make_results([1.2, 1.3, 1.25]))
+        r = table.interpolate(t=50, warn=False)
+        assert r.is_extrapolated
+        assert "t" in r.extrapolated_axes
+
+    def test_extrapolation_larger_sigma(self):
+        table = pkc.BuildupTable([{"t": 10}, {"t": 20}, {"t": 30}], _make_results([1.2, 1.3, 1.25]))
+        assert table.interpolate(t=100, warn=False).sigma > table.interpolate(t=20).sigma
+
+    def test_2d(self):
+        points = [{"a": 10, "b": 10}, {"a": 10, "b": 20}, {"a": 20, "b": 10}, {"a": 20, "b": 20}]
+        table = pkc.BuildupTable(points, _make_results([1.1, 1.2, 1.3, 1.4]))
+        r = table.interpolate(a=15, b=15)
+        assert 1.0 < r.value < 1.5
+
+    def test_available_quantities(self):
+        table = pkc.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3], "flux-neutron"))
+        assert "flux-neutron" in table.available_quantities
+
+    def test_default_quantity(self):
+        table = pkc.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
+        assert table.interpolate(t=15).value > 0
+
+    def test_invalid_quantity_raises(self):
+        table = pkc.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
+        with pytest.raises(ValueError, match="not available"):
+            table.interpolate(t=15, quantity="flux-photon")
+
+    def test_wrong_axes_raises(self):
+        table = pkc.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
+        with pytest.raises(ValueError, match="Expected axes"):
+            table.interpolate(wrong=15)
+
+    def test_too_few_points_raises(self):
+        with pytest.raises(ValueError, match="at least 2"):
+            pkc.BuildupTable([{"t": 10}], _make_results([1.2]))
+
+    def test_mismatched_lengths_raises(self):
+        with pytest.raises(ValueError, match="same length"):
+            pkc.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2]))
+
+    def test_inconsistent_axes_raises(self):
+        with pytest.raises(ValueError, match="same axes"):
+            pkc.BuildupTable([{"t": 10}, {"x": 20}], _make_results([1.2, 1.3]))
+
+    def test_axis_ranges(self):
+        table = pkc.BuildupTable([{"t": 10}, {"t": 30}], _make_results([1.2, 1.3]))
+        assert table.axis_ranges == {"t": (10.0, 30.0)}
+
+    def test_repr(self):
+        table = pkc.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
+        assert "BuildupTable" in repr(table)
