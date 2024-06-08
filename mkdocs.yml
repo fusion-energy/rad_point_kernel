@@ -1,0 +1,42 @@
+site_name: Point Kernel Calculator
+site_description: Fast engineering estimates for neutron and photon shielding
+repo_url: https://github.com/shimwell/rad_point_kernel
+
+theme:
+  name: material
+  palette:
+    scheme: default
+    primary: blue
+  features:
+    - content.code.copy
+    - navigation.sections
+
+nav:
+  - Home: index.md
+  - Theory:
+    - Point kernel method: theory/point_kernel.md
+    - Build-up factors: theory/buildup_factors.md
+  - User guide:
+    - Installation: guide/installation.md
+    - Materials and layers: guide/materials_and_layers.md
+    - Sources: guide/source_spectra.md
+    - Photon transmission: guide/photon_transmission.md
+    - Neutron transmission: guide/neutron_transmission.md
+    - Flux and dose: guide/flux_and_dose.md
+    - Build-up factors with MC: guide/buildup_mc.md
+    - Many thicknesses and extrapolation: guide/extrapolation.md
+    - Caching MC results: guide/caching.md
+    - Plotting results: guide/plotting.md
+    - Shielding studies: guide/studies.md
+  - API reference: api.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
