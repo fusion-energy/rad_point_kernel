@@ -28,3 +28,7 @@ source = pkc.Source("neutron", 14.1e6)
 result = pkc.calculate_dose(1e12, layers, source, "AP")
 print(f"Dose rate: {result.dose_rate:.3e} Sv/hr")
 ```
+
+## Documentation
+
+Full documentation at [https://fusion-energy.github.io/point_kernel_calculator](https://fusion-energy.github.io/point_kernel_calculator)
