@@ -15,7 +15,7 @@ print(f"PK flux (no buildup): {pk.uncollided_flux:.4e} photons/cm2/s")
 print("Running MC with Co-60 spectrum...")
 results = pkc.compute_buildup(
     geometries=[layers],
-    energy_ev=source,
+    source=source,
     quantities=["flux"],
     particles_per_batch=10_000,
     max_batches=50,

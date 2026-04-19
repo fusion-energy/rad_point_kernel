@@ -239,7 +239,7 @@ class TestBuildup:
         s = pkc.Source("neutron", 14.06e6)
 
         br = pkc.BuildupResult()
-        br.buildup = {"flux-neutron": 2.5}
+        br.buildup = {"flux": 2.5}
         result = pkc.calculate_flux(1e12, layers, s, buildup=br)
         assert result.buildup_factor == pytest.approx(2.5)
 
@@ -271,20 +271,20 @@ class TestMaterialFractions:
 
 class TestSecondaryPhotonDose:
     def test_void_no_gammas(self):
-        result = pkc.calculate_secondary_photon_dose_rate(1e12, [pkc.Layer(thickness=100)], 14.06e6, "AP")
+        result = pkc.calculate_secondary_photon_dose_rate(1e12, [pkc.Layer(thickness=100)], pkc.Source("neutron", 14.06e6), "AP")
         assert result.secondary_photon_dose_rate == 0.0
         assert result.neutron_dose_rate > 0.0
 
     def test_material_produces_gammas(self):
         iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
         layers = [pkc.Layer(thickness=50), pkc.Layer(thickness=10, material=iron)]
-        result = pkc.calculate_secondary_photon_dose_rate(1e12, layers, 14.06e6, "AP")
+        result = pkc.calculate_secondary_photon_dose_rate(1e12, layers, pkc.Source("neutron", 14.06e6), "AP")
         assert result.secondary_photon_dose_rate > 0.0
 
     def test_total_is_sum(self):
         iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
         layers = [pkc.Layer(thickness=50), pkc.Layer(thickness=10, material=iron)]
-        result = pkc.calculate_secondary_photon_dose_rate(1e12, layers, 14.06e6, "AP")
+        result = pkc.calculate_secondary_photon_dose_rate(1e12, layers, pkc.Source("neutron", 14.06e6), "AP")
         assert result.total_dose_rate == pytest.approx(
             result.neutron_dose_rate + result.secondary_photon_dose_rate, rel=1e-12
         )
@@ -292,7 +292,7 @@ class TestSecondaryPhotonDose:
     def test_neutron_dose_matches_standalone(self):
         iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
         layers = [pkc.Layer(thickness=50), pkc.Layer(thickness=10, material=iron)]
-        coupled = pkc.calculate_secondary_photon_dose_rate(1e12, layers, 14.06e6, "AP")
+        coupled = pkc.calculate_secondary_photon_dose_rate(1e12, layers, pkc.Source("neutron", 14.06e6), "AP")
         s = pkc.Source("neutron", 14.06e6)
         standalone = pkc.calculate_dose(1e12, layers, s, "AP")
         assert coupled.neutron_dose_rate == pytest.approx(standalone.dose_rate, rel=1e-10)
@@ -304,10 +304,10 @@ class TestSecondaryPhotonDose:
 class TestBuildupResult:
     def test_to_dict_round_trip(self):
         r = pkc.BuildupResult()
-        r.mc = {"dose-AP-neutron": 1.5e-11}
-        r.mc_std_dev = {"dose-AP-neutron": 1e-13}
-        r.pk = {"dose-AP-neutron": 1.2e-11}
-        r.buildup = {"dose-AP-neutron": 1.25}
+        r.mc = {"dose-AP": 1.5e-11}
+        r.mc_std_dev = {"dose-AP": 1e-13}
+        r.pk = {"dose-AP": 1.2e-11}
+        r.buildup = {"dose-AP": 1.25}
         r.optical_thickness = 3.5
         d = r.to_dict()
         r2 = pkc.BuildupResult.from_dict(d)
@@ -317,11 +317,11 @@ class TestBuildupResult:
 
     def test_save_load_round_trip(self, tmp_path):
         r1 = pkc.BuildupResult()
-        r1.mc = {"flux-photon": 1e-6}
-        r1.buildup = {"flux-photon": 1.25}
+        r1.mc = {"flux": 1e-6}
+        r1.buildup = {"flux": 1.25}
         r2 = pkc.BuildupResult()
-        r2.mc = {"flux-photon": 5e-7}
-        r2.buildup = {"flux-photon": 1.3}
+        r2.mc = {"flux": 5e-7}
+        r2.buildup = {"flux": 1.3}
         path = tmp_path / "cache.json"
         pkc.BuildupResult.save([r1, r2], path)
         loaded = pkc.BuildupResult.load(path)
@@ -337,7 +337,7 @@ class TestBuildupResult:
 # --- BuildupTable tests ---
 
 
-def _make_results(b_values, quantity="dose-AP-neutron"):
+def _make_results(b_values, quantity="dose-AP"):
     results = []
     for b in b_values:
         r = pkc.BuildupResult()
@@ -373,8 +373,8 @@ class TestBuildupTable:
         assert 1.0 < r.value < 1.5
 
     def test_available_quantities(self):
-        table = pkc.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3], "flux-neutron"))
-        assert "flux-neutron" in table.available_quantities
+        table = pkc.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3], "flux"))
+        assert "flux" in table.available_quantities
 
     def test_default_quantity(self):
         table = pkc.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
@@ -383,7 +383,7 @@ class TestBuildupTable:
     def test_invalid_quantity_raises(self):
         table = pkc.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
         with pytest.raises(ValueError, match="not available"):
-            table.interpolate(t=15, quantity="flux-photon")
+            table.interpolate(t=15, quantity="flux")
 
     def test_wrong_axes_raises(self):
         table = pkc.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
