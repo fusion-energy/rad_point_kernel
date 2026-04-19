@@ -103,6 +103,18 @@ Returns a `CalcResult`. Computes uncollided flux multiplied by the ICRP-116 flue
 - `geometry` -- one of `"AP"`, `"PA"`, `"RLAT"`, `"LLAT"`, `"ROT"`, `"ISO"`.
 - `buildup` -- optional `BuildupModel`, `BuildupResult`, or `InterpolationResult`.
 
+### Secondary photon dose rate
+
+#### `calculate_secondary_photon_dose_rate(source_strength, layers, source, geometry, neutron_buildup=None)`
+
+Returns a `SecondaryGammaResult`. Analytical estimate of the secondary photon dose rate from neutron capture gammas in each material, plus the neutron dose. For more accurate results, prefer a coupled neutron-photon `compute_buildup` run.
+
+- `source_strength` -- source strength in particles/s.
+- `layers` -- list of `Layer` objects.
+- `source` -- a monoenergetic neutron `Source` object.
+- `geometry` -- one of `"AP"`, `"PA"`, `"RLAT"`, `"LLAT"`, `"ROT"`, `"ISO"`.
+- `neutron_buildup` -- optional build-up applied to the neutron component.
+
 ---
 
 ## Result types
@@ -119,6 +131,16 @@ Returned by flux and dose calculations.
 - `optical_thickness` -- Sum(Sigma_r,i * t_i).
 - `buildup_factor` -- applied build-up factor (1.0 if none).
 - `total_distance_cm` -- total distance from source to detector (cm).
+
+### `SecondaryGammaResult`
+
+Returned by `calculate_secondary_photon_dose_rate`.
+
+**Properties:**
+
+- `neutron_dose_rate` -- neutron dose rate in Sv/hr.
+- `secondary_photon_dose_rate` -- secondary photon dose rate in Sv/hr.
+- `total_dose_rate` -- sum of neutron + secondary photon dose.
 
 ---
 

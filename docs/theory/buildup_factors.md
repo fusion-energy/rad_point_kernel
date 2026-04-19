@@ -55,7 +55,7 @@ The GP ([inference-tools](https://github.com/C-bowman/inference-tools)) has key 
 
 ![Build-up factor example](../assets/buildup_example.png)
 
-*Build-up factor vs concrete thickness for different polyethylene thicknesses. Dots are Monte Carlo simulations with error bars. Lines are GP predictions with shaded uncertainty bands that widen beyond the Monte Carlo data range.*
+*Build-up factor vs concrete thickness for different water thicknesses. Dots are Monte Carlo simulations with error bars. Lines are GP predictions with shaded uncertainty bands that widen beyond the Monte Carlo data range.*
 
 ## Flux vs dose build-up
 
