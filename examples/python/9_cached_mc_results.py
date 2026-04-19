@@ -41,7 +41,6 @@ else:
         particles_per_batch=10_000,
         max_batches=50,
         trigger_rel_err=0.05,
-        cross_sections="/home/jon/nuclear_data/cross_sections.xml",
     )
     pkc.BuildupResult.save(mc_results, CACHE_FILE)
     print(f"Saved to {CACHE_FILE}")
