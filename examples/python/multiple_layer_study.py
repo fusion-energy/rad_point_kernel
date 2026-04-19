@@ -31,11 +31,14 @@ N_DOSE = f"dose-{GEOMETRY}"
 P_DOSE = f"dose-{GEOMETRY}-coupled-photon"
 
 polyethylene = pkc.Material(
-    composition={"H": 2, "C": 1}, density=0.94, fraction="atom",
+    composition={"H": 2, "C": 1},
+    density=0.94,
+    fraction="atom",
 )
 concrete = pkc.Material(
     composition={"H": 0.01, "O": 0.53, "Si": 0.34, "Ca": 0.04, "Al": 0.03, "Fe": 0.01},
-    density=2.3, fraction="mass",
+    density=2.3,
+    fraction="mass",
 )
 
 mc_poly = [0, 5, 10, 15, 20]
@@ -97,7 +100,9 @@ for pt in mc_poly:
     for ct in mc_conc:
         r = cached[(pt, ct)]
         mc_total = r.mc.get(N_DOSE, 0) + r.mc.get(P_DOSE, 0)
-        mc_std = np.sqrt(r.mc_std_dev.get(N_DOSE, 0)**2 + r.mc_std_dev.get(P_DOSE, 0)**2)
+        mc_std = np.sqrt(
+            r.mc_std_dev.get(N_DOSE, 0) ** 2 + r.mc_std_dev.get(P_DOSE, 0) ** 2
+        )
         pk_neutron = r.pk.get(N_DOSE, 0)
 
         br = pkc.BuildupResult()
@@ -109,7 +114,8 @@ for pt in mc_poly:
         print(f"  poly={pt:>2d}, conc={ct:>3d}: B_total={br.buildup['total']:.3f}")
 
     tables_by_poly[pt] = pkc.BuildupTable(
-        points=[{"conc": ct} for ct in mc_conc], results=br_list,
+        points=[{"conc": ct} for ct in mc_conc],
+        results=br_list,
     )
 
 # Also build tables by concrete thickness (for the second plot)
@@ -119,7 +125,9 @@ for ct in mc_conc:
     for pt in mc_poly:
         r = cached[(pt, ct)]
         mc_total = r.mc.get(N_DOSE, 0) + r.mc.get(P_DOSE, 0)
-        mc_std = np.sqrt(r.mc_std_dev.get(N_DOSE, 0)**2 + r.mc_std_dev.get(P_DOSE, 0)**2)
+        mc_std = np.sqrt(
+            r.mc_std_dev.get(N_DOSE, 0) ** 2 + r.mc_std_dev.get(P_DOSE, 0) ** 2
+        )
         pk_neutron = r.pk.get(N_DOSE, 0)
 
         br = pkc.BuildupResult()
@@ -130,7 +138,8 @@ for ct in mc_conc:
         br_list.append(br)
 
     tables_by_conc[ct] = pkc.BuildupTable(
-        points=[{"poly": pt} for pt in mc_poly], results=br_list,
+        points=[{"poly": pt} for pt in mc_poly],
+        results=br_list,
     )
 
 # --- Step 3: Extrapolate ---
@@ -144,8 +153,10 @@ for pt in mc_poly:
     for ct in all_conc:
         layers = make_layers(pt, ct)
         pk = pkc.calculate_dose(
-            source_strength=SOURCE_STRENGTH, layers=layers,
-            source=source, geometry=GEOMETRY,
+            source_strength=SOURCE_STRENGTH,
+            layers=layers,
+            source=source,
+            geometry=GEOMETRY,
         )
         bi = table.interpolate(conc=ct, warn=False)
         doses.append(pk.dose_rate * bi.value)
@@ -161,8 +172,10 @@ for ct in mc_conc:
     for pt in all_poly:
         layers = make_layers(pt, ct)
         pk = pkc.calculate_dose(
-            source_strength=SOURCE_STRENGTH, layers=layers,
-            source=source, geometry=GEOMETRY,
+            source_strength=SOURCE_STRENGTH,
+            layers=layers,
+            source=source,
+            geometry=GEOMETRY,
         )
         bi = table.interpolate(poly=pt, warn=False)
         doses.append(pk.dose_rate * bi.value)
@@ -185,17 +198,29 @@ for pt in mc_poly:
     ax.fill_between(all_conc, d["doses_lo"], d["doses_hi"], color=c, alpha=0.12)
 
     mc_vals = [
-        (cached[(pt, ct)].mc.get(N_DOSE, 0) + cached[(pt, ct)].mc.get(P_DOSE, 0)) * SOURCE_STRENGTH
+        (cached[(pt, ct)].mc.get(N_DOSE, 0) + cached[(pt, ct)].mc.get(P_DOSE, 0))
+        * SOURCE_STRENGTH
         for ct in mc_conc
     ]
     mc_errs = [
-        np.sqrt(cached[(pt, ct)].mc_std_dev.get(N_DOSE, 0)**2
-                + cached[(pt, ct)].mc_std_dev.get(P_DOSE, 0)**2) * SOURCE_STRENGTH
+        np.sqrt(
+            cached[(pt, ct)].mc_std_dev.get(N_DOSE, 0) ** 2
+            + cached[(pt, ct)].mc_std_dev.get(P_DOSE, 0) ** 2
+        )
+        * SOURCE_STRENGTH
         for ct in mc_conc
     ]
-    ax.errorbar(mc_conc, mc_vals, yerr=mc_errs, fmt="o", color=c,
-                markersize=6, capsize=3, zorder=5,
-                label="Monte Carlo" if pt == mc_poly[0] else None)
+    ax.errorbar(
+        mc_conc,
+        mc_vals,
+        yerr=mc_errs,
+        fmt="o",
+        color=c,
+        markersize=6,
+        capsize=3,
+        zorder=5,
+        label="Monte Carlo" if pt == mc_poly[0] else None,
+    )
 
 ax.set_xlabel("Concrete thickness (cm)", fontsize=13)
 ax.set_ylabel("Total dose rate (Sv/hr)", fontsize=13)
@@ -221,17 +246,29 @@ for ct in mc_conc:
     ax.fill_between(all_poly, d["doses_lo"], d["doses_hi"], color=c, alpha=0.12)
 
     mc_vals = [
-        (cached[(pt, ct)].mc.get(N_DOSE, 0) + cached[(pt, ct)].mc.get(P_DOSE, 0)) * SOURCE_STRENGTH
+        (cached[(pt, ct)].mc.get(N_DOSE, 0) + cached[(pt, ct)].mc.get(P_DOSE, 0))
+        * SOURCE_STRENGTH
         for pt in mc_poly
     ]
     mc_errs = [
-        np.sqrt(cached[(pt, ct)].mc_std_dev.get(N_DOSE, 0)**2
-                + cached[(pt, ct)].mc_std_dev.get(P_DOSE, 0)**2) * SOURCE_STRENGTH
+        np.sqrt(
+            cached[(pt, ct)].mc_std_dev.get(N_DOSE, 0) ** 2
+            + cached[(pt, ct)].mc_std_dev.get(P_DOSE, 0) ** 2
+        )
+        * SOURCE_STRENGTH
         for pt in mc_poly
     ]
-    ax.errorbar(mc_poly, mc_vals, yerr=mc_errs, fmt="o", color=c,
-                markersize=6, capsize=3, zorder=5,
-                label="Monte Carlo" if ct == mc_conc[0] else None)
+    ax.errorbar(
+        mc_poly,
+        mc_vals,
+        yerr=mc_errs,
+        fmt="o",
+        color=c,
+        markersize=6,
+        capsize=3,
+        zorder=5,
+        label="Monte Carlo" if ct == mc_conc[0] else None,
+    )
 
 ax.set_xlabel("Polyethylene thickness (cm)", fontsize=13)
 ax.set_ylabel("Total dose rate (Sv/hr)", fontsize=13)
