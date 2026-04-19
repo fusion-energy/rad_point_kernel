@@ -41,10 +41,10 @@ concrete = pkc.Material(
     fraction="mass",
 )
 
-mc_poly = [0, 5, 10, 15, 20]
-mc_conc = [10, 20, 30, 40]
-all_poly = mc_poly + list(range(mc_poly[-1] + 5, 55, 5))
-all_conc = mc_conc + list(range(mc_conc[-1] + 10, 210, 10))
+mc_poly = [0, 10, 20, 30, 40, 50]
+mc_conc = [10, 50, 100, 200, 400]
+all_poly = list(range(0, 55, 5))
+all_conc = list(range(10, 410, 10))
 
 RESULTS_DIR = Path(os.path.dirname(__file__), "..", "..", "results", "multiple_layer")
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -186,8 +186,14 @@ for ct in mc_conc:
 # --- Step 4: Plot ---
 print("\nGenerating plots...")
 
-colors_poly = {0: "#7f7f7f", 5: "#1f77b4", 10: "#ff7f0e", 15: "#2ca02c", 20: "#d62728"}
-colors_conc = {10: "#1f77b4", 20: "#ff7f0e", 30: "#2ca02c", 40: "#d62728"}
+colors_poly = {
+    0: "#7f7f7f", 10: "#1f77b4", 20: "#ff7f0e",
+    30: "#2ca02c", 40: "#d62728", 50: "#9467bd",
+}
+colors_conc = {
+    10: "#1f77b4", 50: "#ff7f0e", 100: "#2ca02c",
+    200: "#d62728", 400: "#9467bd",
+}
 
 # Plot 1: dose vs concrete thickness
 fig, ax = plt.subplots(figsize=(10, 7))
