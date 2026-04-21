@@ -5,13 +5,13 @@ Monte Carlo simulations are expensive. `BuildupResult` provides `save` and `load
 ## Save and load
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
 # Save a list of BuildupResults
-pkc.BuildupResult.save(mc_results, "buildup_cache.json")
+rpk.BuildupResult.save(mc_results, "buildup_cache.json")
 
 # Load them back
-mc_results = pkc.BuildupResult.load("buildup_cache.json")
+mc_results = rpk.BuildupResult.load("buildup_cache.json")
 ```
 
 ## Cache-or-compute pattern
@@ -20,9 +20,9 @@ Check if a cache file exists before running MC:
 
 ```python
 from pathlib import Path
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-concrete = pkc.Material(
+concrete = rpk.Material(
     composition={
         "H": 0.01, "O": 0.53, "Si": 0.34,
         "Ca": 0.04, "Al": 0.03, "Fe": 0.01,
@@ -36,20 +36,20 @@ CACHE = Path("mc_cache.json")
 
 if CACHE.exists():
     print("Loading cached Monte Carlo results...")
-    mc_results = pkc.BuildupResult.load(CACHE)
+    mc_results = rpk.BuildupResult.load(CACHE)
 else:
     print("Running Monte Carlo...")
     geometries = [
-        [pkc.Layer(thickness=t, material=concrete)]
+        [rpk.Layer(thickness=t, material=concrete)]
         for t in mc_thicknesses
     ]
-    source = pkc.Source("photon", 1e6)
-    mc_results = pkc.compute_buildup(
+    source = rpk.Source("photon", 1e6)
+    mc_results = rpk.compute_buildup(
         geometries=geometries,
         source=source,
         quantities=["dose-AP"],
     )
-    pkc.BuildupResult.save(mc_results, CACHE)
+    rpk.BuildupResult.save(mc_results, CACHE)
     print(f"Saved to {CACHE}")
 
 for t, r in zip(mc_thicknesses, mc_results):
@@ -63,9 +63,9 @@ When you need to add more thicknesses to an existing study, load the cache, run 
 ```python
 import json
 from pathlib import Path
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-concrete = pkc.Material(
+concrete = rpk.Material(
     composition={
         "H": 0.01, "O": 0.53, "Si": 0.34,
         "Ca": 0.04, "Al": 0.03, "Fe": 0.01,
@@ -81,7 +81,7 @@ CACHE = Path("mc_incremental.json")
 cached = {}
 if CACHE.exists():
     for entry in json.loads(CACHE.read_text()):
-        cached[entry["thickness"]] = pkc.BuildupResult.from_dict(entry["result"])
+        cached[entry["thickness"]] = rpk.BuildupResult.from_dict(entry["result"])
     print(f"Loaded {len(cached)} cached thicknesses")
 
 # Find missing thicknesses
@@ -90,11 +90,11 @@ missing = [t for t in mc_thicknesses if t not in cached]
 if missing:
     print(f"Running Monte Carlo for {missing}...")
     geometries = [
-        [pkc.Layer(thickness=t, material=concrete)]
+        [rpk.Layer(thickness=t, material=concrete)]
         for t in missing
     ]
-    source = pkc.Source("photon", 1e6)
-    new_results = pkc.compute_buildup(
+    source = rpk.Source("photon", 1e6)
+    new_results = rpk.compute_buildup(
         geometries=geometries,
         source=source,
         quantities=["dose-AP"],

@@ -3,7 +3,7 @@
 All public classes and functions are accessible from the top-level `rad_point_kernel` module.
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 ```
 
 ---
@@ -21,13 +21,13 @@ Defines a radiation source by particle type and energy.
 
 ```python
 # Monoenergetic Cs-137 photon source
-source = pkc.Source("photon", 662e3)
+source = rpk.Source("photon", 662e3)
 
 # Co-60 two-line photon source
-source = pkc.Source("photon", [(1173e3, 1.0), (1333e3, 1.0)])
+source = rpk.Source("photon", [(1173e3, 1.0), (1333e3, 1.0)])
 
 # D-T fusion neutron source
-source = pkc.Source("neutron", 14.1e6)
+source = rpk.Source("neutron", 14.1e6)
 ```
 
 ---

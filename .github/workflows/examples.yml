@@ -8,8 +8,8 @@ jobs:
   python-examples:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - run: pip install rad_point_kernel_core
@@ -24,7 +24,7 @@ jobs:
             -e H O Al Si Ca Fe \
             -p neutron photon \
             -d nuclear_data
-      - name: Run numbered examples (studies skipped — too slow for CI)
+      - name: Run numbered examples (studies skipped - too slow for CI)
         env:
           OPENMC_CROSS_SECTIONS: ${{ github.workspace }}/nuclear_data/cross_sections.xml
         run: |

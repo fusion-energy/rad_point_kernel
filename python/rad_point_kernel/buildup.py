@@ -43,6 +43,8 @@ def _parse_quantity(q):
 class BuildupTable:
     """GP-based interpolation table for build-up factors.
 
+    Axis values are layer thicknesses in cm (matching Layer.thickness).
+
     Example::
 
         table = BuildupTable(
@@ -207,8 +209,9 @@ def compute_buildup(
     """Run OpenMC MC on a list of geometries and compute build-up factors.
 
     Args:
-        geometries: List of layer lists, each defining a shield geometry.
-        source: Source object with particle type and energy.
+        geometries: List of layer lists, each defining a shield geometry
+            (Layer thicknesses in cm).
+        source: Source object with particle type and energy (eV).
         quantities: List of quantity strings. Examples: "flux", "dose-AP",
             "flux-coupled-photon", "dose-AP-coupled-photon".
         particles_per_batch: Particles per batch (default 10,000).
@@ -217,7 +220,8 @@ def compute_buildup(
         cross_sections: Path to cross_sections.xml or directory containing it.
 
     Returns:
-        List of BuildupResult, one per geometry.
+        List of BuildupResult, one per geometry. MC flux is in particles/cm²/s,
+        MC dose is in Sv/hr, both per unit source strength.
     """
     if isinstance(quantities, str):
         quantities = [quantities]
@@ -398,7 +402,7 @@ def _populate_result(result, layers, source, quantities, mc_data):
         result.mc[q_name] = mc_val
         result.mc_std_dev[q_name] = mc_std
 
-        # PK reference — only for primary particle quantities (not coupled secondary)
+        # PK reference - only for primary particle quantities (not coupled secondary)
         if not coupled:
             if measure == "flux":
                 pk = calculate_flux(source_strength=1.0, layers=layers, source=source)

@@ -1,6 +1,6 @@
-site_name: Point Kernel Calculator
+site_name: Rad Point Kernel
 site_description: Fast engineering estimates for neutron and photon shielding
-repo_url: https://github.com/shimwell/rad_point_kernel
+repo_url: https://github.com/fusion-energy/rad_point_kernel
 
 theme:
   name: material
@@ -29,6 +29,11 @@ nav:
     - Plotting results: guide/plotting.md
     - Shielding studies: guide/studies.md
   - API reference: api.md
+  - Verification and validation:
+    - Overview: vnv/index.md
+    - Uncollided flux in void: vnv/uncollided_flux_in_void.md
+    - Transmission in void: vnv/transmission_in_void.md
+    - Beer-Lambert single slab: vnv/beer_lambert_single_slab.md
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -37,6 +42,9 @@ markdown_extensions:
   - admonition
   - pymdownx.arithmatex:
       generic: true
+
+extra:
+  generator: false
 
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
