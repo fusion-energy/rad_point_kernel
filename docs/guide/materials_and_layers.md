@@ -6,9 +6,9 @@ A `Material` needs a composition dictionary and a density in g/cm3. The composit
 
 ### From elements (mass fractions)
 
-Mass fractions are the default. The values are relative -- they are normalized internally.
+Mass fractions are the default. The values are relative; they are normalized internally.
 
-```python
+```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
 
 iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
@@ -27,7 +27,7 @@ concrete = rpk.Material(
 
 Set `fraction="atom"` to specify atom (number) fractions instead.
 
-```python
+```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
 
 polyethylene = rpk.Material(
@@ -41,7 +41,7 @@ polyethylene = rpk.Material(
 
 Formulas like `H2O` are expanded automatically.
 
-```python
+```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
 
 water = rpk.Material(composition={"H2O": 1.0}, density=1.0)
@@ -51,7 +51,7 @@ water = rpk.Material(composition={"H2O": 1.0}, density=1.0)
 
 Use nuclide names (element symbol + mass number) when isotopic composition matters.
 
-```python
+```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
 
 enriched_lithium = rpk.Material(
@@ -65,7 +65,7 @@ enriched_lithium = rpk.Material(
 
 `Material.volume_mix()` combines two materials by volume fraction. The resulting density and composition are computed from the volume-weighted combination.
 
-```python
+```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
 
 concrete = rpk.Material(
@@ -91,7 +91,7 @@ print(f"Density: {rebar_concrete.density:.3f} g/cm3")
 
 A `Layer` represents a spherical shell with a thickness (in cm) and an optional material. Layers stack outward from the source.
 
-```python
+```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
 
 iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
@@ -104,7 +104,7 @@ shield = rpk.Layer(thickness=10, material=iron)
 
 Omit the material to create a void (empty space). Void layers contribute distance for the inverse-square-law calculation but no attenuation.
 
-```python
+```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
 
 void = rpk.Layer(thickness=1000)  # 10 m of empty space
@@ -114,7 +114,7 @@ void = rpk.Layer(thickness=1000)  # 10 m of empty space
 
 A geometry is simply a list of layers. They are evaluated outward from the source point.
 
-```python
+```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
 
 water = rpk.Material(composition={"H2O": 1.0}, density=1.0)
@@ -130,8 +130,8 @@ iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 
 layers = [
     rpk.Layer(thickness=1000),                    # 10 m void
-    rpk.Layer(thickness=5, material=iron),         # 5 cm iron
-    rpk.Layer(thickness=30, material=water),        # 30 cm water
-    rpk.Layer(thickness=100, material=concrete),    # 100 cm concrete
+    rpk.Layer(thickness=5, material=iron),        # 5 cm iron
+    rpk.Layer(thickness=30, material=water),      # 30 cm water
+    rpk.Layer(thickness=100, material=concrete),  # 100 cm concrete
 ]
 ```

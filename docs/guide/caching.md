@@ -43,7 +43,7 @@ else:
         [rpk.Layer(thickness=t, material=concrete)]
         for t in mc_thicknesses
     ]
-    source = rpk.Source("photon", 1e6)
+    source = rpk.Source(particle="photon", energy=1e6)
     mc_results = rpk.compute_buildup(
         geometries=geometries,
         source=source,
@@ -93,7 +93,7 @@ if missing:
         [rpk.Layer(thickness=t, material=concrete)]
         for t in missing
     ]
-    source = rpk.Source("photon", 1e6)
+    source = rpk.Source(particle="photon", energy=1e6)
     new_results = rpk.compute_buildup(
         geometries=geometries,
         source=source,

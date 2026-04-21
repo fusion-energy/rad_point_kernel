@@ -25,7 +25,7 @@ all_thicknesses = mc_thicknesses + list(range(25, 410, 5))
 
 CACHE_FILE = Path(__file__).parent / "9_cached_mc_results.json"
 
-# --- MC (or load from cache) ---
+# MC (or load from cache)
 if CACHE_FILE.exists():
     print(f"Loading cached MC results from {CACHE_FILE}")
     mc_results = rpk.BuildupResult.load(CACHE_FILE)
@@ -48,7 +48,7 @@ else:
 for t, r in zip(mc_thicknesses, mc_results):
     print(f"  {t:>2d} cm: B = {r.buildup['dose-AP']:.3f}")
 
-# --- BuildupTable + dose ---
+# BuildupTable + dose
 table = rpk.BuildupTable(
     points=[{"thickness": t} for t in mc_thicknesses], results=mc_results
 )
@@ -62,7 +62,7 @@ for t, layers in zip(all_thicknesses, all_geometries):
     pk_b_lo.append(pk.dose_rate * (bi.value - bi.sigma))
     pk_b_hi.append(pk.dose_rate * (bi.value + bi.sigma))
 
-# --- Plot ---
+# Plot
 fig, ax = plt.subplots(figsize=(10, 7))
 ax.plot(all_thicknesses, pk_b_doses, "b-", linewidth=2, label="PK with buildup")
 ax.fill_between(all_thicknesses, pk_b_lo, pk_b_hi, color="blue", alpha=0.15)

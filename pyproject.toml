@@ -18,6 +18,7 @@ dependencies = [
 docs = [
     "mkdocs",
     "mkdocs-material",
+    "markdown-exec[ansi]",
 ]
 
 [tool.setuptools.packages.find]
