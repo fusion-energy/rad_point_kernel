@@ -7,7 +7,7 @@ import pytest
 import rad_point_kernel as rpk
 
 
-# --- Source tests ---
+# Source tests
 
 
 class TestSource:
@@ -32,7 +32,7 @@ class TestSource:
         assert "neutron" in repr(s)
 
 
-# --- Material tests ---
+# Material tests
 
 
 class TestMaterial:
@@ -76,7 +76,7 @@ class TestMaterial:
             rpk.Material(composition={"Fe": -0.5}, density=7.874)
 
 
-# --- Layer tests ---
+# Layer tests
 
 
 class TestLayer:
@@ -100,7 +100,7 @@ class TestLayer:
         assert layer.thickness == 0.0
 
 
-# --- Transmission tests ---
+# Transmission tests
 
 
 class TestTransmission:
@@ -152,7 +152,7 @@ class TestTransmission:
         )
 
 
-# --- Flux tests ---
+# Flux tests
 
 
 class TestFlux:
@@ -177,7 +177,7 @@ class TestFlux:
         assert flux.transmission_fraction == pytest.approx(trans, rel=1e-12)
 
 
-# --- Dose tests ---
+# Dose tests
 
 
 class TestDose:
@@ -214,7 +214,7 @@ class TestDose:
         assert result.dose_rate > 0
 
 
-# --- Buildup model tests ---
+# Buildup model tests
 
 
 class TestBuildup:
@@ -253,7 +253,7 @@ class TestBuildup:
         assert result.buildup_factor == pytest.approx(3.0)
 
 
-# --- Material fraction tests ---
+# Material fraction tests
 
 
 class TestMaterialFractions:
@@ -266,7 +266,7 @@ class TestMaterialFractions:
         assert frac_atom == pytest.approx(frac_mass, rel=1e-3)
 
 
-# --- Secondary photon dose tests ---
+# Secondary photon dose tests
 
 
 class TestSecondaryPhotonDose:
@@ -298,7 +298,7 @@ class TestSecondaryPhotonDose:
         assert coupled.neutron_dose_rate == pytest.approx(standalone.dose_rate, rel=1e-10)
 
 
-# --- BuildupResult tests ---
+# BuildupResult tests
 
 
 class TestBuildupResult:
@@ -334,7 +334,7 @@ class TestBuildupResult:
         assert r.optical_thickness == 0.0
 
 
-# --- BuildupTable tests ---
+# BuildupTable tests
 
 
 def _make_results(b_values, quantity="dose-AP"):

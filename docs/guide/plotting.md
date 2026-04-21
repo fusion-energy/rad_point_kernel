@@ -12,7 +12,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# --- Setup ---
+# Setup
 concrete = rpk.Material(
     composition={
         "H": 0.01, "O": 0.53, "Si": 0.34,
@@ -23,12 +23,12 @@ concrete = rpk.Material(
 )
 
 SOURCE = 1e12
-source = rpk.Source("photon", 1e6)
+source = rpk.Source(particle="photon", energy=1e6)
 
 mc_thicknesses = [5, 10, 15, 20]
 all_thicknesses = list(range(5, 205, 5))
 
-# --- Monte Carlo at thin shields ---
+# Monte Carlo at thin shields
 mc_geometries = [
     [rpk.Layer(thickness=t, material=concrete)]
     for t in mc_thicknesses
@@ -39,13 +39,13 @@ mc_results = rpk.compute_buildup(
     quantities=["dose-AP"],
 )
 
-# --- Build GP table ---
+# Build GP table
 table = rpk.BuildupTable(
     points=[{"thickness": t} for t in mc_thicknesses],
     results=mc_results,
 )
 
-# --- Compute dose at all thicknesses ---
+# Compute dose at all thicknesses
 doses = []
 doses_lo = []
 doses_hi = []
@@ -53,16 +53,21 @@ doses_hi = []
 for t in all_thicknesses:
     layers = [rpk.Layer(thickness=t, material=concrete)]
     bi = table.interpolate(thickness=t)
-    pk = rpk.calculate_dose(SOURCE, layers, source, "AP")
+    pk = rpk.calculate_dose(
+        source_strength=SOURCE,
+        layers=layers,
+        source=source,
+        geometry="AP",
+    )
     doses.append(pk.dose_rate * bi.value)
     doses_lo.append(pk.dose_rate * (bi.value - bi.sigma))
     doses_hi.append(pk.dose_rate * (bi.value + bi.sigma))
 
-# --- Monte Carlo reference points ---
+# Monte Carlo reference points
 mc_doses = [r.mc["dose-AP"] * SOURCE for r in mc_results]
 mc_errs = [r.mc_std_dev["dose-AP"] * SOURCE for r in mc_results]
 
-# --- Plot ---
+# Plot
 fig, ax = plt.subplots(figsize=(10, 7))
 
 ax.plot(all_thicknesses, doses, "b-", linewidth=2, label="PK with build-up")
@@ -78,7 +83,7 @@ ax.errorbar(
 
 ax.set_xlabel("Concrete thickness (cm)", fontsize=13)
 ax.set_ylabel("Photon dose rate (Sv/hr)", fontsize=13)
-ax.set_title("Photon dose -- 1 MeV, AP geometry", fontsize=13)
+ax.set_title("Photon dose - 1 MeV, AP geometry", fontsize=13)
 ax.set_yscale("log")
 ax.legend(fontsize=11)
 ax.grid(True, which="both", alpha=0.3)
@@ -97,4 +102,4 @@ The result looks like this:
 - **Black points with error bars**: direct Monte Carlo simulation results (ground truth).
 - **Blue line**: point-kernel dose multiplied by the GP-predicted build-up factor.
 - **Blue band**: 1-sigma GP uncertainty. The band is tight near Monte Carlo data points and widens as you move further away, especially in the extrapolation region beyond the thickest Monte Carlo shield.
-- **Dashed line** (if shown): point-kernel uncollided dose without build-up correction - the gap between this and the solid line shows how much scattered radiation the build-up factor adds.
+- **Dashed line** (if shown): point-kernel uncollided dose without build-up correction. The gap between this and the solid line shows how much scattered radiation the build-up factor adds.

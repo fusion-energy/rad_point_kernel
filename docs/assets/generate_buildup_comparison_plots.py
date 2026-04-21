@@ -9,7 +9,7 @@ Each plot compares:
   - PK * B with GP-extrapolated MC buildup (solid + uncertainty band)
   - MC reference points
 
-Uses a 662 keV photon source through concrete - the same "canonical" setup
+Uses a 662 keV photon source through concrete; the same "canonical" setup
 as the dose_buildup_comparison.png shown in the buildup factors theory page.
 
 Nuclear data:
@@ -30,9 +30,9 @@ import rad_point_kernel as rpk
 
 matplotlib.use("Agg")
 
-# --- Setup ---
+# Setup
 SOURCE_STRENGTH = 1e12
-source = rpk.Source("photon", 662e3)
+source = rpk.Source(particle="photon", energy=662e3)
 concrete = rpk.Material(
     composition={"H": 0.01, "O": 0.53, "Si": 0.34, "Ca": 0.04, "Al": 0.03, "Fe": 0.01},
     density=2.3,
@@ -45,7 +45,7 @@ all_thicknesses = mc_thicknesses + list(range(35, 205, 5))
 ASSETS_DIR = Path(__file__).resolve().parent
 CACHE_FILE = ASSETS_DIR / "buildup_comparison_cache.json"
 
-# --- Step 1: MC with cache ---
+# Step 1: MC with cache
 if CACHE_FILE.exists():
     cached = [rpk.BuildupResult.from_dict(d) for d in json.loads(CACHE_FILE.read_text())]
     mc_results = cached
@@ -82,10 +82,19 @@ def _build_curve(quantity: str):
         layers = [rpk.Layer(thickness=t, material=concrete)]
         bi = table.interpolate(thickness=t, quantity=quantity, warn=False)
         if quantity == "flux":
-            pk = rpk.calculate_flux(SOURCE_STRENGTH, layers, source)
+            pk = rpk.calculate_flux(
+                source_strength=SOURCE_STRENGTH,
+                layers=layers,
+                source=source,
+            )
             pk_val = pk.uncollided_flux
         else:
-            pk = rpk.calculate_dose(SOURCE_STRENGTH, layers, source, "AP")
+            pk = rpk.calculate_dose(
+                source_strength=SOURCE_STRENGTH,
+                layers=layers,
+                source=source,
+                geometry="AP",
+            )
             pk_val = pk.dose_rate
         pk_uncoll.append(pk_val)
         pk_b.append(pk_val * bi.value)

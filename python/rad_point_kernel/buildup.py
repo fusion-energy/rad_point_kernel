@@ -268,7 +268,7 @@ def _run_mc(layers, source, coupled, quantities, particles_per_batch, max_batche
     source_particle = source.particle
     source_energy = source.energy  # float or list of (energy, weight) tuples
 
-    # --- Materials ---
+    # Materials
     omc_materials = []
     layer_mats = []
     for layer in layers:
@@ -285,7 +285,7 @@ def _run_mc(layers, source, coupled, quantities, particles_per_batch, max_batche
         else:
             layer_mats.append(None)
 
-    # --- Geometry ---
+    # Geometry
     r = 0.0
     radii = []
     for layer in layers:
@@ -309,7 +309,7 @@ def _run_mc(layers, source, coupled, quantities, particles_per_batch, max_batche
 
     omc_geometry = openmc.Geometry(openmc.Universe(cells=cells))
 
-    # --- Source ---
+    # Source
     omc_source = openmc.IndependentSource()
     omc_source.space = openmc.stats.Point((0, 0, 0))
     omc_source.angle = openmc.stats.Isotropic()
@@ -322,7 +322,7 @@ def _run_mc(layers, source, coupled, quantities, particles_per_batch, max_batche
     else:
         omc_source.energy = openmc.stats.Discrete([source_energy], [1.0])
 
-    # --- Settings ---
+    # Settings
     settings = openmc.Settings()
     settings.run_mode = "fixed source"
     settings.particles = particles_per_batch
@@ -334,7 +334,7 @@ def _run_mc(layers, source, coupled, quantities, particles_per_batch, max_batche
     settings.trigger_max_batches = max_batches
     settings.trigger_batch_interval = 5
 
-    # --- Tallies ---
+    # Tallies
     surface_filter = openmc.SurfaceFilter([spheres[-1]])
     tallies_obj = openmc.Tallies()
     tally_map = {}
@@ -362,7 +362,7 @@ def _run_mc(layers, source, coupled, quantities, particles_per_batch, max_batche
         tallies_obj.append(tally)
         tally_map[q_name] = tally
 
-    # --- Run ---
+    # Run
     model = openmc.Model(
         geometry=omc_geometry,
         materials=openmc.Materials(omc_materials),
