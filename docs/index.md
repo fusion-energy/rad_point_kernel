@@ -6,12 +6,12 @@ A fast engineering tool for neutron and photon shielding calculations.
 
 Point Kernel Calculator estimates radiation dose and flux behind shielding using the point-kernel method. It handles:
 
-- **Photon sources** — monoenergetic (Cs-137) or multi-line spectra (Co-60)
-- **Neutron sources** — monoenergetic (D-T) or mixed spectra (D-T + D-D)
-- **Secondary photons** — gammas produced by neutron interactions in the shield (coupled neutron-photon transport via OpenMC)
-- **Multi-layer shields** — any combination of materials and void
-- **Build-up factor correction** — Monte Carlo computed, with Gaussian Process extrapolation and uncertainty
-- **ICRP-116 dose coefficients** — 6 irradiation geometries (AP, PA, RLAT, LLAT, ROT, ISO)
+- **Photon sources** — monoenergetic (e.g. Cs-137) or multi-line spectra (e.g. Co-60)
+- **Neutron sources** — monoenergetic (DT) or mixed spectra (DT + DD)
+- **Secondary photons** — gammas produced by neutron interactions in the shield (coupled neutron-photon transport)
+- **Multi-layer shields** — any combination of materials and voids
+- **Build-up factor correction** — Monte Carlo computed (OpenMC), with Gaussian Process extrapolation and uncertainty
+- **ICRP-116 dose coefficients** — 6 irradiation directions (AP, PA, RLAT, LLAT, ROT, ISO)
 
 ## When to use it
 
@@ -22,12 +22,12 @@ The point-kernel method is a fast approximation for shielding design. Use it whe
 - You want to screen many material/geometry combinations rapidly
 - You need an analytical baseline to compare against transport codes
 
-It is **not** a replacement for Monte Carlo transport codes (OpenMC, MCNP) for final design — but it gets you 80% of the answer in seconds instead of hours.
+It is **not** a replacement for Monte Carlo transport codes for final design, but it gets you closer to an answer in seconds instead of hours.
 
 ## How it works
 
-1. **Point kernel** (Rust, instant): Computes uncollided flux through concentric spherical layers using removal cross sections from ENDF/B-VIII.0
-2. **Build-up correction** (OpenMC, minutes): Runs Monte Carlo on a few thin shields to determine how much scattered radiation adds to the uncollided estimate
+1. **Point kernel** (Rust, instant): Computes uncollided flux through concentric spherical layers using removal cross sections and secondary photon production cross sections generated from ENDF/B-VIII.0
+2. **Build-up correction** (OpenMC): Runs Monte Carlo on a few thin shields to determine how much scattered radiation adds to the uncollided estimate
 3. **GP extrapolation** ([inference-tools](https://github.com/C-bowman/inference-tools), instant): Fits a Gaussian Process to the Monte Carlo build-up factors and predicts B at any thickness with uncertainty bounds
 
 ## Quick start

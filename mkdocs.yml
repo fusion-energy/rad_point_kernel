@@ -29,6 +29,11 @@ nav:
     - Plotting results: guide/plotting.md
     - Shielding studies: guide/studies.md
   - API reference: api.md
+  - Verification and validation:
+    - Overview: vnv/index.md
+    - Uncollided flux in void: vnv/uncollided_flux_in_void.md
+    - Transmission in void: vnv/transmission_in_void.md
+    - Beer-Lambert single slab: vnv/beer_lambert_single_slab.md
 
 markdown_extensions:
   - pymdownx.highlight:
