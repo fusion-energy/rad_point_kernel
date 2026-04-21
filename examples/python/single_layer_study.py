@@ -17,7 +17,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
 matplotlib.use("Agg")
 
@@ -25,7 +25,7 @@ matplotlib.use("Agg")
 SOURCE_STRENGTH = 1e12
 GEOMETRY = "AP"
 VOID_THICKNESS = 1000
-source = pkc.Source("neutron", 14.1e6)
+source = rpk.Source("neutron", 14.1e6)
 
 N_DOSE = f"dose-{GEOMETRY}"
 P_DOSE = f"dose-{GEOMETRY}-coupled-photon"
@@ -37,7 +37,7 @@ RESULTS_DIR = Path(os.path.dirname(__file__), "..", "..", "results", "single_lay
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # --- Materials (PNNL compositions, atom fractions) ---
-portland = pkc.Material(
+portland = rpk.Material(
     composition={
         "H": 0.168753,
         "C": 0.001416,
@@ -53,7 +53,7 @@ portland = pkc.Material(
     density=2.3,
     fraction="atom",
 )
-magnetite = pkc.Material(
+magnetite = rpk.Material(
     composition={
         "H": 0.082377,
         "O": 0.551,
@@ -71,7 +71,7 @@ magnetite = pkc.Material(
     density=3.53,
     fraction="atom",
 )
-steel = pkc.Material(
+steel = rpk.Material(
     composition={
         "C": 0.003747,
         "Si": 0.003163,
@@ -85,8 +85,8 @@ steel = pkc.Material(
 )
 
 materials = {
-    "Portland + 3% steel": pkc.Material.volume_mix(portland, 0.97, steel, 0.03),
-    "Magnetite + 3% steel": pkc.Material.volume_mix(magnetite, 0.97, steel, 0.03),
+    "Portland + 3% steel": rpk.Material.volume_mix(portland, 0.97, steel, 0.03),
+    "Magnetite + 3% steel": rpk.Material.volume_mix(magnetite, 0.97, steel, 0.03),
 }
 
 # --- Step 1: MC with cache ---
@@ -99,17 +99,17 @@ for name, mat in materials.items():
     cached = {}
     if cache_file.exists():
         for entry in json.loads(cache_file.read_text()):
-            cached[entry["thickness"]] = pkc.BuildupResult.from_dict(entry["result"])
+            cached[entry["thickness"]] = rpk.BuildupResult.from_dict(entry["result"])
         print(f"Loaded {len(cached)} cached thicknesses for {name}")
 
     missing = [t for t in mc_thicknesses if t not in cached]
     if missing:
         print(f"Running coupled MC for {name} at {missing} cm...")
         layers_list = [
-            [pkc.Layer(thickness=VOID_THICKNESS), pkc.Layer(thickness=t, material=mat)]
+            [rpk.Layer(thickness=VOID_THICKNESS), rpk.Layer(thickness=t, material=mat)]
             for t in missing
         ]
-        mc_list = pkc.compute_buildup(
+        mc_list = rpk.compute_buildup(
             geometries=layers_list,
             source=source,
             quantities=[N_DOSE, P_DOSE],
@@ -138,7 +138,7 @@ for name, mat in materials.items():
         )
         pk_neutron = r.pk.get(N_DOSE, 0)
 
-        br = pkc.BuildupResult()
+        br = rpk.BuildupResult()
         br.mc["total"] = mc_total
         br.mc_std_dev["total"] = mc_std
         br.pk["total"] = pk_neutron
@@ -146,7 +146,7 @@ for name, mat in materials.items():
         br_list.append(br)
         print(f"  {name}: t={t:>3d} cm, B_total={br.buildup['total']:.3f}")
 
-    tables[name] = pkc.BuildupTable(
+    tables[name] = rpk.BuildupTable(
         points=[{"thickness": t} for t in mc_thicknesses], results=br_list
     )
     mc_cached[name] = cached
@@ -161,10 +161,10 @@ for name, mat in materials.items():
 
     for t in all_thicknesses:
         layers = [
-            pkc.Layer(thickness=VOID_THICKNESS),
-            pkc.Layer(thickness=t, material=mat),
+            rpk.Layer(thickness=VOID_THICKNESS),
+            rpk.Layer(thickness=t, material=mat),
         ]
-        pk = pkc.calculate_dose(
+        pk = rpk.calculate_dose(
             source_strength=SOURCE_STRENGTH,
             layers=layers,
             source=source,

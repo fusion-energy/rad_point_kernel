@@ -5,7 +5,7 @@ For an uncollided beam traversing a homogeneous slab, the transmission is
     T(t) = exp(-Sigma * t)
 
 where Sigma is the macroscopic total cross section (monoenergetic). This
-verification does NOT assume any particular Sigma value — it verifies the
+verification does NOT assume any particular Sigma value - it verifies the
 *exponential law* itself, which is independent of cross-section data:
 
   1. Self-similarity across thickness:
@@ -27,37 +27,37 @@ which cross-section library is loaded.
 
 import math
 
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
 
 TOL_REL = 1e-10  # double-precision exp + one cross-section lookup round-trip
 
 # (label, Material, Source)
 def _mat(comp, density):
-    return pkc.Material(composition=comp, density=density)
+    return rpk.Material(composition=comp, density=density)
 
 CASES = [
-    ("iron / n 14.06 MeV",   _mat({"Fe": 1.0}, 7.874),              pkc.Source("neutron", 14.06e6)),
-    ("iron / n 2.45 MeV",    _mat({"Fe": 1.0}, 7.874),              pkc.Source("neutron", 2.45e6)),
-    ("iron / photon 1 MeV",  _mat({"Fe": 1.0}, 7.874),              pkc.Source("photon", 1.0e6)),
-    ("water / n 14.06 MeV",  _mat({"H": 2.0, "O": 1.0}, 1.0),       pkc.Source("neutron", 14.06e6)),
-    ("water / photon 1 MeV", _mat({"H": 2.0, "O": 1.0}, 1.0),       pkc.Source("photon", 1.0e6)),
-    ("lead / photon 662 keV",_mat({"Pb": 1.0}, 11.34),              pkc.Source("photon", 6.62e5)),
-    ("lead / photon 1 MeV",  _mat({"Pb": 1.0}, 11.34),              pkc.Source("photon", 1.0e6)),
+    ("iron / n 14.06 MeV",   _mat({"Fe": 1.0}, 7.874),              rpk.Source("neutron", 14.06e6)),
+    ("iron / n 2.45 MeV",    _mat({"Fe": 1.0}, 7.874),              rpk.Source("neutron", 2.45e6)),
+    ("iron / photon 1 MeV",  _mat({"Fe": 1.0}, 7.874),              rpk.Source("photon", 1.0e6)),
+    ("water / n 14.06 MeV",  _mat({"H": 2.0, "O": 1.0}, 1.0),       rpk.Source("neutron", 14.06e6)),
+    ("water / photon 1 MeV", _mat({"H": 2.0, "O": 1.0}, 1.0),       rpk.Source("photon", 1.0e6)),
+    ("lead / photon 662 keV",_mat({"Pb": 1.0}, 11.34),              rpk.Source("photon", 6.62e5)),
+    ("lead / photon 1 MeV",  _mat({"Pb": 1.0}, 11.34),              rpk.Source("photon", 1.0e6)),
 ]
 
-T_REF = 5.0  # cm — reference thickness for the exponential-scaling check
+T_REF = 5.0  # cm - reference thickness for the exponential-scaling check
 K_VALUES = [0.5, 1.0, 2.0, 3.0, 5.0, 10.0]  # multiples of t_ref
 SPLIT_PAIRS = [(2.0, 8.0), (4.0, 4.0), (1.0, 9.0), (3.5, 6.5)]
 
 
 def _T(material, source, thickness):
-    return pkc.calculate_transmission([pkc.Layer(thickness=thickness, material=material)], source)
+    return rpk.calculate_transmission([rpk.Layer(thickness=thickness, material=material)], source)
 
 
 def _T_stacked(material, source, t1, t2):
-    return pkc.calculate_transmission(
-        [pkc.Layer(thickness=t1, material=material), pkc.Layer(thickness=t2, material=material)],
+    return rpk.calculate_transmission(
+        [rpk.Layer(thickness=t1, material=material), rpk.Layer(thickness=t2, material=material)],
         source,
     )
 

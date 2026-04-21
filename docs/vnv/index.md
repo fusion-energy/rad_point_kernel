@@ -1,15 +1,15 @@
 # Verification and Validation
 
 This section documents what has been checked to give confidence that the
-point-kernel kernel math is correct, and — separately — where its predictions
+point-kernel kernel math is correct, and - separately - where its predictions
 have been compared against external references.
 
 We split the work using the standard definitions:
 
-- **Verification** — "are we solving the equations right?" — compares code
+- **Verification** - "are we solving the equations right?" - compares code
   output to closed-form analytic solutions or to another code solving the
   same equations (code-to-code benchmarks).
-- **Validation** — "are we solving the right equations?" — compares code
+- **Validation** - "are we solving the right equations?" - compares code
   output to **experimental measurements** (e.g. SINBAD, ICSBEP, or ORNL
   shielding benchmarks).
 
@@ -17,7 +17,7 @@ The runnable scripts live in the top-level
 [`verification_and_validation/`](https://github.com/shimwell/rad_point_kernel/tree/main/verification_and_validation)
 folder of the repository.
 
-## Verification — status
+## Verification - status
 
 | Case | Quantity | Reference | Status |
 |------|----------|-----------|--------|
@@ -25,7 +25,7 @@ folder of the repository.
 | [Transmission in void](transmission_in_void.md) | $T = 1$ | Analytic | Passing, exact |
 | [Beer-Lambert single slab](beer_lambert_single_slab.md) | $T(t) = e^{-\Sigma t}$ | Analytic (exponential law) | Passing, $< 10^{-15}$ |
 
-## Validation — status
+## Validation - status
 
 | Case | Reference | Status |
 |------|-----------|--------|

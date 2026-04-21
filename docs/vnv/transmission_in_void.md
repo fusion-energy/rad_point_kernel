@@ -23,7 +23,7 @@ covers:
   photon at 1 MeV / 662 keV / 10 keV
 - **Multi-layer stacks**: four different void stacks with 1 to 10 layers
 
-The tolerance is **absolute zero** — $T$ must equal $1.0$ exactly, not
+The tolerance is **absolute zero** - $T$ must equal $1.0$ exactly, not
 "within $10^{-15}$". Any departure from 1.0 would indicate either a stray
 cross-section lookup on a void layer or an accumulation of floating-point
 error where it shouldn't exist.

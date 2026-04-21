@@ -9,11 +9,11 @@ A `Material` needs a composition dictionary and a density in g/cm3. The composit
 Mass fractions are the default. The values are relative -- they are normalized internally.
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 
-concrete = pkc.Material(
+concrete = rpk.Material(
     composition={
         "H": 0.01, "O": 0.53, "Si": 0.34,
         "Ca": 0.04, "Al": 0.03, "Fe": 0.01,
@@ -28,9 +28,9 @@ concrete = pkc.Material(
 Set `fraction="atom"` to specify atom (number) fractions instead.
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-polyethylene = pkc.Material(
+polyethylene = rpk.Material(
     composition={"H": 2, "C": 1},
     density=0.94,
     fraction="atom",
@@ -42,9 +42,9 @@ polyethylene = pkc.Material(
 Formulas like `H2O` are expanded automatically.
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-water = pkc.Material(composition={"H2O": 1.0}, density=1.0)
+water = rpk.Material(composition={"H2O": 1.0}, density=1.0)
 ```
 
 ### From specific nuclides
@@ -52,9 +52,9 @@ water = pkc.Material(composition={"H2O": 1.0}, density=1.0)
 Use nuclide names (element symbol + mass number) when isotopic composition matters.
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-enriched_lithium = pkc.Material(
+enriched_lithium = rpk.Material(
     composition={"Li6": 0.6, "Li7": 0.4},
     density=0.534,
     fraction="atom",
@@ -66,9 +66,9 @@ enriched_lithium = pkc.Material(
 `Material.volume_mix()` combines two materials by volume fraction. The resulting density and composition are computed from the volume-weighted combination.
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-concrete = pkc.Material(
+concrete = rpk.Material(
     composition={
         "H": 0.01, "O": 0.53, "Si": 0.34,
         "Ca": 0.04, "Al": 0.03, "Fe": 0.01,
@@ -76,14 +76,14 @@ concrete = pkc.Material(
     density=2.3,
     fraction="mass",
 )
-steel = pkc.Material(
+steel = rpk.Material(
     composition={"C": 0.004, "Fe": 0.996},
     density=7.87,
     fraction="atom",
 )
 
 # 97% concrete + 3% steel rebar by volume
-rebar_concrete = pkc.Material.volume_mix(concrete, 0.97, steel, 0.03)
+rebar_concrete = rpk.Material.volume_mix(concrete, 0.97, steel, 0.03)
 print(f"Density: {rebar_concrete.density:.3f} g/cm3")
 ```
 
@@ -92,12 +92,12 @@ print(f"Density: {rebar_concrete.density:.3f} g/cm3")
 A `Layer` represents a spherical shell with a thickness (in cm) and an optional material. Layers stack outward from the source.
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 
 # A 10 cm iron layer
-shield = pkc.Layer(thickness=10, material=iron)
+shield = rpk.Layer(thickness=10, material=iron)
 ```
 
 ### Void layers
@@ -105,9 +105,9 @@ shield = pkc.Layer(thickness=10, material=iron)
 Omit the material to create a void (empty space). Void layers contribute distance for the inverse-square-law calculation but no attenuation.
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-void = pkc.Layer(thickness=1000)  # 10 m of empty space
+void = rpk.Layer(thickness=1000)  # 10 m of empty space
 ```
 
 ## Multi-layer geometry
@@ -115,10 +115,10 @@ void = pkc.Layer(thickness=1000)  # 10 m of empty space
 A geometry is simply a list of layers. They are evaluated outward from the source point.
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-water = pkc.Material(composition={"H2O": 1.0}, density=1.0)
-concrete = pkc.Material(
+water = rpk.Material(composition={"H2O": 1.0}, density=1.0)
+concrete = rpk.Material(
     composition={
         "H": 0.01, "O": 0.53, "Si": 0.34,
         "Ca": 0.04, "Al": 0.03, "Fe": 0.01,
@@ -126,12 +126,12 @@ concrete = pkc.Material(
     density=2.3,
     fraction="mass",
 )
-iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 
 layers = [
-    pkc.Layer(thickness=1000),                    # 10 m void
-    pkc.Layer(thickness=5, material=iron),         # 5 cm iron
-    pkc.Layer(thickness=30, material=water),        # 30 cm water
-    pkc.Layer(thickness=100, material=concrete),    # 100 cm concrete
+    rpk.Layer(thickness=1000),                    # 10 m void
+    rpk.Layer(thickness=5, material=iron),         # 5 cm iron
+    rpk.Layer(thickness=30, material=water),        # 30 cm water
+    rpk.Layer(thickness=100, material=concrete),    # 100 cm concrete
 ]
 ```
