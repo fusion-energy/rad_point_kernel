@@ -13,7 +13,7 @@ The point-kernel method computes uncollided flux: the fraction of particles that
 
 Compute the photon dose build-up factor for 10 cm of iron:
 
-```python
+```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
 
 iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
@@ -36,7 +36,7 @@ print(f"Build-up B:  {r.buildup['dose-AP']:.3f}")
 
 Pass a list of layer lists to run Monte Carlo on several shield configurations in one call:
 
-```python
+```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
 
 iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
@@ -70,7 +70,7 @@ The only exception is when you want to tally **secondary photons** produced by n
 
 You can request multiple quantities in a single call:
 
-```python
+```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
 
 iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
@@ -105,7 +105,7 @@ It also has `r.optical_thickness` (the total optical thickness of the geometry).
 
 The simplest approach. The `calculate_*` functions auto-detect the correct quantity key:
 
-```python
+```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
 
 iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
@@ -134,7 +134,7 @@ print(f"Dose with build-up: {corrected.dose_rate:.4e} Sv/hr")
 
 If you have a known build-up factor from another source:
 
-```python
+```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
 
 iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
@@ -174,7 +174,12 @@ results = rpk.compute_buildup(
 
 When using a neutron source, nuclear reactions in the shield produce secondary gamma rays. To include these, add `"dose-AP-coupled-photon"` to your quantities. The Monte Carlo runs with coupled neutron-photon transport automatically:
 
-```python
+```python exec="true" source="material-block" result="text"
+import rad_point_kernel as rpk
+
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
+layers = [rpk.Layer(thickness=10, material=iron)]
+
 source = rpk.Source(particle="neutron", energy=14.1e6)
 results = rpk.compute_buildup(
     geometries=[layers],
@@ -185,6 +190,9 @@ results = rpk.compute_buildup(
 r = results[0]
 S = 1e12
 total_dose = (r.mc["dose-AP"] + r.mc["dose-AP-coupled-photon"]) * S
+print(f"Neutron dose:   {r.mc['dose-AP'] * S:.4e} Sv/hr")
+print(f"Secondary gamma: {r.mc['dose-AP-coupled-photon'] * S:.4e} Sv/hr")
+print(f"Total dose:     {total_dose:.4e} Sv/hr")
 ```
 
 Since you're already running Monte Carlo for neutron build-up, coupled transport adds some extra compute cost and gives the secondary photon dose.

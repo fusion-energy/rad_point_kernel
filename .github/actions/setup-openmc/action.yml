@@ -1,0 +1,39 @@
+name: Setup OpenMC with ENDF/B-VIII.1
+description: Install OpenMC and download (or restore from cache) ENDF/B-VIII.1 HDF5 nuclear data, then export OPENMC_CROSS_SECTIONS.
+
+runs:
+  using: composite
+  steps:
+    - name: Install OpenMC
+      shell: bash
+      run: python -m pip install --extra-index-url https://shimwell.github.io/wheels openmc
+
+    - name: Restore ENDF/B-VIII.1 cache
+      id: cache-endf
+      uses: actions/cache@v4
+      with:
+        path: ~/nuclear_data
+        key: endf-b8.1-anl-uhbxlrx7hvxqw27psymfbhi7bx7s6u6a
+
+    - name: Download and extract ENDF/B-VIII.1 (on cache miss)
+      if: steps.cache-endf.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        mkdir -p ~/nuclear_data
+        cd ~/nuclear_data
+        curl -L --fail -o endfb8.1.tar.xz \
+          https://anl.box.com/shared/static/uhbxlrx7hvxqw27psymfbhi7bx7s6u6a.xz
+        tar -xf endfb8.1.tar.xz
+        rm endfb8.1.tar.xz
+
+    - name: Export OPENMC_CROSS_SECTIONS
+      shell: bash
+      run: |
+        set -euo pipefail
+        xs=$(find "$HOME/nuclear_data" -name cross_sections.xml | head -n 1)
+        if [ -z "$xs" ]; then
+          echo "cross_sections.xml not found under ~/nuclear_data" >&2
+          exit 1
+        fi
+        echo "OPENMC_CROSS_SECTIONS=$xs" >> "$GITHUB_ENV"

@@ -6,3 +6,6 @@ dist
 build
 site
 *.png
+/buildup_cache.json
+/mc_cache.json
+/mc_incremental.json
