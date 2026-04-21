@@ -19,6 +19,7 @@ docs = [
     "mkdocs",
     "mkdocs-material",
     "markdown-exec[ansi]",
+    "matplotlib",
 ]
 
 [tool.setuptools.packages.find]

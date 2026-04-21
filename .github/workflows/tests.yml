@@ -18,4 +18,16 @@ jobs:
       - run: pip install rad_point_kernel_core
       - run: pip install -e .
       - run: pip install pytest
-      - run: pytest tests/
+      - run: pytest tests/ -k "not mc"
+  mc-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install rad_point_kernel_core
+      - run: pip install -e .
+      - run: pip install pytest
+      - uses: ./.github/actions/setup-openmc
+      - run: pytest tests/test_mc.py -v
