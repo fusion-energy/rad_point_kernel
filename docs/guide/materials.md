@@ -1,4 +1,4 @@
-# Materials and layers
+# Materials
 
 ## Creating materials
 
@@ -8,7 +8,7 @@ A `Material` needs a composition dictionary and a density in g/cm3. The composit
 
 Mass fractions are the default. The values are relative; they are normalized internally.
 
-```python exec="true" source="material-block" result="text"
+```python exec="true" source="material-block"
 import rad_point_kernel as rpk
 
 iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
@@ -27,7 +27,7 @@ concrete = rpk.Material(
 
 Set `fraction="atom"` to specify atom (number) fractions instead.
 
-```python exec="true" source="material-block" result="text"
+```python exec="true" source="material-block"
 import rad_point_kernel as rpk
 
 polyethylene = rpk.Material(
@@ -41,7 +41,7 @@ polyethylene = rpk.Material(
 
 Formulas like `H2O` are expanded automatically.
 
-```python exec="true" source="material-block" result="text"
+```python exec="true" source="material-block"
 import rad_point_kernel as rpk
 
 water = rpk.Material(composition={"H2O": 1.0}, density=1.0)
@@ -51,7 +51,7 @@ water = rpk.Material(composition={"H2O": 1.0}, density=1.0)
 
 Use nuclide names (element symbol + mass number) when isotopic composition matters.
 
-```python exec="true" source="material-block" result="text"
+```python exec="true" source="material-block"
 import rad_point_kernel as rpk
 
 enriched_lithium = rpk.Material(
@@ -84,40 +84,20 @@ steel = rpk.Material(
 
 # 97% concrete + 3% steel rebar by volume
 rebar_concrete = rpk.Material.volume_mix(concrete, 0.97, steel, 0.03)
-print(f"Density: {rebar_concrete.density:.3f} g/cm3")
+print(f"Density: {rebar_concrete.density} g/cm3")
 ```
 
-## Creating layers
+## Mixing materials by mass
 
-A `Layer` represents a spherical shell with a thickness (in cm) and an optional material. Layers stack outward from the source.
+`Material.mass_mix()` combines two materials by mass fraction. Use this for additives that are specified by weight percent - boron in borated concrete, tungsten in heavy-loaded polyethylene, etc.
+
+The mixed density is volume-additive (each component retains its own bulk density):
+
+    1 / rho_mix = w_a / rho_a + w_b / rho_b
 
 ```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
 
-iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
-
-# A 10 cm iron layer
-shield = rpk.Layer(thickness=10, material=iron)
-```
-
-### Void layers
-
-Omit the material to create a void (empty space). Void layers contribute distance for the inverse-square-law calculation but no attenuation.
-
-```python exec="true" source="material-block" result="text"
-import rad_point_kernel as rpk
-
-void = rpk.Layer(thickness=1000)  # 10 m of empty space
-```
-
-## Multi-layer geometry
-
-A geometry is simply a list of layers. They are evaluated outward from the source point.
-
-```python exec="true" source="material-block" result="text"
-import rad_point_kernel as rpk
-
-water = rpk.Material(composition={"H2O": 1.0}, density=1.0)
 concrete = rpk.Material(
     composition={
         "H": 0.01, "O": 0.53, "Si": 0.34,
@@ -126,12 +106,9 @@ concrete = rpk.Material(
     density=2.3,
     fraction="mass",
 )
-iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
+boron = rpk.Material(composition={"B": 1.0}, density=2.34, fraction="mass")
 
-layers = [
-    rpk.Layer(thickness=1000),                    # 10 m void
-    rpk.Layer(thickness=5, material=iron),        # 5 cm iron
-    rpk.Layer(thickness=30, material=water),      # 30 cm water
-    rpk.Layer(thickness=100, material=concrete),  # 100 cm concrete
-]
+# Concrete with 3 wt% natural boron
+borated = rpk.Material.mass_mix(concrete, 0.97, boron, 0.03)
+print(f"Density: {borated.density} g/cm3")
 ```

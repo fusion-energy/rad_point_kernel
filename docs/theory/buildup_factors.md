@@ -66,18 +66,18 @@ Build-up factors for flux and dose are different:
 
 Since scattered particles have lower energies and dose coefficients change with energy, $B_{\text{flux}} \neq B_{\text{dose}}$ in general. For shielding design, use dose build-up.
 
-## Effect of build-up on dose estimates
-
-Without build-up correction, the point-kernel method underestimates the dose, especially for thick shields where scattered particles dominate:
-
-![Dose with and without buildup](../assets/dose_buildup_comparison.png)
-
-*Dose rate vs shield thickness. The dashed line (PK uncollided) underestimates compared to the solid line (PK with Monte Carlo build-up correction). Monte Carlo simulation points confirm the corrected estimate.*
-
 ## Effect of build-up on flux estimates
 
-The same effect is even larger for **flux** because $B_{\text{flux}}$ counts every scattered particle regardless of energy, while $B_{\text{dose}}$ weights them by their (lower) dose coefficient:
+Without build-up correction, the point-kernel method underestimates the flux, especially for thick shields where scattered particles dominate:
 
 ![Flux with and without buildup](../assets/flux_buildup_comparison.png)
 
-*Flux vs shield thickness for the same 662 keV photon source through concrete. The PK uncollided estimate (dashed) increasingly underestimates the true flux as thickness grows; $B_{\text{flux}}$ is typically 1.5-2x larger than $B_{\text{dose}}$ at the same thickness.*
+*Flux vs shield thickness for a 662 keV photon source through concrete. The PK uncollided estimate (dashed) increasingly underestimates the true flux as thickness grows; $B_{\text{flux}}$ counts every scattered particle regardless of energy.*
+
+## Effect of build-up on dose estimates
+
+The same effect applies to **dose**, though smaller than for flux because $B_{\text{dose}}$ weights scattered particles by their (lower) dose coefficient while $B_{\text{flux}}$ counts them all:
+
+![Dose with and without buildup](../assets/dose_buildup_comparison.png)
+
+*Dose rate vs shield thickness for the same source and shield. The dashed line (PK uncollided) underestimates compared to the solid line (PK with Monte Carlo build-up correction). Monte Carlo simulation points confirm the corrected estimate. $B_{\text{dose}}$ is typically 0.5-0.7x smaller than $B_{\text{flux}}$ at the same thickness.*

@@ -2,7 +2,7 @@
 
 All public classes and functions are accessible from the top-level `rad_point_kernel` module.
 
-```python exec="true" source="material-block" result="text" session="api"
+```python exec="true" source="material-block" session="api"
 import rad_point_kernel as rpk
 ```
 
@@ -19,7 +19,7 @@ Defines a radiation source by particle type and energy.
 
 **Examples:**
 
-```python exec="true" source="material-block" result="text" session="api"
+```python exec="true" source="material-block" session="api"
 # Monoenergetic Cs-137 photon source
 source = rpk.Source(particle="photon", energy=662e3)
 
