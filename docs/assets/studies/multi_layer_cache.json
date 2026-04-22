@@ -1,23 +1,44 @@
 [
   {
     "water": 0,
-    "conc": 10,
+    "conc": 5,
     "result": {
       "mc": {
-        "dose-AP": 9.12303791805364e-14,
-        "dose-AP-coupled-photon": 8.321677426167055e-16
+        "dose-AP": 1.1785657857607613e-13,
+        "dose-AP-coupled-photon": 6.427229110203133e-16
       },
       "mc_std_dev": {
-        "dose-AP": 2.2396605694465695e-16,
-        "dose-AP-coupled-photon": 3.6823981619418124e-18
+        "dose-AP": 1.4004200671478012e-16,
+        "dose-AP-coupled-photon": 3.4660726812345656e-18
       },
       "pk": {
-        "dose-AP": 7.146821236218721e-14
+        "dose-AP": 1.0065610799549423e-13
       },
       "buildup": {
-        "dose-AP": 1.276516876037116
+        "dose-AP": 1.1708835253331258
       },
-      "optical_thickness": 0.6650629771251046
+      "optical_thickness": 0.3325314885625523
+    }
+  },
+  {
+    "water": 0,
+    "conc": 25,
+    "result": {
+      "mc": {
+        "dose-AP": 3.432346409799947e-14,
+        "dose-AP-coupled-photon": 7.078715438776837e-16
+      },
+      "mc_std_dev": {
+        "dose-AP": 2.60747584539949e-16,
+        "dose-AP-coupled-photon": 4.931093039430896e-18
+      },
+      "pk": {
+        "dose-AP": 2.5589285771652063e-14
+      },
+      "buildup": {
+        "dose-AP": 1.3413216923788929
+      },
+      "optical_thickness": 1.6626574428127614
     }
   },
   {
@@ -25,18 +46,18 @@
     "conc": 50,
     "result": {
       "mc": {
-        "dose-AP": 5.311794811494394e-15,
-        "dose-AP-coupled-photon": 2.4700484948447297e-16
+        "dose-AP": 5.378753946557716e-15,
+        "dose-AP-coupled-photon": 2.5104815940941316e-16
       },
       "mc_std_dev": {
-        "dose-AP": 8.97246071773957e-17,
-        "dose-AP-coupled-photon": 2.7769518711694653e-18
+        "dose-AP": 8.414449571213983e-17,
+        "dose-AP-coupled-photon": 2.8055336777656392e-18
       },
       "pk": {
         "dose-AP": 4.6242823592803e-15
       },
       "buildup": {
-        "dose-AP": 1.148674410167526
+        "dose-AP": 1.1631543077734634
       },
       "optical_thickness": 3.325314885625523
     }
@@ -46,18 +67,18 @@
     "conc": 100,
     "result": {
       "mc": {
-        "dose-AP": 9.313727285142963e-17,
-        "dose-AP-coupled-photon": 1.508041263464985e-17
+        "dose-AP": 9.188366398601713e-17,
+        "dose-AP-coupled-photon": 1.5080499616656746e-17
       },
       "mc_std_dev": {
-        "dose-AP": 4.450373013105796e-18,
-        "dose-AP-coupled-photon": 3.0723977704267717e-19
+        "dose-AP": 4.314636881459752e-18,
+        "dose-AP-coupled-photon": 2.837912808548308e-19
       },
       "pk": {
         "dose-AP": 1.515205948706593e-16
       },
       "buildup": {
-        "dose-AP": 0.6146839175950523
+        "dose-AP": 0.6064103963190659
       },
       "optical_thickness": 6.650629771251046
     }
@@ -67,62 +88,167 @@
     "conc": 200,
     "result": {
       "mc": {
-        "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 1.5429056998350794e-20
+        "dose-AP": 9.980181059574208e-22,
+        "dose-AP-coupled-photon": 2.0933653668898166e-20
       },
       "mc_std_dev": {
-        "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 5.865508565676579e-21
+        "dose-AP": 9.980181059574208e-22,
+        "dose-AP-coupled-photon": 6.702307067553516e-21
       },
       "pk": {
         "dose-AP": 1.6465037875804193e-19
       },
       "buildup": {
-        "dose-AP": 0.0
+        "dose-AP": 0.00606143826382589
       },
       "optical_thickness": 13.301259542502091
     }
   },
   {
-    "water": 0,
-    "conc": 400,
+    "water": 5,
+    "conc": 5,
     "result": {
       "mc": {
-        "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 0.0
+        "dose-AP": 9.363913647536384e-14,
+        "dose-AP-coupled-photon": 7.273795883977522e-16
       },
       "mc_std_dev": {
-        "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 0.0
+        "dose-AP": 1.7410564787780373e-16,
+        "dose-AP-coupled-photon": 4.699987088710255e-18
       },
       "pk": {
-        "dose-AP": 2.0230449532518463e-25
+        "dose-AP": 7.774086082608773e-14
       },
       "buildup": {
-        "dose-AP": 0.0
+        "dose-AP": 1.204503468064777
       },
-      "optical_thickness": 26.602519085004182
+      "optical_thickness": 0.5809347471168633
+    }
+  },
+  {
+    "water": 5,
+    "conc": 25,
+    "result": {
+      "mc": {
+        "dose-AP": 2.501352218220518e-14,
+        "dose-AP-coupled-photon": 5.64988180574422e-16
+      },
+      "mc_std_dev": {
+        "dose-AP": 1.851431242485107e-16,
+        "dose-AP-coupled-photon": 5.289931344942202e-18
+      },
+      "pk": {
+        "dose-AP": 1.9767478779901235e-14
+      },
+      "buildup": {
+        "dose-AP": 1.265387582337405
+      },
+      "optical_thickness": 1.9110607013670724
+    }
+  },
+  {
+    "water": 5,
+    "conc": 50,
+    "result": {
+      "mc": {
+        "dose-AP": 3.721245633863583e-15,
+        "dose-AP-coupled-photon": 1.8403540552150006e-16
+      },
+      "mc_std_dev": {
+        "dose-AP": 9.549562896148606e-17,
+        "dose-AP-coupled-photon": 1.250309078638899e-18
+      },
+      "pk": {
+        "dose-AP": 3.57303984006955e-15
+      },
+      "buildup": {
+        "dose-AP": 1.0414789088361096
+      },
+      "optical_thickness": 3.573718144179834
+    }
+  },
+  {
+    "water": 5,
+    "conc": 100,
+    "result": {
+      "mc": {
+        "dose-AP": 6.106928864513716e-17,
+        "dose-AP-coupled-photon": 1.0811930327657543e-17
+      },
+      "mc_std_dev": {
+        "dose-AP": 2.9995625877739433e-18,
+        "dose-AP-coupled-photon": 2.2010357983716905e-19
+      },
+      "pk": {
+        "dose-AP": 1.171257315658663e-16
+      },
+      "buildup": {
+        "dose-AP": 0.521399421192042
+      },
+      "optical_thickness": 6.899033029805357
+    }
+  },
+  {
+    "water": 5,
+    "conc": 200,
+    "result": {
+      "mc": {
+        "dose-AP": 8.0524388332875085e-22,
+        "dose-AP-coupled-photon": 1.6172686506171924e-20
+      },
+      "mc_std_dev": {
+        "dose-AP": 8.0524388332875085e-22,
+        "dose-AP-coupled-photon": 5.287968848348928e-21
+      },
+      "pk": {
+        "dose-AP": 1.2737112006477368e-19
+      },
+      "buildup": {
+        "dose-AP": 0.006322028752822851
+      },
+      "optical_thickness": 13.549662801056403
     }
   },
   {
     "water": 10,
-    "conc": 10,
+    "conc": 5,
     "result": {
       "mc": {
-        "dose-AP": 5.162705507106139e-14,
-        "dose-AP-coupled-photon": 7.440374865255992e-16
+        "dose-AP": 7.153315449742272e-14,
+        "dose-AP-coupled-photon": 7.717418943446734e-16
       },
       "mc_std_dev": {
-        "dose-AP": 2.4740776718279624e-16,
-        "dose-AP-coupled-photon": 4.301679804385318e-18
+        "dose-AP": 2.630929287976738e-16,
+        "dose-AP-coupled-photon": 5.737874336470789e-18
       },
       "pk": {
-        "dose-AP": 4.263782024112502e-14
+        "dose-AP": 6.004541404514854e-14
       },
       "buildup": {
-        "dose-AP": 1.2108277294453733
+        "dose-AP": 1.1913175324869352
       },
-      "optical_thickness": 1.1618694942337267
+      "optical_thickness": 0.8293380056711744
+    }
+  },
+  {
+    "water": 10,
+    "conc": 25,
+    "result": {
+      "mc": {
+        "dose-AP": 1.8250261102981432e-14,
+        "dose-AP-coupled-photon": 4.535305257386829e-16
+      },
+      "mc_std_dev": {
+        "dose-AP": 1.1262977471357194e-16,
+        "dose-AP-coupled-photon": 2.394563790832666e-18
+      },
+      "pk": {
+        "dose-AP": 1.5270908206313902e-14
+      },
+      "buildup": {
+        "dose-AP": 1.1950999152385506
+      },
+      "optical_thickness": 2.1594639599213834
     }
   },
   {
@@ -130,18 +256,18 @@
     "conc": 50,
     "result": {
       "mc": {
-        "dose-AP": 2.6709909901698964e-15,
-        "dose-AP-coupled-photon": 1.385089994773762e-16
+        "dose-AP": 2.614952433052305e-15,
+        "dose-AP-coupled-photon": 1.4202357138540762e-16
       },
       "mc_std_dev": {
-        "dose-AP": 7.783139718612999e-17,
-        "dose-AP-coupled-photon": 2.5921701633588762e-18
+        "dose-AP": 5.136053477614893e-17,
+        "dose-AP-coupled-photon": 1.939227957888507e-18
       },
       "pk": {
         "dose-AP": 2.7609013109183084e-15
       },
       "buildup": {
-        "dose-AP": 0.9674344315050846
+        "dose-AP": 0.9471372347541612
       },
       "optical_thickness": 3.822121402734145
     }
@@ -151,18 +277,18 @@
     "conc": 100,
     "result": {
       "mc": {
-        "dose-AP": 3.8813578775216486e-17,
-        "dose-AP-coupled-photon": 7.982554138838171e-18
+        "dose-AP": 4.060949158235921e-17,
+        "dose-AP-coupled-photon": 8.011125242647774e-18
       },
       "mc_std_dev": {
-        "dose-AP": 1.949951188622983e-18,
-        "dose-AP-coupled-photon": 1.71447587112292e-19
+        "dose-AP": 2.053707895424816e-18,
+        "dose-AP-coupled-photon": 1.514958278296784e-19
       },
       "pk": {
         "dose-AP": 9.054213905943273e-17
       },
       "buildup": {
-        "dose-AP": 0.42867971950319045
+        "dose-AP": 0.448514824193658
       },
       "optical_thickness": 7.147436288359668
     }
@@ -172,62 +298,167 @@
     "conc": 200,
     "result": {
       "mc": {
-        "dose-AP": 8.995017564994268e-22,
-        "dose-AP-coupled-photon": 9.550183293987487e-21
+        "dose-AP": 0.0,
+        "dose-AP-coupled-photon": 1.878391088673311e-20
       },
       "mc_std_dev": {
-        "dose-AP": 8.995017564994268e-22,
-        "dose-AP-coupled-photon": 4.257212922337558e-21
+        "dose-AP": 0.0,
+        "dose-AP-coupled-photon": 6.406122006540476e-21
       },
       "pk": {
         "dose-AP": 9.853582488448083e-20
       },
       "buildup": {
-        "dose-AP": 0.009128677387680714
+        "dose-AP": 0.0
       },
       "optical_thickness": 13.798066059610713
     }
   },
   {
-    "water": 10,
-    "conc": 400,
+    "water": 15,
+    "conc": 5,
+    "result": {
+      "mc": {
+        "dose-AP": 5.3375437473958496e-14,
+        "dose-AP-coupled-photon": 7.570581601663259e-16
+      },
+      "mc_std_dev": {
+        "dose-AP": 2.1215718569884327e-16,
+        "dose-AP-coupled-photon": 6.849526247148574e-18
+      },
+      "pk": {
+        "dose-AP": 4.638007219901872e-14
+      },
+      "buildup": {
+        "dose-AP": 1.150826959581313
+      },
+      "optical_thickness": 1.0777412642254856
+    }
+  },
+  {
+    "water": 15,
+    "conc": 25,
+    "result": {
+      "mc": {
+        "dose-AP": 1.3219486521322136e-14,
+        "dose-AP-coupled-photon": 3.685763980728378e-16
+      },
+      "mc_std_dev": {
+        "dose-AP": 1.6309965745580985e-16,
+        "dose-AP-coupled-photon": 4.804730523038493e-18
+      },
+      "pk": {
+        "dose-AP": 1.1797737343639179e-14
+      },
+      "buildup": {
+        "dose-AP": 1.1205103263677507
+      },
+      "optical_thickness": 2.4078672184756944
+    }
+  },
+  {
+    "water": 15,
+    "conc": 50,
+    "result": {
+      "mc": {
+        "dose-AP": 1.9572950212856857e-15,
+        "dose-AP-coupled-photon": 1.0773048129059854e-16
+      },
+      "mc_std_dev": {
+        "dose-AP": 3.66518056682443e-17,
+        "dose-AP-coupled-photon": 1.2959804195379547e-18
+      },
+      "pk": {
+        "dose-AP": 2.1334537549070837e-15
+      },
+      "buildup": {
+        "dose-AP": 0.9174302544799852
+      },
+      "optical_thickness": 4.070524661288456
+    }
+  },
+  {
+    "water": 15,
+    "conc": 100,
+    "result": {
+      "mc": {
+        "dose-AP": 3.0600875356840334e-17,
+        "dose-AP-coupled-photon": 6.0679030205503766e-18
+      },
+      "mc_std_dev": {
+        "dose-AP": 1.6888137329857589e-18,
+        "dose-AP-coupled-photon": 1.2407587481485666e-19
+      },
+      "pk": {
+        "dose-AP": 6.999496630760297e-17
+      },
+      "buildup": {
+        "dose-AP": 0.43718680029590096
+      },
+      "optical_thickness": 7.395839546913979
+    }
+  },
+  {
+    "water": 15,
+    "conc": 200,
     "result": {
       "mc": {
         "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 0.0
+        "dose-AP-coupled-photon": 1.03070680187407e-20
       },
       "mc_std_dev": {
         "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 0.0
+        "dose-AP-coupled-photon": 4.8510694738342105e-21
       },
       "pk": {
-        "dose-AP": 1.213565021304073e-25
+        "dose-AP": 7.623109829486756e-20
       },
       "buildup": {
         "dose-AP": 0.0
       },
-      "optical_thickness": 27.099325602112806
+      "optical_thickness": 14.046469318165025
     }
   },
   {
     "water": 20,
-    "conc": 10,
+    "conc": 5,
     "result": {
       "mc": {
-        "dose-AP": 2.816707873059284e-14,
-        "dose-AP-coupled-photon": 5.825918973765928e-16
+        "dose-AP": 3.926450780873503e-14,
+        "dose-AP-coupled-photon": 7.10424573932215e-16
       },
       "mc_std_dev": {
-        "dose-AP": 2.0942672036771453e-16,
-        "dose-AP-coupled-photon": 3.4023563665975297e-18
+        "dose-AP": 1.6288610746719343e-16,
+        "dose-AP-coupled-photon": 5.0670339652330615e-18
       },
       "pk": {
-        "dose-AP": 2.54425454764473e-14
+        "dose-AP": 3.5826457593190254e-14
       },
       "buildup": {
-        "dose-AP": 1.1070857181592815
+        "dose-AP": 1.095964001090587
       },
-      "optical_thickness": 1.6586760113423489
+      "optical_thickness": 1.3261445227797966
+    }
+  },
+  {
+    "water": 20,
+    "conc": 25,
+    "result": {
+      "mc": {
+        "dose-AP": 9.481863347430734e-15,
+        "dose-AP-coupled-photon": 2.9281014444875375e-16
+      },
+      "mc_std_dev": {
+        "dose-AP": 6.400416686381704e-17,
+        "dose-AP-coupled-photon": 3.536152794865981e-18
+      },
+      "pk": {
+        "dose-AP": 9.11491569880068e-15
+      },
+      "buildup": {
+        "dose-AP": 1.040257931148868
+      },
+      "optical_thickness": 2.656270477030006
     }
   },
   {
@@ -235,18 +466,18 @@
     "conc": 50,
     "result": {
       "mc": {
-        "dose-AP": 1.313684236265877e-15,
-        "dose-AP-coupled-photon": 8.186219582316042e-17
+        "dose-AP": 1.3028083993126251e-15,
+        "dose-AP-coupled-photon": 8.257563337006813e-17
       },
       "mc_std_dev": {
-        "dose-AP": 2.9982719551974873e-17,
-        "dose-AP-coupled-photon": 8.361442670063148e-19
+        "dose-AP": 3.9132345838812746e-17,
+        "dose-AP-coupled-photon": 1.6241234124524883e-18
       },
       "pk": {
         "dose-AP": 1.6486737726114356e-15
       },
       "buildup": {
-        "dose-AP": 0.7968127218916401
+        "dose-AP": 0.7902160032842803
       },
       "optical_thickness": 4.318927919842767
     }
@@ -256,18 +487,18 @@
     "conc": 100,
     "result": {
       "mc": {
-        "dose-AP": 2.0352541849069737e-17,
-        "dose-AP-coupled-photon": 4.553672494645066e-18
+        "dose-AP": 1.9090965556789713e-17,
+        "dose-AP-coupled-photon": 4.282091325403602e-18
       },
       "mc_std_dev": {
-        "dose-AP": 1.4120229090218774e-18,
-        "dose-AP-coupled-photon": 9.565665392697845e-20
+        "dose-AP": 1.3937124788047103e-18,
+        "dose-AP-coupled-photon": 9.684626832652847e-20
       },
       "pk": {
         "dose-AP": 5.4112840772381594e-17
       },
       "buildup": {
-        "dose-AP": 0.37611298092221723
+        "dose-AP": 0.35279917454515647
       },
       "optical_thickness": 7.64424280546829
     }
@@ -278,11 +509,11 @@
     "result": {
       "mc": {
         "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 1.902462495402117e-20
+        "dose-AP-coupled-photon": 1.1771827723541584e-20
       },
       "mc_std_dev": {
         "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 7.606738522355344e-21
+        "dose-AP-coupled-photon": 5.1523034479242805e-21
       },
       "pk": {
         "dose-AP": 5.897730277037499e-20
@@ -294,339 +525,108 @@
     }
   },
   {
-    "water": 20,
-    "conc": 400,
+    "water": 25,
+    "conc": 5,
     "result": {
       "mc": {
-        "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 0.0
+        "dose-AP": 2.8272863328253673e-14,
+        "dose-AP-coupled-photon": 6.474404970496477e-16
       },
       "mc_std_dev": {
-        "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 0.0
+        "dose-AP": 1.7318543316740132e-16,
+        "dose-AP-coupled-photon": 3.3508294288273465e-18
       },
       "pk": {
-        "dose-AP": 7.28055115767778e-26
+        "dose-AP": 2.7675596206634506e-14
       },
       "buildup": {
-        "dose-AP": 0.0
+        "dose-AP": 1.0215810028864343
       },
-      "optical_thickness": 27.596132119221426
+      "optical_thickness": 1.5745477813341076
     }
   },
   {
-    "water": 30,
-    "conc": 10,
+    "water": 25,
+    "conc": 25,
     "result": {
       "mc": {
-        "dose-AP": 1.4299171266596544e-14,
-        "dose-AP-coupled-photon": 4.3249546126905696e-16
+        "dose-AP": 6.735329965555286e-15,
+        "dose-AP-coupled-photon": 2.3656885919930275e-16
       },
       "mc_std_dev": {
-        "dose-AP": 1.252705618877525e-16,
-        "dose-AP-coupled-photon": 2.4496078828075854e-18
+        "dose-AP": 1.0507446935627541e-16,
+        "dose-AP-coupled-photon": 1.5149755530376193e-18
       },
       "pk": {
-        "dose-AP": 1.5184762418458505e-14
+        "dose-AP": 7.042493821172139e-15
       },
       "buildup": {
-        "dose-AP": 0.9416789589815747
+        "dose-AP": 0.9563842207864757
       },
-      "optical_thickness": 2.155482528450971
+      "optical_thickness": 2.904673735584317
     }
   },
   {
-    "water": 30,
+    "water": 25,
     "conc": 50,
     "result": {
       "mc": {
-        "dose-AP": 6.468487826839356e-16,
-        "dose-AP-coupled-photon": 4.799833188767139e-17
+        "dose-AP": 9.479279481224785e-16,
+        "dose-AP-coupled-photon": 6.335431961102358e-17
       },
       "mc_std_dev": {
-        "dose-AP": 1.19456150311411e-17,
-        "dose-AP-coupled-photon": 1.235490853181423e-18
+        "dose-AP": 3.079245216188394e-17,
+        "dose-AP-coupled-photon": 1.2790263024123883e-18
       },
       "pk": {
-        "dose-AP": 9.846784755135821e-16
+        "dose-AP": 1.2741049164642781e-15
       },
       "buildup": {
-        "dose-AP": 0.6569137020554415
+        "dose-AP": 0.7439952046908653
       },
-      "optical_thickness": 4.815734436951389
+      "optical_thickness": 4.567331178397078
     }
   },
   {
-    "water": 30,
+    "water": 25,
     "conc": 100,
     "result": {
       "mc": {
-        "dose-AP": 7.955473143843352e-18,
-        "dose-AP-coupled-photon": 2.5242628074247065e-18
+        "dose-AP": 1.3436179369334937e-17,
+        "dose-AP-coupled-photon": 3.3143739706334374e-18
       },
       "mc_std_dev": {
-        "dose-AP": 9.29272704983682e-19,
-        "dose-AP-coupled-photon": 8.454877863984765e-20
+        "dose-AP": 1.173588791467107e-18,
+        "dose-AP-coupled-photon": 8.803388448458443e-20
       },
       "pk": {
-        "dose-AP": 3.234589431244725e-17
+        "dose-AP": 4.1836097816158335e-17
       },
       "buildup": {
-        "dose-AP": 0.24595001353176224
+        "dose-AP": 0.32116234712850034
       },
-      "optical_thickness": 8.141049322576912
+      "optical_thickness": 7.892646064022601
     }
   },
   {
-    "water": 30,
+    "water": 25,
     "conc": 200,
     "result": {
       "mc": {
         "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 2.1453512536976915e-21
+        "dose-AP-coupled-photon": 4.198149737605647e-21
       },
       "mc_std_dev": {
         "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 1.6546083590720939e-21
+        "dose-AP-coupled-photon": 3.427115669059582e-21
       },
       "pk": {
-        "dose-AP": 3.5304821206318916e-20
+        "dose-AP": 4.5630184668920344e-20
       },
       "buildup": {
         "dose-AP": 0.0
       },
-      "optical_thickness": 14.791679093827957
-    }
-  },
-  {
-    "water": 30,
-    "conc": 400,
-    "result": {
-      "mc": {
-        "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 0.0
-      },
-      "mc_std_dev": {
-        "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 0.0
-      },
-      "pk": {
-        "dose-AP": 4.3682606329980604e-26
-      },
-      "buildup": {
-        "dose-AP": 0.0
-      },
-      "optical_thickness": 28.09293863633005
-    }
-  },
-  {
-    "water": 40,
-    "conc": 10,
-    "result": {
-      "mc": {
-        "dose-AP": 6.9392995848319125e-15,
-        "dose-AP-coupled-photon": 3.1221674465701133e-16
-      },
-      "mc_std_dev": {
-        "dose-AP": 6.620961243101626e-17,
-        "dose-AP-coupled-photon": 3.700155566179032e-18
-      },
-      "pk": {
-        "dose-AP": 9.06433092999969e-15
-      },
-      "buildup": {
-        "dose-AP": 0.7655611471405259
-      },
-      "optical_thickness": 2.652289045559593
-    }
-  },
-  {
-    "water": 40,
-    "conc": 50,
-    "result": {
-      "mc": {
-        "dose-AP": 3.0602670283263766e-16,
-        "dose-AP-coupled-photon": 2.809923064595272e-17
-      },
-      "mc_std_dev": {
-        "dose-AP": 8.614151761805328e-18,
-        "dose-AP-coupled-photon": 1.1295310453720985e-18
-      },
-      "pk": {
-        "dose-AP": 5.88204890108354e-16
-      },
-      "buildup": {
-        "dose-AP": 0.5202722860332971
-      },
-      "optical_thickness": 5.312540954060012
-    }
-  },
-  {
-    "water": 40,
-    "conc": 100,
-    "result": {
-      "mc": {
-        "dose-AP": 5.639729689270276e-18,
-        "dose-AP-coupled-photon": 1.3773664284191386e-18
-      },
-      "mc_std_dev": {
-        "dose-AP": 7.631161303920451e-19,
-        "dose-AP-coupled-photon": 5.837688889253484e-20
-      },
-      "pk": {
-        "dose-AP": 1.9337753437252413e-17
-      },
-      "buildup": {
-        "dose-AP": 0.2916434790406342
-      },
-      "optical_thickness": 8.637855839685534
-    }
-  },
-  {
-    "water": 40,
-    "conc": 200,
-    "result": {
-      "mc": {
-        "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 2.7889863754427587e-21
-      },
-      "mc_std_dev": {
-        "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 2.7889863754427587e-21
-      },
-      "pk": {
-        "dose-AP": 2.1136863367057168e-20
-      },
-      "buildup": {
-        "dose-AP": 0.0
-      },
-      "optical_thickness": 15.28848561093658
-    }
-  },
-  {
-    "water": 40,
-    "conc": 400,
-    "result": {
-      "mc": {
-        "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 0.0
-      },
-      "mc_std_dev": {
-        "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 0.0
-      },
-      "pk": {
-        "dose-AP": 2.6211706989882144e-26
-      },
-      "buildup": {
-        "dose-AP": 0.0
-      },
-      "optical_thickness": 28.58974515343867
-    }
-  },
-  {
-    "water": 50,
-    "conc": 10,
-    "result": {
-      "mc": {
-        "dose-AP": 3.3469690165676388e-15,
-        "dose-AP-coupled-photon": 2.1720459442931822e-16
-      },
-      "mc_std_dev": {
-        "dose-AP": 6.397929396969512e-17,
-        "dose-AP-coupled-photon": 1.3705921599695232e-18
-      },
-      "pk": {
-        "dose-AP": 5.411806893022076e-15
-      },
-      "buildup": {
-        "dose-AP": 0.6184568449556439
-      },
-      "optical_thickness": 3.149095562668215
-    }
-  },
-  {
-    "water": 50,
-    "conc": 50,
-    "result": {
-      "mc": {
-        "dose-AP": 1.4381785686647806e-16,
-        "dose-AP-coupled-photon": 1.8022578754560715e-17
-      },
-      "mc_std_dev": {
-        "dose-AP": 6.953037527024007e-18,
-        "dose-AP-coupled-photon": 4.1599713335284305e-19
-      },
-      "pk": {
-        "dose-AP": 3.5142764916246125e-16
-      },
-      "buildup": {
-        "dose-AP": 0.4092388780712943
-      },
-      "optical_thickness": 5.809347471168634
-    }
-  },
-  {
-    "water": 50,
-    "conc": 100,
-    "result": {
-      "mc": {
-        "dose-AP": 2.440998941270912e-18,
-        "dose-AP-coupled-photon": 7.982620202159248e-19
-      },
-      "mc_std_dev": {
-        "dose-AP": 5.022544838184922e-19,
-        "dose-AP-coupled-photon": 4.044691695716212e-20
-      },
-      "pk": {
-        "dose-AP": 1.1562712080481218e-17
-      },
-      "buildup": {
-        "dose-AP": 0.21110954975619545
-      },
-      "optical_thickness": 9.134662356794156
-    }
-  },
-  {
-    "water": 50,
-    "conc": 200,
-    "result": {
-      "mc": {
-        "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 0.0
-      },
-      "mc_std_dev": {
-        "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 0.0
-      },
-      "pk": {
-        "dose-AP": 1.2656206593087951e-20
-      },
-      "buildup": {
-        "dose-AP": 0.0
-      },
-      "optical_thickness": 15.785292128045201
-    }
-  },
-  {
-    "water": 50,
-    "conc": 400,
-    "result": {
-      "mc": {
-        "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 0.0
-      },
-      "mc_std_dev": {
-        "dose-AP": 0.0,
-        "dose-AP-coupled-photon": 0.0
-      },
-      "pk": {
-        "dose-AP": 1.572982732918966e-26
-      },
-      "buildup": {
-        "dose-AP": 0.0
-      },
-      "optical_thickness": 29.086551670547294
+      "optical_thickness": 14.543275835273647
     }
   }
 ]
