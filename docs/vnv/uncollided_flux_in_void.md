@@ -16,7 +16,7 @@ cross-section library.
 
 ## What the script does
 
-[`verification_and_validation/uncollided_flux_in_void.py`](https://github.com/shimwell/rad_point_kernel/blob/main/verification_and_validation/uncollided_flux_in_void.py)
+[`verification_and_validation/uncollided_flux_in_void.py`](https://github.com/fusion-energy/rad_point_kernel/blob/main/verification_and_validation/uncollided_flux_in_void.py)
 sweeps:
 
 - Distances from **1 cm to 5000 cm** (8 values, log-spaced)

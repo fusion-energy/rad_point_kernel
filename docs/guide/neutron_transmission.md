@@ -1,5 +1,13 @@
 # Neutron transmission
 
+Three levels of calculation, each building on the previous:
+
+| Function | What it computes | Considers geometry? |
+|---|---|---|
+| **`calculate_transmission`** | **Material attenuation only (exp(-Sigma*t))** | **No** |
+| `calculate_flux` | S / (4*pi*R^2) * exp(-Sigma*t) * B | Yes (inverse square law) |
+| `calculate_dose` | Flux * ICRP-116 dose coefficient | Yes (inverse square law) |
+
 `calculate_transmission` computes the fraction of uncollided neutrons that pass through a set of layers. Like the photon version, it returns a float between 0 and 1 representing exp(-Sum(Sigma_r,i * t_i)).
 
 ## Single layer example
@@ -14,7 +22,7 @@ layers = [rpk.Layer(thickness=10, material=iron)]
 
 source = rpk.Source(particle="neutron", energy=14.1e6)
 frac = rpk.calculate_transmission(layers=layers, source=source)
-print(f"Transmission: {frac:.4e}")
+print(f"Transmission: {frac}")
 ```
 
 ## Comparing shield thicknesses
@@ -28,7 +36,7 @@ source = rpk.Source(particle="neutron", energy=14.1e6)
 for thickness in [5, 10, 20, 50]:
     layers = [rpk.Layer(thickness=thickness, material=iron)]
     frac = rpk.calculate_transmission(layers=layers, source=source)
-    print(f"{thickness:>3d} cm iron: {frac:.4e}")
+    print(f"{thickness:>3d} cm iron: {frac}")
 ```
 
 ## Notes
