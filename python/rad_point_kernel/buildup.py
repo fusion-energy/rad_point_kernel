@@ -241,7 +241,7 @@ def compute_buildup(
     trigger_rel_err=0.05,
     cross_sections=None,
     use_weight_windows=True,
-    max_history_splits=1_000,
+    max_history_splits=100,
 ):
     """Run OpenMC MC on a list of geometries and compute build-up factors.
 
