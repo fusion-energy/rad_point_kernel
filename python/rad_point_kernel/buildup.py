@@ -240,6 +240,8 @@ def compute_buildup(
     max_batches=100,
     trigger_rel_err=0.05,
     cross_sections=None,
+    use_weight_windows=True,
+    max_history_splits=1_000,
 ):
     """Run OpenMC MC on a list of geometries and compute build-up factors.
 
@@ -292,6 +294,9 @@ def compute_buildup(
         mc_data = _run_mc(
             layers, source, needs_coupled,
             parsed, particles_per_batch, batches, max_batches, trigger_rel_err,
+            use_weight_windows=use_weight_windows,
+            ww_quantities=list(quantities),
+            max_history_splits=max_history_splits,
         )
         _populate_result(result, layers, source, parsed, mc_data)
         results.append(result)
@@ -299,7 +304,8 @@ def compute_buildup(
     return results
 
 
-def _run_mc(layers, source, coupled, quantities, particles_per_batch, batches, max_batches, trigger_rel_err):
+def _run_mc(layers, source, coupled, quantities, particles_per_batch, batches, max_batches, trigger_rel_err,
+            *, use_weight_windows=True, ww_quantities=None, max_history_splits=1_000):
     """Run a single MC simulation. Returns dict: quantity_name -> (mean, std_dev)."""
     import openmc
 
@@ -371,6 +377,17 @@ def _run_mc(layers, source, coupled, quantities, particles_per_batch, batches, m
     settings.trigger_active = True
     settings.trigger_max_batches = max_batches
     settings.trigger_batch_interval = 5
+
+    # Weight-window generation — driven by the user's tally quantities.
+    if use_weight_windows:
+        from .weight_windows import build_weight_windows
+        ww_list = build_weight_windows(
+            layers, source,
+            quantities=ww_quantities or [q for q, _ in quantities],
+        )
+        if ww_list:
+            settings.weight_windows = ww_list
+            settings.max_history_splits = max_history_splits
 
     # Tallies
     surface_filter = openmc.SurfaceFilter([spheres[-1]])
