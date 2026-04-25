@@ -1,4 +1,4 @@
-# point_kernel_calculator
+# rad_point_kernel
 
 Point-kernel neutron and photon shielding calculator.
 
@@ -7,7 +7,7 @@ Fast engineering estimates for radiation dose and flux behind multi-layer shield
 ## Installation
 
 ```bash
-pip install point_kernel_calculator
+pip install rad_point_kernel
 ```
 
 For Monte Carlo build-up factors, also install OpenMC:
@@ -19,7 +19,7 @@ python -m pip install --extra-index-url https://shimwell.github.io/wheels openmc
 ## Quick start
 
 ```python
-import point_kernel_calculator as pkc
+import rad_point_kernel as pkc
 
 iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
 layers = [pkc.Layer(thickness=10, material=iron)]
@@ -31,4 +31,4 @@ print(f"Dose rate: {result.dose_rate:.3e} Sv/hr")
 
 ## Documentation
 
-Full documentation at [https://fusion-energy.github.io/point_kernel_calculator](https://fusion-energy.github.io/point_kernel_calculator)
+Full documentation at [https://fusion-energy.github.io/rad_point_kernel](https://fusion-energy.github.io/rad_point_kernel)
