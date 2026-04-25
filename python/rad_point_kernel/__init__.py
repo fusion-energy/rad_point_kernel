@@ -101,20 +101,25 @@ def calculate_dose(source_strength, layers, source, geometry, buildup=None):
 
 # TODO: Consider removing from public API — coupled MC is more accurate.
 def calculate_secondary_photon_dose_rate(
-    source_strength, layers, energy_ev, geometry, neutron_buildup=None,
+    source_strength, layers, source, geometry, neutron_buildup=None,
 ):
-    """Calculate secondary photon dose rate (analytical, no MC)."""
-    if neutron_buildup is not None and not isinstance(neutron_buildup, BuildupModel):
-        if isinstance(neutron_buildup, InterpolationResult):
-            neutron_buildup = BuildupModel.constant(neutron_buildup.value)
-        elif isinstance(neutron_buildup, BuildupResult):
-            key = f"dose-{geometry}"
-            b = neutron_buildup.buildup.get(key)
-            if b is None:
-                raise ValueError(f"BuildupResult doesn't contain '{key}'")
-            neutron_buildup = BuildupModel.constant(b)
+    """Calculate secondary photon dose rate (analytical, no MC).
+
+    Args:
+        source_strength: Source strength in particles/sec.
+        layers: List of Layer objects.
+        source: Source object (must be a monoenergetic neutron source).
+        geometry: Dose geometry ("AP", "PA", "RLAT", "LLAT", "ROT", "ISO").
+        neutron_buildup: Optional BuildupModel, BuildupResult, or InterpolationResult.
+    """
+    if source.particle != "neutron":
+        raise ValueError(
+            f"calculate_secondary_photon_dose_rate requires a neutron source, "
+            f"got {source.particle!r}"
+        )
+    neutron_buildup = _resolve_buildup(neutron_buildup, source, "dose", geometry)
     return _calculate_secondary_photon_dose_rate(
-        source_strength, layers, energy_ev, geometry, neutron_buildup,
+        source_strength, layers, source.energy, geometry, neutron_buildup,
     )
 
 
