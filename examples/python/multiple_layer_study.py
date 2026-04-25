@@ -1,12 +1,12 @@
 """Multiple-layer shielding study: total dose (neutron + secondary photon).
 
-Geometry: 10 m void + variable polyethylene + variable concrete.
+Geometry: 10 m void + variable water + variable concrete.
 MC (coupled neutron-photon) at thin shields, GP-extrapolated.
 Results cached to avoid re-simulation on re-run.
 
 Two plots:
-  1. Total dose vs concrete thickness (one line per poly thickness)
-  2. Total dose vs poly thickness (one line per concrete thickness)
+  1. Total dose vs concrete thickness (one line per water thickness)
+  2. Total dose vs water thickness (one line per concrete thickness)
 """
 
 import json
@@ -30,20 +30,16 @@ source = pkc.Source("neutron", 14.06e6)
 N_DOSE = f"dose-{GEOMETRY}"
 P_DOSE = f"dose-{GEOMETRY}-coupled-photon"
 
-polyethylene = pkc.Material(
-    composition={"H": 2, "C": 1},
-    density=0.94,
-    fraction="atom",
-)
+water = pkc.Material(composition={"H2O": 1.0}, density=1.0)
 concrete = pkc.Material(
     composition={"H": 0.01, "O": 0.53, "Si": 0.34, "Ca": 0.04, "Al": 0.03, "Fe": 0.01},
     density=2.3,
     fraction="mass",
 )
 
-mc_poly = [0, 10, 20, 30, 40, 50]
+mc_water = [0, 10, 20, 30, 40, 50]
 mc_conc = [10, 50, 100, 200, 400]
-all_poly = list(range(0, 55, 5))
+all_water = list(range(0, 55, 5))
 all_conc = list(range(10, 410, 10))
 
 RESULTS_DIR = Path(os.path.dirname(__file__), "..", "..", "results", "multiple_layer")
@@ -51,10 +47,10 @@ RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 CACHE_FILE = RESULTS_DIR / "mc_cache.json"
 
 
-def make_layers(poly_t, conc_t):
+def make_layers(water_t, conc_t):
     layers = [pkc.Layer(thickness=VOID_THICKNESS)]
-    if poly_t > 0:
-        layers.append(pkc.Layer(thickness=poly_t, material=polyethylene))
+    if water_t > 0:
+        layers.append(pkc.Layer(thickness=water_t, material=water))
     layers.append(pkc.Layer(thickness=conc_t, material=concrete))
     return layers
 
@@ -63,14 +59,14 @@ def make_layers(poly_t, conc_t):
 cached = {}
 if CACHE_FILE.exists():
     for entry in json.loads(CACHE_FILE.read_text()):
-        key = (entry["poly"], entry["conc"])
+        key = (entry["water"], entry["conc"])
         cached[key] = pkc.BuildupResult.from_dict(entry["result"])
     print(f"Loaded {len(cached)} cached points")
 
-missing = [(p, c) for p in mc_poly for c in mc_conc if (p, c) not in cached]
+missing = [(w, c) for w in mc_water for c in mc_conc if (w, c) not in cached]
 if missing:
     print(f"Running coupled MC for {len(missing)} geometries...")
-    mc_geometries = [make_layers(p, c) for p, c in missing]
+    mc_geometries = [make_layers(w, c) for w, c in missing]
     mc_list = pkc.compute_buildup(
         geometries=mc_geometries,
         source=source,
@@ -79,26 +75,26 @@ if missing:
         max_batches=100,
         trigger_rel_err=0.05,
     )
-    for (p, c), r in zip(missing, mc_list):
-        cached[(p, c)] = r
+    for (w, c), r in zip(missing, mc_list):
+        cached[(w, c)] = r
 
     cache_data = [
-        {"poly": p, "conc": c, "result": cached[(p, c)].to_dict()}
-        for p, c in sorted(cached)
+        {"water": w, "conc": c, "result": cached[(w, c)].to_dict()}
+        for w, c in sorted(cached)
     ]
     CACHE_FILE.write_text(json.dumps(cache_data, indent=2))
     print(f"  Saved {len(cached)} points to {CACHE_FILE}")
 else:
     print("All points cached")
 
-# --- Step 2: Build total buildup tables (one per poly thickness) ---
+# --- Step 2: Build total buildup tables (one per water thickness) ---
 print("\nComputing total buildup factors...")
 
-tables_by_poly = {}
-for pt in mc_poly:
+tables_by_water = {}
+for wt in mc_water:
     br_list = []
     for ct in mc_conc:
-        r = cached[(pt, ct)]
+        r = cached[(wt, ct)]
         mc_total = r.mc.get(N_DOSE, 0) + r.mc.get(P_DOSE, 0)
         mc_std = np.sqrt(
             r.mc_std_dev.get(N_DOSE, 0) ** 2 + r.mc_std_dev.get(P_DOSE, 0) ** 2
@@ -111,9 +107,9 @@ for pt in mc_poly:
         br.pk["total"] = pk_neutron
         br.buildup["total"] = mc_total / pk_neutron if pk_neutron > 0 else 1.0
         br_list.append(br)
-        print(f"  poly={pt:>2d}, conc={ct:>3d}: B_total={br.buildup['total']:.3f}")
+        print(f"  water={wt:>2d}, conc={ct:>3d}: B_total={br.buildup['total']:.3f}")
 
-    tables_by_poly[pt] = pkc.BuildupTable(
+    tables_by_water[wt] = pkc.BuildupTable(
         points=[{"conc": ct} for ct in mc_conc],
         results=br_list,
     )
@@ -122,8 +118,8 @@ for pt in mc_poly:
 tables_by_conc = {}
 for ct in mc_conc:
     br_list = []
-    for pt in mc_poly:
-        r = cached[(pt, ct)]
+    for wt in mc_water:
+        r = cached[(wt, ct)]
         mc_total = r.mc.get(N_DOSE, 0) + r.mc.get(P_DOSE, 0)
         mc_std = np.sqrt(
             r.mc_std_dev.get(N_DOSE, 0) ** 2 + r.mc_std_dev.get(P_DOSE, 0) ** 2
@@ -138,20 +134,20 @@ for ct in mc_conc:
         br_list.append(br)
 
     tables_by_conc[ct] = pkc.BuildupTable(
-        points=[{"poly": pt} for pt in mc_poly],
+        points=[{"water": wt} for wt in mc_water],
         results=br_list,
     )
 
 # --- Step 3: Extrapolate ---
 print("\nExtrapolating...")
 
-# Data for plot 1: dose vs concrete, one line per poly
+# Data for plot 1: dose vs concrete, one line per water
 data_vs_conc = {}
-for pt in mc_poly:
-    table = tables_by_poly[pt]
+for wt in mc_water:
+    table = tables_by_water[wt]
     doses, doses_lo, doses_hi = [], [], []
     for ct in all_conc:
-        layers = make_layers(pt, ct)
+        layers = make_layers(wt, ct)
         pk = pkc.calculate_dose(
             source_strength=SOURCE_STRENGTH,
             layers=layers,
@@ -162,31 +158,31 @@ for pt in mc_poly:
         doses.append(pk.dose_rate * bi.value)
         doses_lo.append(pk.dose_rate * (bi.value - bi.sigma))
         doses_hi.append(pk.dose_rate * (bi.value + bi.sigma))
-    data_vs_conc[pt] = {"doses": doses, "doses_lo": doses_lo, "doses_hi": doses_hi}
+    data_vs_conc[wt] = {"doses": doses, "doses_lo": doses_lo, "doses_hi": doses_hi}
 
-# Data for plot 2: dose vs poly, one line per concrete
-data_vs_poly = {}
+# Data for plot 2: dose vs water, one line per concrete
+data_vs_water = {}
 for ct in mc_conc:
     table = tables_by_conc[ct]
     doses, doses_lo, doses_hi = [], [], []
-    for pt in all_poly:
-        layers = make_layers(pt, ct)
+    for wt in all_water:
+        layers = make_layers(wt, ct)
         pk = pkc.calculate_dose(
             source_strength=SOURCE_STRENGTH,
             layers=layers,
             source=source,
             geometry=GEOMETRY,
         )
-        bi = table.interpolate(poly=pt, warn=False)
+        bi = table.interpolate(water=wt, warn=False)
         doses.append(pk.dose_rate * bi.value)
         doses_lo.append(pk.dose_rate * (bi.value - bi.sigma))
         doses_hi.append(pk.dose_rate * (bi.value + bi.sigma))
-    data_vs_poly[ct] = {"doses": doses, "doses_lo": doses_lo, "doses_hi": doses_hi}
+    data_vs_water[ct] = {"doses": doses, "doses_lo": doses_lo, "doses_hi": doses_hi}
 
 # --- Step 4: Plot ---
 print("\nGenerating plots...")
 
-colors_poly = {
+colors_water = {
     0: "#7f7f7f", 10: "#1f77b4", 20: "#ff7f0e",
     30: "#2ca02c", 40: "#d62728", 50: "#9467bd",
 }
@@ -197,21 +193,21 @@ colors_conc = {
 
 # Plot 1: dose vs concrete thickness
 fig, ax = plt.subplots(figsize=(10, 7))
-for pt in mc_poly:
-    c = colors_poly[pt]
-    d = data_vs_conc[pt]
-    ax.plot(all_conc, d["doses"], color=c, linewidth=2, label=f"{pt} cm poly")
+for wt in mc_water:
+    c = colors_water[wt]
+    d = data_vs_conc[wt]
+    ax.plot(all_conc, d["doses"], color=c, linewidth=2, label=f"{wt} cm water")
     ax.fill_between(all_conc, d["doses_lo"], d["doses_hi"], color=c, alpha=0.12)
 
     mc_vals = [
-        (cached[(pt, ct)].mc.get(N_DOSE, 0) + cached[(pt, ct)].mc.get(P_DOSE, 0))
+        (cached[(wt, ct)].mc.get(N_DOSE, 0) + cached[(wt, ct)].mc.get(P_DOSE, 0))
         * SOURCE_STRENGTH
         for ct in mc_conc
     ]
     mc_errs = [
         np.sqrt(
-            cached[(pt, ct)].mc_std_dev.get(N_DOSE, 0) ** 2
-            + cached[(pt, ct)].mc_std_dev.get(P_DOSE, 0) ** 2
+            cached[(wt, ct)].mc_std_dev.get(N_DOSE, 0) ** 2
+            + cached[(wt, ct)].mc_std_dev.get(P_DOSE, 0) ** 2
         )
         * SOURCE_STRENGTH
         for ct in mc_conc
@@ -225,14 +221,14 @@ for pt in mc_poly:
         markersize=6,
         capsize=3,
         zorder=5,
-        label="Monte Carlo" if pt == mc_poly[0] else None,
+        label="Monte Carlo" if wt == mc_water[0] else None,
     )
 
 ax.set_xlabel("Concrete thickness (cm)", fontsize=13)
 ax.set_ylabel("Total dose rate (Sv/hr)", fontsize=13)
 ax.set_title(
     f"Total dose vs concrete thickness\n"
-    f"({VOID_THICKNESS/100:.0f} m void + poly + concrete, {source.energy/1e6:.2f} MeV, {GEOMETRY})",
+    f"({VOID_THICKNESS/100:.0f} m void + water + concrete, {source.energy/1e6:.2f} MeV, {GEOMETRY})",
     fontsize=12,
 )
 ax.set_yscale("log")
@@ -243,29 +239,29 @@ fig.savefig(RESULTS_DIR / "dose_vs_concrete.png", dpi=150, bbox_inches="tight")
 print(f"  Saved dose_vs_concrete.png")
 plt.close(fig)
 
-# Plot 2: dose vs poly thickness
+# Plot 2: dose vs water thickness
 fig, ax = plt.subplots(figsize=(10, 7))
 for ct in mc_conc:
     c = colors_conc[ct]
-    d = data_vs_poly[ct]
-    ax.plot(all_poly, d["doses"], color=c, linewidth=2, label=f"{ct} cm concrete")
-    ax.fill_between(all_poly, d["doses_lo"], d["doses_hi"], color=c, alpha=0.12)
+    d = data_vs_water[ct]
+    ax.plot(all_water, d["doses"], color=c, linewidth=2, label=f"{ct} cm concrete")
+    ax.fill_between(all_water, d["doses_lo"], d["doses_hi"], color=c, alpha=0.12)
 
     mc_vals = [
-        (cached[(pt, ct)].mc.get(N_DOSE, 0) + cached[(pt, ct)].mc.get(P_DOSE, 0))
+        (cached[(wt, ct)].mc.get(N_DOSE, 0) + cached[(wt, ct)].mc.get(P_DOSE, 0))
         * SOURCE_STRENGTH
-        for pt in mc_poly
+        for wt in mc_water
     ]
     mc_errs = [
         np.sqrt(
-            cached[(pt, ct)].mc_std_dev.get(N_DOSE, 0) ** 2
-            + cached[(pt, ct)].mc_std_dev.get(P_DOSE, 0) ** 2
+            cached[(wt, ct)].mc_std_dev.get(N_DOSE, 0) ** 2
+            + cached[(wt, ct)].mc_std_dev.get(P_DOSE, 0) ** 2
         )
         * SOURCE_STRENGTH
-        for pt in mc_poly
+        for wt in mc_water
     ]
     ax.errorbar(
-        mc_poly,
+        mc_water,
         mc_vals,
         yerr=mc_errs,
         fmt="o",
@@ -276,19 +272,19 @@ for ct in mc_conc:
         label="Monte Carlo" if ct == mc_conc[0] else None,
     )
 
-ax.set_xlabel("Polyethylene thickness (cm)", fontsize=13)
+ax.set_xlabel("Water thickness (cm)", fontsize=13)
 ax.set_ylabel("Total dose rate (Sv/hr)", fontsize=13)
 ax.set_title(
-    f"Total dose vs polyethylene thickness\n"
-    f"({VOID_THICKNESS/100:.0f} m void + poly + concrete, {source.energy/1e6:.2f} MeV, {GEOMETRY})",
+    f"Total dose vs water thickness\n"
+    f"({VOID_THICKNESS/100:.0f} m void + water + concrete, {source.energy/1e6:.2f} MeV, {GEOMETRY})",
     fontsize=12,
 )
 ax.set_yscale("log")
 ax.legend(fontsize=10)
 ax.grid(True, which="both", alpha=0.3)
 fig.tight_layout()
-fig.savefig(RESULTS_DIR / "dose_vs_poly.png", dpi=150, bbox_inches="tight")
-print(f"  Saved dose_vs_poly.png")
+fig.savefig(RESULTS_DIR / "dose_vs_water.png", dpi=150, bbox_inches="tight")
+print(f"  Saved dose_vs_water.png")
 plt.close(fig)
 
 print(f"\nAll plots saved to {RESULTS_DIR}")
