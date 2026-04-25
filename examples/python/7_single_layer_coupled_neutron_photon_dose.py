@@ -9,8 +9,13 @@ SOURCE_STRENGTH = 1e12
 
 print("Running coupled MC...")
 results = pkc.compute_buildup(
-    geometries=[layers], source=source, quantities=["dose-AP-coupled-photon"],
-    particles_per_batch=10_000, max_batches=50, trigger_rel_err=0.05,
+    geometries=[layers],
+    source=source,
+    quantities=["dose-AP-coupled-photon"],
+    particles_per_batch=10_000,
+    max_batches=50,
+    trigger_rel_err=0.05,
+    cross_sections="/home/jon/nuclear_data/cross_sections.xml",
 )
 
 r = results[0]

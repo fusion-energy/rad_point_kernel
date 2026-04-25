@@ -12,8 +12,13 @@ print(f"PK dose (no buildup): {pk.dose_rate:.4e} Sv/hr")
 
 print("Running MC...")
 results = pkc.compute_buildup(
-    geometries=[layers], source=source, quantities=["dose-AP"],
-    particles_per_batch=10_000, max_batches=50, trigger_rel_err=0.05,
+    geometries=[layers],
+    source=source,
+    quantities=["dose-AP"],
+    particles_per_batch=10_000,
+    max_batches=50,
+    trigger_rel_err=0.05,
+    cross_sections="/home/jon/nuclear_data/cross_sections.xml",
 )
 
 r = results[0]
