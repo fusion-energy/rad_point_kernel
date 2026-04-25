@@ -20,7 +20,7 @@ jobs:
       - name: Download nuclear data for elements used in examples
         run: |
           openmc_data_downloader \
-            -l ENDFB-7.1-NNDC \
+            -l ENDFB-7.1-NNDC TENDL-2019 \
             -e H O Al Si Ca Fe \
             -p neutron photon \
             -d nuclear_data
