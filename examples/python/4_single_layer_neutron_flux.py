@@ -14,8 +14,12 @@ print(f"PK flux (no buildup): {pk.uncollided_flux:.4e} n/cm2/s")
 # MC buildup
 print("Running MC with D-T + D-D spectrum...")
 results = pkc.compute_buildup(
-    geometries=[layers], source=source, quantities=["flux"],
-    particles_per_batch=10_000, max_batches=50, trigger_rel_err=0.05,
+    geometries=[layers],
+    source=source,
+    quantities=["flux"],
+    particles_per_batch=10_000,
+    max_batches=50,
+    trigger_rel_err=0.05,
 )
 
 r = results[0]
