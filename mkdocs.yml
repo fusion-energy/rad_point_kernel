@@ -30,6 +30,7 @@ nav:
     - Dose (neutron): guide/neutron_dose.md
     - Dose (coupled): guide/coupled_dose.md
     - Calculate build-up with MC: guide/buildup_mc.md
+    - Weight window generation: guide/weight_windows.md
     - Many thicknesses and extrapolation: guide/extrapolation.md
     - Caching MC results: guide/caching.md
     - Plotting results: guide/plotting.md
