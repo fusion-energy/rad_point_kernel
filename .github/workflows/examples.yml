@@ -1,0 +1,34 @@
+name: Examples
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  python-examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install rad_point_kernel_core
+      - run: pip install -e .
+      - run: pip install matplotlib
+      - run: pip install --extra-index-url https://shimwell.github.io/wheels openmc
+      - run: pip install openmc-data-downloader
+      - name: Download nuclear data for elements used in examples
+        run: |
+          openmc_data_downloader \
+            -l ENDFB-7.1-NNDC \
+            -e H O Al Si Ca Fe \
+            -p neutron photon \
+            -d nuclear_data
+      - name: Run numbered examples (studies skipped — too slow for CI)
+        env:
+          OPENMC_CROSS_SECTIONS: ${{ github.workspace }}/nuclear_data/cross_sections.xml
+        run: |
+          for f in examples/python/[0-9]_*.py; do
+            echo "=== $f ==="
+            python "$f"
+          done

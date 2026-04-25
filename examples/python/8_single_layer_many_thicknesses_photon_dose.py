@@ -32,7 +32,6 @@ mc_results = pkc.compute_buildup(
     particles_per_batch=10_000,
     max_batches=50,
     trigger_rel_err=0.05,
-    cross_sections="~/nuclear_data",
 )
 
 for t, r in zip(mc_thicknesses, mc_results):
