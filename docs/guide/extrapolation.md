@@ -118,14 +118,12 @@ This means you can use any interpolation or fitting method you prefer — scipy,
 
 ## Multi-dimensional extrapolation
 
-`BuildupTable` supports N-dimensional parameter spaces. For example, with polyethylene and concrete thicknesses as two axes:
+`BuildupTable` supports N-dimensional parameter spaces. For example, with water and concrete thicknesses as two axes:
 
 ```python
 import rad_point_kernel as pkc
 
-polyethylene = pkc.Material(
-    composition={"H": 2, "C": 1}, density=0.94, fraction="atom",
-)
+water = pkc.Material(composition={"H2O": 1.0}, density=1.0)
 concrete = pkc.Material(
     composition={
         "H": 0.01, "O": 0.53, "Si": 0.34,
@@ -135,17 +133,17 @@ concrete = pkc.Material(
     fraction="mass",
 )
 
-# Monte Carlo at a grid of (poly, concrete) thicknesses
-mc_poly = [0, 10, 20]
+# Monte Carlo at a grid of (water, concrete) thicknesses
+mc_water = [0, 10, 20]
 mc_conc = [10, 20, 30]
 points = []
 geometries = []
-for p in mc_poly:
+for w in mc_water:
     for c in mc_conc:
-        points.append({"poly": p, "conc": c})
+        points.append({"water": w, "conc": c})
         layers = [pkc.Layer(thickness=1000)]
-        if p > 0:
-            layers.append(pkc.Layer(thickness=p, material=polyethylene))
+        if w > 0:
+            layers.append(pkc.Layer(thickness=w, material=water))
         layers.append(pkc.Layer(thickness=c, material=concrete))
         geometries.append(layers)
 
@@ -158,8 +156,8 @@ mc_results = pkc.compute_buildup(
 
 table = pkc.BuildupTable(points=points, results=mc_results)
 
-# Query at any (poly, concrete) combination
-bi = table.interpolate(poly=15, conc=25)
+# Query at any (water, concrete) combination
+bi = table.interpolate(water=15, conc=25)
 print(f"B = {bi.value:.3f} +/- {bi.sigma:.3f}")
 ```
 
