@@ -38,21 +38,50 @@ RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # --- Materials (PNNL compositions, atom fractions) ---
 portland = pkc.Material(
-    composition={"H": 0.168753, "C": 0.001416, "O": 0.562525, "Na": 0.011838,
-                 "Mg": 0.0014, "Al": 0.021354, "Si": 0.204119, "K": 0.005656,
-                 "Ca": 0.018674, "Fe": 0.004264},
-    density=2.3, fraction="atom",
+    composition={
+        "H": 0.168753,
+        "C": 0.001416,
+        "O": 0.562525,
+        "Na": 0.011838,
+        "Mg": 0.0014,
+        "Al": 0.021354,
+        "Si": 0.204119,
+        "K": 0.005656,
+        "Ca": 0.018674,
+        "Fe": 0.004264,
+    },
+    density=2.3,
+    fraction="atom",
 )
 magnetite = pkc.Material(
-    composition={"H": 0.082377, "O": 0.551, "Mg": 0.010248, "Al": 0.023218,
-                 "Si": 0.024456, "S": 0.001177, "Ca": 0.047269, "Ti": 0.030274,
-                 "V": 0.00163, "Cr": 0.000871, "Mn": 0.000962, "Fe": 0.226518},
-    density=3.53, fraction="atom",
+    composition={
+        "H": 0.082377,
+        "O": 0.551,
+        "Mg": 0.010248,
+        "Al": 0.023218,
+        "Si": 0.024456,
+        "S": 0.001177,
+        "Ca": 0.047269,
+        "Ti": 0.030274,
+        "V": 0.00163,
+        "Cr": 0.000871,
+        "Mn": 0.000962,
+        "Fe": 0.226518,
+    },
+    density=3.53,
+    fraction="atom",
 )
 steel = pkc.Material(
-    composition={"C": 0.003747, "Si": 0.003163, "P": 0.001127,
-                 "S": 0.000175, "Mn": 0.000154, "Fe": 0.991634},
-    density=7.7, fraction="atom",
+    composition={
+        "C": 0.003747,
+        "Si": 0.003163,
+        "P": 0.001127,
+        "S": 0.000175,
+        "Mn": 0.000154,
+        "Fe": 0.991634,
+    },
+    density=7.7,
+    fraction="atom",
 )
 
 materials = {
@@ -91,7 +120,9 @@ for name, mat in materials.items():
         for t, r in zip(missing, mc_list):
             cached[t] = r
 
-        cache_data = [{"thickness": t, "result": cached[t].to_dict()} for t in sorted(cached)]
+        cache_data = [
+            {"thickness": t, "result": cached[t].to_dict()} for t in sorted(cached)
+        ]
         cache_file.write_text(json.dumps(cache_data, indent=2))
         print(f"  Saved {len(cached)} thicknesses to {cache_file}")
     else:
@@ -102,7 +133,9 @@ for name, mat in materials.items():
     for t in mc_thicknesses:
         r = cached[t]
         mc_total = r.mc.get(N_DOSE, 0) + r.mc.get(P_DOSE, 0)
-        mc_std = np.sqrt(r.mc_std_dev.get(N_DOSE, 0)**2 + r.mc_std_dev.get(P_DOSE, 0)**2)
+        mc_std = np.sqrt(
+            r.mc_std_dev.get(N_DOSE, 0) ** 2 + r.mc_std_dev.get(P_DOSE, 0) ** 2
+        )
         pk_neutron = r.pk.get(N_DOSE, 0)
 
         br = pkc.BuildupResult()
@@ -113,7 +146,9 @@ for name, mat in materials.items():
         br_list.append(br)
         print(f"  {name}: t={t:>3d} cm, B_total={br.buildup['total']:.3f}")
 
-    tables[name] = pkc.BuildupTable(points=[{"thickness": t} for t in mc_thicknesses], results=br_list)
+    tables[name] = pkc.BuildupTable(
+        points=[{"thickness": t} for t in mc_thicknesses], results=br_list
+    )
     mc_cached[name] = cached
 
 # --- Step 2: Extrapolate total dose ---
@@ -125,17 +160,26 @@ for name, mat in materials.items():
     doses, doses_lo, doses_hi = [], [], []
 
     for t in all_thicknesses:
-        layers = [pkc.Layer(thickness=VOID_THICKNESS), pkc.Layer(thickness=t, material=mat)]
+        layers = [
+            pkc.Layer(thickness=VOID_THICKNESS),
+            pkc.Layer(thickness=t, material=mat),
+        ]
         pk = pkc.calculate_dose(
-            source_strength=SOURCE_STRENGTH, layers=layers,
-            source=source, geometry=GEOMETRY,
+            source_strength=SOURCE_STRENGTH,
+            layers=layers,
+            source=source,
+            geometry=GEOMETRY,
         )
         bi = table.interpolate(thickness=t, warn=False)
         doses.append(pk.dose_rate * bi.value)
         doses_lo.append(pk.dose_rate * (bi.value - bi.sigma))
         doses_hi.append(pk.dose_rate * (bi.value + bi.sigma))
 
-    data[name] = {"doses": np.array(doses), "doses_lo": np.array(doses_lo), "doses_hi": np.array(doses_hi)}
+    data[name] = {
+        "doses": np.array(doses),
+        "doses_lo": np.array(doses_lo),
+        "doses_hi": np.array(doses_hi),
+    }
 
 # --- Step 3: Plot ---
 print("\nGenerating plot...")
@@ -148,21 +192,46 @@ for name in materials:
     d = data[name]
     valid = d["doses"] > 0
 
-    ax.plot(np.array(all_thicknesses)[valid], d["doses"][valid], color=c, linewidth=2, label=name)
+    ax.plot(
+        np.array(all_thicknesses)[valid],
+        d["doses"][valid],
+        color=c,
+        linewidth=2,
+        label=name,
+    )
     v2 = valid & (d["doses_lo"] > 0) & (d["doses_hi"] > 0)
-    ax.fill_between(np.array(all_thicknesses)[v2], d["doses_lo"][v2], d["doses_hi"][v2], color=c, alpha=0.15)
+    ax.fill_between(
+        np.array(all_thicknesses)[v2],
+        d["doses_lo"][v2],
+        d["doses_hi"][v2],
+        color=c,
+        alpha=0.15,
+    )
 
     mc_ts = mc_thicknesses
     mc_vals = [
-        (mc_cached[name][t].mc.get(N_DOSE, 0) + mc_cached[name][t].mc.get(P_DOSE, 0)) * SOURCE_STRENGTH
+        (mc_cached[name][t].mc.get(N_DOSE, 0) + mc_cached[name][t].mc.get(P_DOSE, 0))
+        * SOURCE_STRENGTH
         for t in mc_ts
     ]
     mc_errs = [
-        np.sqrt(mc_cached[name][t].mc_std_dev.get(N_DOSE, 0)**2
-                + mc_cached[name][t].mc_std_dev.get(P_DOSE, 0)**2) * SOURCE_STRENGTH
+        np.sqrt(
+            mc_cached[name][t].mc_std_dev.get(N_DOSE, 0) ** 2
+            + mc_cached[name][t].mc_std_dev.get(P_DOSE, 0) ** 2
+        )
+        * SOURCE_STRENGTH
         for t in mc_ts
     ]
-    ax.errorbar(mc_ts, mc_vals, yerr=mc_errs, fmt="o", color=c, markersize=6, capsize=3, zorder=5)
+    ax.errorbar(
+        mc_ts,
+        mc_vals,
+        yerr=mc_errs,
+        fmt="o",
+        color=c,
+        markersize=6,
+        capsize=3,
+        zorder=5,
+    )
 
 ax.set_xlabel("Shield thickness (cm)", fontsize=13)
 ax.set_ylabel("Total dose rate (Sv/hr)", fontsize=13)
