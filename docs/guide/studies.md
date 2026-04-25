@@ -23,20 +23,20 @@ Scans shield thickness from thin to thick for different materials, computing tot
 
 **Script:** `examples/python/multiple_layer_study.py`
 
-Scans two thickness parameters (polyethylene + concrete) simultaneously, demonstrating 2D GP extrapolation.
+Scans two thickness parameters (water + concrete) simultaneously, demonstrating 2D GP extrapolation.
 
 **What it does:**
 
-1. Defines a geometry: 10 m void + variable polyethylene + variable concrete.
-2. Runs coupled Monte Carlo at a grid of (poly, concrete) thickness pairs.
+1. Defines a geometry: 10 m void + variable water + variable concrete.
+2. Runs coupled Monte Carlo at a grid of (water, concrete) thickness pairs.
 3. Caches all results incrementally -- only simulates missing grid points.
-4. Builds 1D `BuildupTable`s (one per fixed poly thickness, one per fixed concrete thickness).
+4. Builds 1D `BuildupTable`s (one per fixed water thickness, one per fixed concrete thickness).
 5. GP-extrapolates dose to a dense grid in both dimensions.
 6. Produces two plots:
-    - Total dose vs concrete thickness (one curve per polyethylene thickness)
-    - Total dose vs polyethylene thickness (one curve per concrete thickness)
+    - Total dose vs concrete thickness (one curve per water thickness)
+    - Total dose vs water thickness (one curve per concrete thickness)
 
-**Geometry:** 10 m void + polyethylene (0--50 cm) + concrete (10--200 cm), 14.06 MeV, AP dose.
+**Geometry:** 10 m void + water (0--50 cm) + concrete (10--400 cm), 14.06 MeV, AP dose.
 
 ## Running the studies
 

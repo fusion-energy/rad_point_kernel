@@ -7,7 +7,8 @@ iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
 
 concrete = pkc.Material(
     composition={"H": 0.01, "O": 0.53, "Si": 0.34, "Ca": 0.04, "Al": 0.03, "Fe": 0.01},
-    density=2.3, fraction="mass",
+    density=2.3,
+    fraction="mass",
 )
 
 # --- Materials from elements (atom fractions) ---
@@ -17,10 +18,14 @@ polyethylene = pkc.Material(composition={"H": 2, "C": 1}, density=0.94, fraction
 water = pkc.Material(composition={"H2O": 1.0}, density=1.0)
 
 # --- Materials from specific nuclides ---
-enriched_lithium = pkc.Material(composition={"Li6": 0.6, "Li7": 0.4}, density=0.534, fraction="atom")
+enriched_lithium = pkc.Material(
+    composition={"Li6": 0.6, "Li7": 0.4}, density=0.534, fraction="atom"
+)
 
 # --- Mixing materials by volume ---
-steel = pkc.Material(composition={"C": 0.004, "Fe": 0.996}, density=7.87, fraction="atom")
+steel = pkc.Material(
+    composition={"C": 0.004, "Fe": 0.996}, density=7.87, fraction="atom"
+)
 rebar_concrete = pkc.Material.volume_mix(concrete, 0.97, steel, 0.03)
 print(f"Rebar concrete density: {rebar_concrete.density:.3f} g/cm3")
 
