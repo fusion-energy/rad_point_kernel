@@ -226,7 +226,7 @@ ax.set_xlabel("Concrete thickness (cm)", fontsize=13)
 ax.set_ylabel("Total dose rate (Sv/hr)", fontsize=13)
 ax.set_title(
     f"Total dose vs concrete thickness\n"
-    f"({VOID_THICKNESS/100:.0f} m void + poly + concrete, {ENERGY_EV/1e6:.2f} MeV, {GEOMETRY})",
+    f"({VOID_THICKNESS/100:.0f} m void + poly + concrete, {source.energy/1e6:.2f} MeV, {GEOMETRY})",
     fontsize=12,
 )
 ax.set_yscale("log")
@@ -274,7 +274,7 @@ ax.set_xlabel("Polyethylene thickness (cm)", fontsize=13)
 ax.set_ylabel("Total dose rate (Sv/hr)", fontsize=13)
 ax.set_title(
     f"Total dose vs polyethylene thickness\n"
-    f"({VOID_THICKNESS/100:.0f} m void + poly + concrete, {ENERGY_EV/1e6:.2f} MeV, {GEOMETRY})",
+    f"({VOID_THICKNESS/100:.0f} m void + poly + concrete, {source.energy/1e6:.2f} MeV, {GEOMETRY})",
     fontsize=12,
 )
 ax.set_yscale("log")

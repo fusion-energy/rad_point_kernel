@@ -236,7 +236,7 @@ for name in materials:
 ax.set_xlabel("Shield thickness (cm)", fontsize=13)
 ax.set_ylabel("Total dose rate (Sv/hr)", fontsize=13)
 ax.set_title(
-    f"Total dose (neutron + secondary \u03b3) \u2014 {ENERGY_EV/1e6:.1f} MeV, {GEOMETRY}\n"
+    f"Total dose (neutron + secondary \u03b3) \u2014 {source.energy/1e6:.1f} MeV, {GEOMETRY}\n"
     f"(S={SOURCE_STRENGTH:.0e} n/s, {VOID_THICKNESS/100:.0f} m void + shield)",
     fontsize=12,
 )
