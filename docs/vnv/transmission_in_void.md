@@ -15,7 +15,7 @@ for any particle type, energy, or geometry. This is checked via both
 
 ## What the script does
 
-[`verification_and_validation/transmission_in_void.py`](https://github.com/shimwell/rad_point_kernel/blob/main/verification_and_validation/transmission_in_void.py)
+[`verification_and_validation/transmission_in_void.py`](https://github.com/fusion-energy/rad_point_kernel/blob/main/verification_and_validation/transmission_in_void.py)
 covers:
 
 - **Thicknesses**: 0, 1, 10, 100, 1000, 10000 cm
