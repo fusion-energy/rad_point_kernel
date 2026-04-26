@@ -1,6 +1,6 @@
 # Source spectra
 
-The `Source` object accepts either a single energy value or a list of (energy, weight) tuples for multi-line sources. Weights are normalized internally, so their scale does not matter.
+The `Source` object accepts either a single energy value in eV or a list of `(energy_eV, weight)` tuples for multi-line sources. Weights are normalized internally, so their scale does not matter.
 
 ## Single energy line
 
@@ -47,10 +47,6 @@ frac = rpk.calculate_transmission(layers, source)
 print(f"D-T + D-D transmission through 10 cm Fe: {frac:.4e}")
 ```
 
-## How weighting works
+## Weighting
 
-Given a spectrum of (E_i, w_i) pairs, the weighted transmission fraction is:
-
-    T = Sum(w_i * T(E_i)) / Sum(w_i)
-
-The weights `(95, 5)` and `(0.95, 0.05)` give identical results. This applies to all calculation functions -- transmission, flux, and dose.
+Mixed-energy sources are weighted proportionally internally: weights are normalized, so `(95, 5)` and `(0.95, 0.05)` give identical results. This applies to all calculation functions -- transmission, flux, and dose.
