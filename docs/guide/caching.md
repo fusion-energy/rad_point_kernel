@@ -4,21 +4,30 @@ Monte Carlo simulations are expensive. `BuildupResult` provides `save` and `load
 
 ## Save and load
 
-```python
+```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
 
-# Save a list of BuildupResults
+# A list of BuildupResults from a prior compute_buildup call
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
+mc_results = rpk.compute_buildup(
+    geometries=[[rpk.Layer(thickness=5, material=iron)]],
+    source=rpk.Source(particle="photon", energy=1e6),
+    quantities=["dose-AP"],
+)
+
+# Save to JSON
 rpk.BuildupResult.save(mc_results, "buildup_cache.json")
 
 # Load them back
 mc_results = rpk.BuildupResult.load("buildup_cache.json")
+print(f"Loaded {len(mc_results)} BuildupResult(s) from cache")
 ```
 
 ## Cache-or-compute pattern
 
 Check if a cache file exists before running MC:
 
-```python
+```python exec="true" source="material-block" result="text"
 from pathlib import Path
 import rad_point_kernel as rpk
 
@@ -60,7 +69,7 @@ for t, r in zip(mc_thicknesses, mc_results):
 
 When you need to add more thicknesses to an existing study, load the cache, run Monte Carlo only for the missing points, and save the combined results.
 
-```python
+```python exec="true" source="material-block" result="text"
 import json
 from pathlib import Path
 import rad_point_kernel as rpk

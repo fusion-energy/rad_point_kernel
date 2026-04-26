@@ -202,6 +202,7 @@ def compute_buildup(
     source,
     quantities=("flux",),
     particles_per_batch=10_000,
+    batches=10,
     max_batches=100,
     trigger_rel_err=0.05,
     cross_sections=None,
@@ -215,6 +216,9 @@ def compute_buildup(
         quantities: List of quantity strings. Examples: "flux", "dose-AP",
             "flux-coupled-photon", "dose-AP-coupled-photon".
         particles_per_batch: Particles per batch (default 10,000).
+        batches: Minimum number of batches before the trigger can stop the
+            run early (default 10). Gives the tally enough statistics to
+            evaluate the relative-error trigger reliably.
         max_batches: Safety cap on number of batches (default 100).
         trigger_rel_err: Target relative error on tallies (default 0.05).
         cross_sections: Path to cross_sections.xml or directory containing it.
@@ -253,7 +257,7 @@ def compute_buildup(
         # Run MC
         mc_data = _run_mc(
             layers, source, needs_coupled,
-            parsed, particles_per_batch, max_batches, trigger_rel_err,
+            parsed, particles_per_batch, batches, max_batches, trigger_rel_err,
         )
         _populate_result(result, layers, source, parsed, mc_data)
         results.append(result)
@@ -261,7 +265,7 @@ def compute_buildup(
     return results
 
 
-def _run_mc(layers, source, coupled, quantities, particles_per_batch, max_batches, trigger_rel_err):
+def _run_mc(layers, source, coupled, quantities, particles_per_batch, batches, max_batches, trigger_rel_err):
     """Run a single MC simulation. Returns dict: quantity_name -> (mean, std_dev)."""
     import openmc
 
@@ -326,7 +330,7 @@ def _run_mc(layers, source, coupled, quantities, particles_per_batch, max_batche
     settings = openmc.Settings()
     settings.run_mode = "fixed source"
     settings.particles = particles_per_batch
-    settings.batches = max_batches
+    settings.batches = batches
     settings.source = [omc_source]
     if coupled:
         settings.photon_transport = True
