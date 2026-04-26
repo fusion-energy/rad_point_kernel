@@ -14,7 +14,7 @@ We split the work using the standard definitions:
   shielding benchmarks).
 
 The runnable scripts live in the top-level
-[`verification_and_validation/`](https://github.com/shimwell/rad_point_kernel/tree/main/verification_and_validation)
+[`verification_and_validation/`](https://github.com/fusion-energy/rad_point_kernel/tree/main/verification_and_validation)
 folder of the repository.
 
 ## Verification status

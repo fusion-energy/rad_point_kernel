@@ -1,4 +1,4 @@
-# Build-up factors with Monte Carlo
+# Calculate build-up with MC
 
 The point-kernel method computes uncollided flux: the fraction of particles that travel through the shield without scattering. In reality, scattered particles also contribute to dose behind the shield. The build-up factor B corrects for this:
 
@@ -27,9 +27,9 @@ results = rpk.compute_buildup(
 )
 
 r = results[0]
-print(f"MC dose:     {r.mc['dose-AP']:.4e} (per source particle)")
-print(f"PK dose:     {r.pk['dose-AP']:.4e}")
-print(f"Build-up B:  {r.buildup['dose-AP']:.3f}")
+print(f"MC dose:     {r.mc['dose-AP']} (per source particle)")
+print(f"PK dose:     {r.pk['dose-AP']}")
+print(f"Build-up B:  {r.buildup['dose-AP']}")
 ```
 
 ## Multiple thicknesses example
@@ -51,7 +51,7 @@ results = rpk.compute_buildup(
 )
 
 for t, r in zip(thicknesses, results):
-    print(f"{t:>2d} cm: B = {r.buildup['dose-AP']:.3f}")
+    print(f"{t:>2d} cm: B = {r.buildup['dose-AP']}")
 ```
 
 ## Quantity strings
@@ -84,8 +84,8 @@ results = rpk.compute_buildup(
 )
 
 r = results[0]
-print(f"Dose B: {r.buildup['dose-AP']:.3f}")
-print(f"Flux B: {r.buildup['flux']:.3f}")
+print(f"Dose B: {r.buildup['dose-AP']}")
+print(f"Flux B: {r.buildup['flux']}")
 ```
 
 ## BuildupResult
@@ -127,7 +127,7 @@ corrected = rpk.calculate_dose(
     geometry="AP",
     buildup=r,
 )
-print(f"Dose with build-up: {corrected.dose_rate:.4e} Sv/hr")
+print(f"Dose with build-up: {corrected.dose_rate} Sv/hr")
 ```
 
 ### Use BuildupModel.constant() manually
@@ -153,7 +153,7 @@ result = rpk.calculate_dose(
     geometry="AP",
     buildup=buildup,
 )
-print(f"Dose with B=2.5: {result.dose_rate:.4e} Sv/hr")
+print(f"Dose with B=2.5: {result.dose_rate} Sv/hr")
 ```
 
 ## Cross sections path
@@ -190,9 +190,9 @@ results = rpk.compute_buildup(
 r = results[0]
 S = 1e12
 total_dose = (r.mc["dose-AP"] + r.mc["dose-AP-coupled-photon"]) * S
-print(f"Neutron dose:   {r.mc['dose-AP'] * S:.4e} Sv/hr")
-print(f"Secondary gamma: {r.mc['dose-AP-coupled-photon'] * S:.4e} Sv/hr")
-print(f"Total dose:     {total_dose:.4e} Sv/hr")
+print(f"Neutron dose:   {r.mc['dose-AP'] * S} Sv/hr")
+print(f"Secondary gamma: {r.mc['dose-AP-coupled-photon'] * S} Sv/hr")
+print(f"Total dose:     {total_dose} Sv/hr")
 ```
 
 Since you're already running Monte Carlo for neutron build-up, coupled transport adds some extra compute cost and gives the secondary photon dose.
