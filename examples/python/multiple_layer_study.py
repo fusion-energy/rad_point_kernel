@@ -21,7 +21,7 @@ import rad_point_kernel as rpk
 
 matplotlib.use("Agg")
 
-# --- Parameters ---
+# Parameters
 SOURCE_STRENGTH = 1e12
 GEOMETRY = "AP"
 VOID_THICKNESS = 1000
@@ -55,7 +55,7 @@ def make_layers(water_t, conc_t):
     return layers
 
 
-# --- Step 1: MC with cache ---
+# Step 1: MC with cache
 cached = {}
 if CACHE_FILE.exists():
     for entry in json.loads(CACHE_FILE.read_text()):
@@ -87,7 +87,7 @@ if missing:
 else:
     print("All points cached")
 
-# --- Step 2: Build total buildup tables (one per water thickness) ---
+# Step 2: Build total buildup tables (one per water thickness)
 print("\nComputing total buildup factors...")
 
 tables_by_water = {}
@@ -138,7 +138,7 @@ for ct in mc_conc:
         results=br_list,
     )
 
-# --- Step 3: Extrapolate ---
+# Step 3: Extrapolate
 print("\nExtrapolating...")
 
 # Data for plot 1: dose vs concrete, one line per water
@@ -179,7 +179,7 @@ for ct in mc_conc:
         doses_hi.append(pk.dose_rate * (bi.value + bi.sigma))
     data_vs_water[ct] = {"doses": doses, "doses_lo": doses_lo, "doses_hi": doses_hi}
 
-# --- Step 4: Plot ---
+# Step 4: Plot
 print("\nGenerating plots...")
 
 colors_water = {

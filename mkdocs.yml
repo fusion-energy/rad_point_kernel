@@ -35,6 +35,10 @@ nav:
     - Transmission in void: vnv/transmission_in_void.md
     - Beer-Lambert single slab: vnv/beer_lambert_single_slab.md
 
+plugins:
+  - search
+  - markdown-exec
+
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true

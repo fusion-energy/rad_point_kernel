@@ -21,7 +21,7 @@ SOURCE_STRENGTH = 1e12
 mc_thicknesses = [5, 10, 15, 20]
 all_thicknesses = mc_thicknesses + list(range(25, 410, 5))
 
-# --- MC on thin shields ---
+# MC on thin shields
 print(f"Running MC for {len(mc_thicknesses)} thicknesses...")
 mc_geometries = [[rpk.Layer(thickness=t, material=concrete)] for t in mc_thicknesses]
 
@@ -37,13 +37,13 @@ mc_results = rpk.compute_buildup(
 for t, r in zip(mc_thicknesses, mc_results):
     print(f"  {t:>2d} cm: B = {r.buildup['dose-AP']:.3f}")
 
-# --- BuildupTable ---
+# BuildupTable
 table = rpk.BuildupTable(
     points=[{"thickness": t} for t in mc_thicknesses],
     results=mc_results,
 )
 
-# --- Dose at all thicknesses ---
+# Dose at all thicknesses
 all_geometries = [[rpk.Layer(thickness=t, material=concrete)] for t in all_thicknesses]
 pk_b_doses, pk_b_lo, pk_b_hi = [], [], []
 
@@ -54,7 +54,7 @@ for t, layers in zip(all_thicknesses, all_geometries):
     pk_b_lo.append(pk.dose_rate * (bi.value - bi.sigma))
     pk_b_hi.append(pk.dose_rate * (bi.value + bi.sigma))
 
-# --- Plot ---
+# Plot
 fig, ax = plt.subplots(figsize=(10, 7))
 ax.plot(all_thicknesses, pk_b_doses, "b-", linewidth=2, label="PK with buildup")
 ax.fill_between(all_thicknesses, pk_b_lo, pk_b_hi, color="blue", alpha=0.15)

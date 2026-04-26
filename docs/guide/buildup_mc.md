@@ -1,13 +1,13 @@
 # Build-up factors with Monte Carlo
 
-The point-kernel method computes uncollided flux -- the fraction of particles that travel through the shield without scattering. In reality, scattered particles also contribute to dose behind the shield. The build-up factor B corrects for this:
+The point-kernel method computes uncollided flux: the fraction of particles that travel through the shield without scattering. In reality, scattered particles also contribute to dose behind the shield. The build-up factor B corrects for this:
 
     Corrected = Point-kernel * B
 
 `compute_buildup` runs OpenMC Monte Carlo simulations on a list of geometries and returns the ratio of Monte Carlo result to point-kernel result for each.
 
 !!! note
-    This requires the `[mc]` optional dependency: `pip install rad_point_kernel[mc]`
+    This requires OpenMC. See [Installation](installation.md#openmc-for-monte-carlo-build-up-factors) for instructions.
 
 ## Basic example
 
@@ -19,7 +19,7 @@ import rad_point_kernel as rpk
 iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 layers = [rpk.Layer(thickness=10, material=iron)]
 
-source = rpk.Source("photon", 1e6)
+source = rpk.Source(particle="photon", energy=1e6)
 results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
@@ -32,7 +32,7 @@ print(f"PK dose:     {r.pk['dose-AP']:.4e}")
 print(f"Build-up B:  {r.buildup['dose-AP']:.3f}")
 ```
 
-## Multiple geometries at once
+## Multiple thicknesses example
 
 Pass a list of layer lists to run Monte Carlo on several shield configurations in one call:
 
@@ -43,7 +43,7 @@ iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 thicknesses = [5, 10, 15, 20]
 geometries = [[rpk.Layer(thickness=t, material=iron)] for t in thicknesses]
 
-source = rpk.Source("photon", 1e6)
+source = rpk.Source(particle="photon", energy=1e6)
 results = rpk.compute_buildup(
     geometries=geometries,
     source=source,
@@ -76,7 +76,7 @@ import rad_point_kernel as rpk
 iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 layers = [rpk.Layer(thickness=10, material=iron)]
 
-source = rpk.Source("neutron", 14.1e6)
+source = rpk.Source(particle="neutron", energy=14.1e6)
 results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
@@ -92,10 +92,10 @@ print(f"Flux B: {r.buildup['flux']:.3f}")
 
 Each element in the returned list is a `BuildupResult` with these dictionaries, keyed by quantity string:
 
-- `r.mc` -- Monte Carlo tally value (per source particle)
-- `r.mc_std_dev` -- Monte Carlo standard deviation
-- `r.pk` -- point-kernel reference value
-- `r.buildup` -- build-up factor (mc / pk)
+- `r.mc` - Monte Carlo tally value (per source particle)
+- `r.mc_std_dev` - Monte Carlo standard deviation
+- `r.pk` - point-kernel reference value
+- `r.buildup` - build-up factor (mc / pk)
 
 It also has `r.optical_thickness` (the total optical thickness of the geometry).
 
@@ -112,7 +112,7 @@ iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 layers = [rpk.Layer(thickness=10, material=iron)]
 SOURCE = 1e12
 
-source = rpk.Source("photon", 1e6)
+source = rpk.Source(particle="photon", energy=1e6)
 results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
@@ -121,7 +121,10 @@ results = rpk.compute_buildup(
 r = results[0]
 
 corrected = rpk.calculate_dose(
-    SOURCE, layers, source, "AP",
+    source_strength=SOURCE,
+    layers=layers,
+    source=source,
+    geometry="AP",
     buildup=r,
 )
 print(f"Dose with build-up: {corrected.dose_rate:.4e} Sv/hr")
@@ -142,9 +145,12 @@ layers = [rpk.Layer(thickness=10, material=iron)]
 # external source (literature, previous calculation, etc.)
 buildup = rpk.BuildupModel.constant(2.5)
 
-source = rpk.Source("photon", 1e6)
+source = rpk.Source(particle="photon", energy=1e6)
 result = rpk.calculate_dose(
-    1e12, layers, source, "AP",
+    source_strength=1e12,
+    layers=layers,
+    source=source,
+    geometry="AP",
     buildup=buildup,
 )
 print(f"Dose with B=2.5: {result.dose_rate:.4e} Sv/hr")
@@ -155,7 +161,7 @@ print(f"Dose with B=2.5: {result.dose_rate:.4e} Sv/hr")
 If the `OPENMC_CROSS_SECTIONS` environment variable is not set, pass the path directly:
 
 ```python
-source = rpk.Source("photon", 1e6)
+source = rpk.Source(particle="photon", energy=1e6)
 results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
@@ -169,7 +175,7 @@ results = rpk.compute_buildup(
 When using a neutron source, nuclear reactions in the shield produce secondary gamma rays. To include these, add `"dose-AP-coupled-photon"` to your quantities. The Monte Carlo runs with coupled neutron-photon transport automatically:
 
 ```python
-source = rpk.Source("neutron", 14.1e6)
+source = rpk.Source(particle="neutron", energy=14.1e6)
 results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
@@ -181,7 +187,7 @@ S = 1e12
 total_dose = (r.mc["dose-AP"] + r.mc["dose-AP-coupled-photon"]) * S
 ```
 
-Since you're already running Monte Carlo for neutron build-up, coupled transport adds minimal extra cost and gives the secondary photon dose for free.
+Since you're already running Monte Carlo for neutron build-up, coupled transport adds some extra compute cost and gives the secondary photon dose.
 
 ## Simulation parameters
 

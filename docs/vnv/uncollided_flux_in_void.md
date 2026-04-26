@@ -11,7 +11,7 @@ $$
 
 With no attenuating medium the exponential attenuation factor is exactly 1,
 so the point-kernel result must reduce to this analytic form to
-floating-point precision - independent of particle type, source energy, or
+floating-point precision, independent of particle type, source energy, or
 cross-section library.
 
 ## What the script does
@@ -36,7 +36,7 @@ formula because both reduce to the same floating-point operations).
 
 ## Result
 
-All 32 cases pass. This is a trivial but load-bearing check - if it ever
+All 32 cases pass. This is a trivial but load-bearing check. If it ever
 fails it means the geometric factor has drifted (e.g. a stray density
 factor, the wrong $4\pi$ constant, or incorrect handling of zero-thickness
 materials).
