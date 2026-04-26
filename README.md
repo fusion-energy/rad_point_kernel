@@ -18,4 +18,4 @@ The software supports single-layer and multi-layer shielding simulations, enabli
 These tools allow engineers and researchers to perform fast and reliable radiation shielding assessments. 🚀
 
 📚 Documentation (installation, usage, and theory) is available at:
-https://fusion-energy.github.io/rad_point_kernel
+**https://fusion-energy.github.io/rad_point_kernel**
