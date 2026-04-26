@@ -112,8 +112,8 @@ def _plot(quantity: str, ylabel: str, title: str, outfile: str):
     ax.plot(all_thicknesses, pk_b, "b-", linewidth=2, label="PK * B (MC-calibrated)")
     ax.fill_between(all_thicknesses, pk_lo, pk_hi, color="blue", alpha=0.15, label="1-sigma")
     ax.errorbar(
-        mc_thicknesses, mc_v, yerr=mc_e, fmt="ko", markersize=7, capsize=4,
-        zorder=5, label="Monte Carlo",
+        mc_thicknesses, mc_v, yerr=mc_e, fmt="ro", markersize=7, capsize=4,
+        ecolor="red", zorder=5, label="Monte Carlo",
     )
     ax.set_xlabel("Concrete thickness (cm)", fontsize=13)
     ax.set_ylabel(ylabel, fontsize=13)
