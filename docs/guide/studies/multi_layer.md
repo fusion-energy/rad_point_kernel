@@ -25,10 +25,10 @@ concrete = rpk.Material(
     fraction="mass",
 )
 
-mc_water = [0, 10, 20, 30, 40, 50]
-mc_conc = [10, 50, 100, 200, 400]
-all_water = list(range(0, 55, 5))
-all_conc = list(range(10, 410, 10))
+mc_water = [0, 5, 10, 15, 20, 25]
+mc_conc = [5, 25, 50, 100, 200]
+all_water = list(range(0, 30, 5))
+all_conc = list(range(5, 205, 5))
 
 CACHE = Path("docs/assets/studies/multi_layer_cache.json")
 CACHE.parent.mkdir(parents=True, exist_ok=True)
