@@ -84,14 +84,44 @@ class BuildupTable:
             for i, ax in enumerate(self._axis_names)
         }
 
-        self._available = set()
+        available = set()
         r0 = results[0]
         for q in r0.buildup:
             if all(q in r.buildup and r.buildup[q] is not None for r in results):
-                self._available.add(q)
+                available.add(q)
+
+        self._kept_indices = {}
+        for q in sorted(available):
+            kept = [i for i, r in enumerate(results) if r.buildup[q] != 0.0]
+            dropped = [points[i] for i, r in enumerate(results) if r.buildup[q] == 0.0]
+            if dropped:
+                print(
+                    f"WARNING: BuildupTable dropping {len(dropped)} point(s) "
+                    f"with build-up = 0 for quantity '{q}' at {dropped}. "
+                    f"Usually the MC tally returned 0 (insufficient statistics); "
+                    f"the GP would be pulled toward 0 and extrapolation unreliable. "
+                    f"Re-run MC with more particles or use variance reduction.",
+                    file=sys.stderr,
+                )
+            if len(kept) < 2:
+                print(
+                    f"WARNING: Quantity '{q}' has only {len(kept)} non-zero "
+                    f"point(s); need >= 2 to fit a GP. Removing from table.",
+                    file=sys.stderr,
+                )
+                continue
+            self._kept_indices[q] = kept
+
+        self._available = set(self._kept_indices.keys())
+        if not self._available:
+            raise ValueError(
+                "BuildupTable has no quantity with >= 2 non-zero build-up "
+                "points. All MC tallies may have returned 0 - re-run with "
+                "more particles or use variance reduction."
+            )
 
         sorted_qs = sorted(self._available)
-        self._default_quantity = sorted_qs[0] if sorted_qs else None
+        self._default_quantity = sorted_qs[0]
         self._gps = {}
 
     @property
@@ -113,13 +143,17 @@ class BuildupTable:
         from inference.gp import GpRegressor
         from inference.gp.covariance import SquaredExponential
 
-        y = np.array([r.buildup[quantity] for r in self._results], dtype=float)
+        keep = self._kept_indices[quantity]
+        x_kept = self._x[keep]
+        kept_results = [self._results[i] for i in keep]
+
+        y = np.array([r.buildup[quantity] for r in kept_results], dtype=float)
         y_err = np.array(
             [
                 r.mc_std_dev.get(quantity, 0.01) / r.pk[quantity]
                 if r.pk.get(quantity, 0) > 0
                 else 0.01
-                for r in self._results
+                for r in kept_results
             ],
             dtype=float,
         )
@@ -127,7 +161,7 @@ class BuildupTable:
 
         hyperpar_bounds = [(-10, 10)]
         for i in range(self._n_dims):
-            coords = np.sort(np.unique(self._x[:, i]))
+            coords = np.sort(np.unique(x_kept[:, i]))
             if len(coords) > 1:
                 min_spacing = np.min(np.diff(coords))
             else:
@@ -136,7 +170,7 @@ class BuildupTable:
             hyperpar_bounds.append((min_log_ls, 15))
 
         kernel = SquaredExponential(hyperpar_bounds=hyperpar_bounds)
-        x_input = self._x if self._n_dims > 1 else self._x.ravel()
+        x_input = x_kept if self._n_dims > 1 else x_kept.ravel()
         gp = GpRegressor(x_input, y, y_err=y_err, kernel=kernel)
         self._gps[quantity] = gp
         return gp
@@ -405,6 +439,17 @@ def _populate_result(result, layers, source, quantities, mc_data):
         mc_val, mc_std = mc_data[q_name]
         result.mc[q_name] = mc_val
         result.mc_std_dev[q_name] = mc_std
+
+        if mc_val == 0.0:
+            thicknesses = [layer.thickness for layer in layers]
+            print(
+                f"WARNING: MC tally '{q_name}' returned 0 for geometry with "
+                f"layer thicknesses {thicknesses} cm - not enough particles "
+                f"penetrated the shield. Increase particles_per_batch or "
+                f"max_batches, or use variance reduction. Build-up factor "
+                f"from this result will be unreliable.",
+                file=sys.stderr,
+            )
 
         # PK reference - only for primary particle quantities (not coupled secondary)
         if not coupled:
