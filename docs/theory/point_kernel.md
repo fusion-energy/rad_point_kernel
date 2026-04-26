@@ -64,7 +64,7 @@ Incoherent (Compton) and photoelectric contributions are not subtracted because 
 
 ### Why not simply $\sigma_t - \sigma_s$?
 
-Subtracting all of the elastic (or coherent) cross section would assume every scattered particle keeps going in the forward direction - an overestimate of transmission. Subtracting nothing (just $\sigma_t$) assumes every scatter removes the particle - an underestimate. Weighting by the angular distribution is between the two and, for anisotropic scatterers at high energy, much closer to reality.
+Subtracting all of the elastic (or coherent) cross section would assume every scattered particle keeps going in the forward direction; this overestimates transmission. Subtracting nothing (just $\sigma_t$) assumes every scatter removes the particle; this underestimates it. Weighting by the angular distribution is between the two and, for anisotropic scatterers at high energy, much closer to reality.
 
 ### Compound materials
 
@@ -78,4 +78,4 @@ where $w_i$ is the mass fraction, $A_i$ the atomic mass, and $\rho$ the density.
 
 - **Uncollided only**: Without build-up factors, the method only counts particles that haven't interacted. For thick shields, this severely underestimates the dose.
 - **Spherical geometry**: Layers are concentric spheres. Real geometries with ducts, penetrations, or non-spherical shapes need Monte Carlo.
-- **No energy degradation**: Particles that scatter and lose energy are not tracked - the build-up factor corrects for this empirically.
+- **No energy degradation**: Particles that scatter and lose energy are not tracked; the build-up factor corrects for this empirically.

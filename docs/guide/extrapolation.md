@@ -4,13 +4,13 @@ Running Monte Carlo at every thickness is expensive. A more practical approach i
 
 ## Why Gaussian Processes?
 
-Build-up factors don't follow a simple functional form - they depend on material, energy, geometry, and thickness in complex ways. Fitting a polynomial or exponential would impose assumptions about the shape that may not hold.
+Build-up factors don't follow a simple functional form; they depend on material, energy, geometry, and thickness in complex ways. Fitting a polynomial or exponential would impose assumptions about the shape that may not hold.
 
 A Gaussian Process (GP) makes **no assumption about the functional form**. Instead it:
 
-- **Learns the shape from the data** - whatever the Monte Carlo points show, the GP follows
-- **Gives uncertainty estimates** - tight near data, wider far away, honestly reflecting what we don't know
-- **Accounts for Monte Carlo noise** - each data point has a statistical uncertainty that the GP uses to avoid overfitting
+- **Learns the shape from the data**: whatever the Monte Carlo points show, the GP follows
+- **Gives uncertainty estimates**: tight near data, wider far away, honestly reflecting what we don't know
+- **Accounts for Monte Carlo noise**: each data point has a statistical uncertainty that the GP uses to avoid overfitting
 
 This makes it robust across different materials and geometries without needing to choose a fitting function.
 
@@ -33,7 +33,7 @@ concrete = rpk.Material(
 )
 
 SOURCE = 1e12
-source = rpk.Source("photon", 1e6)
+source = rpk.Source(particle="photon", energy=1e6)
 
 # Step 1: Monte Carlo at 4 thicknesses
 mc_thicknesses = [5, 10, 15, 20]
@@ -63,7 +63,13 @@ for t in all_thicknesses:
     layers = [rpk.Layer(thickness=t, material=concrete)]
     bi = table.interpolate(thickness=t)
 
-    result = rpk.calculate_dose(SOURCE, layers, source, "AP", buildup=bi)
+    result = rpk.calculate_dose(
+        source_strength=SOURCE,
+        layers=layers,
+        source=source,
+        geometry="AP",
+        buildup=bi,
+    )
 
     status = "EXTRAPOLATED" if bi.is_extrapolated else "interpolated"
     print(f"  {t:>3d} cm: dose = {result.dose_rate:.4e} Sv/hr, "
@@ -94,9 +100,10 @@ You can pass an `InterpolationResult` directly to any calculation function:
 ```python
 bi = table.interpolate(thickness=50)
 result = rpk.calculate_dose(
-    1e12,
-    [rpk.Layer(thickness=50, material=concrete)],
-    source, "AP",
+    source_strength=1e12,
+    layers=[rpk.Layer(thickness=50, material=concrete)],
+    source=source,
+    geometry="AP",
     buildup=bi,
 )
 ```
@@ -109,12 +116,15 @@ You don't have to use `BuildupTable` - if you have build-up factors from another
 # Your own B value from any source
 my_B = 3.2
 result = rpk.calculate_dose(
-    1e12, layers, source, "AP",
+    source_strength=1e12,
+    layers=layers,
+    source=source,
+    geometry="AP",
     buildup=rpk.BuildupModel.constant(my_B),
 )
 ```
 
-This means you can use any interpolation or fitting method you prefer - scipy, scikit-learn, a lookup table, or even a hand-drawn curve - and feed the result into the point-kernel calculation.
+This means you can use any interpolation or fitting method you prefer (scipy, scikit-learn, a lookup table, or even a hand-drawn curve) and feed the result into the point-kernel calculation.
 
 ## Multi-dimensional extrapolation
 
@@ -147,7 +157,7 @@ for w in mc_water:
         layers.append(rpk.Layer(thickness=c, material=concrete))
         geometries.append(layers)
 
-source = rpk.Source("neutron", 14.06e6)
+source = rpk.Source(particle="neutron", energy=14.06e6)
 mc_results = rpk.compute_buildup(
     geometries=geometries,
     source=source,
@@ -206,7 +216,12 @@ doses_hi = []
 for t in all_thicknesses:
     layers = [rpk.Layer(thickness=t, material=concrete)]
     bi = table.interpolate(thickness=t)
-    pk = rpk.calculate_dose(SOURCE, layers, source, "AP")
+    pk = rpk.calculate_dose(
+        source_strength=SOURCE,
+        layers=layers,
+        source=source,
+        geometry="AP",
+    )
     doses.append(pk.dose_rate * bi.value)
     doses_lo.append(pk.dose_rate * (bi.value - bi.sigma))
     doses_hi.append(pk.dose_rate * (bi.value + bi.sigma))

@@ -21,7 +21,7 @@ import rad_point_kernel as rpk
 
 matplotlib.use("Agg")
 
-# --- Parameters ---
+# Parameters
 SOURCE_STRENGTH = 1e12
 GEOMETRY = "AP"
 VOID_THICKNESS = 1000
@@ -36,7 +36,7 @@ all_thicknesses = mc_thicknesses + list(range(mc_thicknesses[-1] + 10, 410, 10))
 RESULTS_DIR = Path(os.path.dirname(__file__), "..", "..", "results", "single_layer")
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-# --- Materials (PNNL compositions, atom fractions) ---
+# Materials (PNNL compositions, atom fractions)
 portland = rpk.Material(
     composition={
         "H": 0.168753,
@@ -89,7 +89,7 @@ materials = {
     "Magnetite + 3% steel": rpk.Material.volume_mix(magnetite, 0.97, steel, 0.03),
 }
 
-# --- Step 1: MC with cache ---
+# Step 1: MC with cache
 tables = {}
 mc_cached = {}
 
@@ -151,7 +151,7 @@ for name, mat in materials.items():
     )
     mc_cached[name] = cached
 
-# --- Step 2: Extrapolate total dose ---
+# Step 2: Extrapolate total dose
 print("\nExtrapolating...")
 
 data = {}
@@ -181,7 +181,7 @@ for name, mat in materials.items():
         "doses_hi": np.array(doses_hi),
     }
 
-# --- Step 3: Plot ---
+# Step 3: Plot
 print("\nGenerating plot...")
 
 colors = {"Portland + 3% steel": "#1f77b4", "Magnetite + 3% steel": "#ff7f0e"}
