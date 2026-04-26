@@ -10,6 +10,9 @@ This gives you everything for point-kernel calculations, build-up factor interpo
 
 ## OpenMC for Monte Carlo build-up factors
 
+!!! warning "Linux and macOS only"
+    OpenMC is currently available for Linux and macOS; there are no supported Windows builds. Rad Point Kernel itself works on Windows, but the Monte Carlo build-up features require OpenMC.
+
 To compute build-up factors from Monte Carlo simulation, you also need OpenMC. OpenMC must be installed separately:
 
 **Pre-built wheels (easiest):**
