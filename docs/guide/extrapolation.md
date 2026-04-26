@@ -49,7 +49,7 @@ mc_results = rpk.compute_buildup(
 )
 
 for t, r in zip(mc_thicknesses, mc_results):
-    print(f"  {t:>2d} cm: B = {r.buildup['dose-AP']:.3f}")
+    print(f"  {t:>2d} cm: B = {r.buildup['dose-AP']}")
 
 # Step 2: Build interpolation table
 table = rpk.BuildupTable(
@@ -72,8 +72,8 @@ for t in all_thicknesses:
     )
 
     status = "EXTRAPOLATED" if bi.is_extrapolated else "interpolated"
-    print(f"  {t:>3d} cm: dose = {result.dose_rate:.4e} Sv/hr, "
-          f"B = {bi.value:.3f} +/- {bi.sigma:.3f} ({status})")
+    print(f"  {t:>3d} cm: dose = {result.dose_rate} Sv/hr, "
+          f"B = {bi.value} +/- {bi.sigma} ({status})")
 ```
 
 ## InterpolationResult
@@ -90,8 +90,8 @@ Uncertainty grows with distance from data points:
 ```python exec="true" source="material-block" result="text" session="extrapolation"
 r_near = table.interpolate(thickness=15)
 r_far = table.interpolate(thickness=200)
-print(f"Near MC data (t=15):  sigma = {r_near.sigma:.3f}")
-print(f"Far from data (t=200): sigma = {r_far.sigma:.3f}")
+print(f"Near MC data (t=15):  sigma = {r_near.sigma}")
+print(f"Far from data (t=200): sigma = {r_far.sigma}")
 ```
 
 ## Using InterpolationResult as build-up
@@ -107,7 +107,7 @@ result = rpk.calculate_dose(
     geometry="AP",
     buildup=bi,
 )
-print(f"Dose at 50 cm concrete: {result.dose_rate:.4e} Sv/hr (B = {bi.value:.3f})")
+print(f"Dose at 50 cm concrete: {result.dose_rate} Sv/hr (B = {bi.value})")
 ```
 
 ## Using your own build-up values
@@ -125,7 +125,7 @@ result = rpk.calculate_dose(
     geometry="AP",
     buildup=rpk.BuildupModel.constant(my_B),
 )
-print(f"Dose with B={my_B}: {result.dose_rate:.4e} Sv/hr")
+print(f"Dose with B={my_B}: {result.dose_rate} Sv/hr")
 ```
 
 This means you can use any interpolation or fitting method you prefer (scipy, scikit-learn, a lookup table, or even a hand-drawn curve) and feed the result into the point-kernel calculation.
@@ -172,7 +172,7 @@ table = rpk.BuildupTable(points=points, results=mc_results)
 
 # Query at any (water, concrete) combination
 bi = table.interpolate(water=15, conc=25)
-print(f"B = {bi.value:.3f} +/- {bi.sigma:.3f}")
+print(f"B = {bi.value} +/- {bi.sigma}")
 ```
 
 ## Plotting build-up factors with uncertainty

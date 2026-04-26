@@ -56,7 +56,7 @@ result = rpk.calculate_dose(
     source=source,
     geometry="AP",
 )
-print(f"Dose rate: {result.dose_rate:.3e} Sv/hr")
+print(f"Dose rate: {result.dose_rate} Sv/hr")
 ```
 
 See the [installation guide](guide/installation.md) for setup, including OpenMC and cross-section data.
