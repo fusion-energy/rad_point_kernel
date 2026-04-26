@@ -8,16 +8,16 @@ import os
 from pathlib import Path
 import matplotlib
 import matplotlib.pyplot as plt
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
 matplotlib.use("Agg")
 
-concrete = pkc.Material(
+concrete = rpk.Material(
     composition={"H": 0.01, "O": 0.53, "Si": 0.34, "Ca": 0.04, "Al": 0.03, "Fe": 0.01},
     density=2.3,
     fraction="mass",
 )
-source = pkc.Source("photon", 662e3)
+source = rpk.Source("photon", 662e3)
 SOURCE_STRENGTH = 1e12
 
 mc_thicknesses = [5, 10, 15, 20]
@@ -28,13 +28,13 @@ CACHE_FILE = Path(__file__).parent / "9_cached_mc_results.json"
 # --- MC (or load from cache) ---
 if CACHE_FILE.exists():
     print(f"Loading cached MC results from {CACHE_FILE}")
-    mc_results = pkc.BuildupResult.load(CACHE_FILE)
+    mc_results = rpk.BuildupResult.load(CACHE_FILE)
 else:
     print(f"Running MC for {len(mc_thicknesses)} thicknesses...")
     mc_geometries = [
-        [pkc.Layer(thickness=t, material=concrete)] for t in mc_thicknesses
+        [rpk.Layer(thickness=t, material=concrete)] for t in mc_thicknesses
     ]
-    mc_results = pkc.compute_buildup(
+    mc_results = rpk.compute_buildup(
         geometries=mc_geometries,
         source=source,
         quantities=["dose-AP"],
@@ -42,22 +42,22 @@ else:
         max_batches=50,
         trigger_rel_err=0.05,
     )
-    pkc.BuildupResult.save(mc_results, CACHE_FILE)
+    rpk.BuildupResult.save(mc_results, CACHE_FILE)
     print(f"Saved to {CACHE_FILE}")
 
 for t, r in zip(mc_thicknesses, mc_results):
     print(f"  {t:>2d} cm: B = {r.buildup['dose-AP']:.3f}")
 
 # --- BuildupTable + dose ---
-table = pkc.BuildupTable(
+table = rpk.BuildupTable(
     points=[{"thickness": t} for t in mc_thicknesses], results=mc_results
 )
-all_geometries = [[pkc.Layer(thickness=t, material=concrete)] for t in all_thicknesses]
+all_geometries = [[rpk.Layer(thickness=t, material=concrete)] for t in all_thicknesses]
 
 pk_b_doses, pk_b_lo, pk_b_hi = [], [], []
 for t, layers in zip(all_thicknesses, all_geometries):
     bi = table.interpolate(thickness=t)
-    pk = pkc.calculate_dose(SOURCE_STRENGTH, layers, source, "AP")
+    pk = rpk.calculate_dose(SOURCE_STRENGTH, layers, source, "AP")
     pk_b_doses.append(pk.dose_rate * bi.value)
     pk_b_lo.append(pk.dose_rate * (bi.value - bi.sigma))
     pk_b_hi.append(pk.dose_rate * (bi.value + bi.sigma))
@@ -80,7 +80,7 @@ ax.errorbar(
 )
 ax.set_xlabel("Concrete thickness (cm)", fontsize=13)
 ax.set_ylabel("Photon dose rate (Sv/hr)", fontsize=13)
-ax.set_title("Photon dose — 662 keV (Cs-137), AP geometry (cached MC)", fontsize=13)
+ax.set_title("Photon dose - 662 keV (Cs-137), AP geometry (cached MC)", fontsize=13)
 ax.set_yscale("log")
 ax.legend(fontsize=11)
 ax.grid(True, which="both", alpha=0.3)

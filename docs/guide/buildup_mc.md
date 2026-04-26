@@ -14,13 +14,13 @@ The point-kernel method computes uncollided flux -- the fraction of particles th
 Compute the photon dose build-up factor for 10 cm of iron:
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
-layers = [pkc.Layer(thickness=10, material=iron)]
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
+layers = [rpk.Layer(thickness=10, material=iron)]
 
-source = pkc.Source("photon", 1e6)
-results = pkc.compute_buildup(
+source = rpk.Source("photon", 1e6)
+results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
     quantities=["dose-AP"],
@@ -37,14 +37,14 @@ print(f"Build-up B:  {r.buildup['dose-AP']:.3f}")
 Pass a list of layer lists to run Monte Carlo on several shield configurations in one call:
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 thicknesses = [5, 10, 15, 20]
-geometries = [[pkc.Layer(thickness=t, material=iron)] for t in thicknesses]
+geometries = [[rpk.Layer(thickness=t, material=iron)] for t in thicknesses]
 
-source = pkc.Source("photon", 1e6)
-results = pkc.compute_buildup(
+source = rpk.Source("photon", 1e6)
+results = rpk.compute_buildup(
     geometries=geometries,
     source=source,
     quantities=["dose-AP"],
@@ -56,7 +56,7 @@ for t, r in zip(thicknesses, results):
 
 ## Quantity strings
 
-The `quantities` argument specifies what to tally. Since the `Source` object already carries the particle type, quantity names don't need to repeat it — `"flux"` means "flux of whatever particle the source emits" and `"dose-AP"` means "dose from the source particle at AP geometry."
+The `quantities` argument specifies what to tally. Since the `Source` object already carries the particle type, quantity names don't need to repeat it - `"flux"` means "flux of whatever particle the source emits" and `"dose-AP"` means "dose from the source particle at AP geometry."
 
 The only exception is when you want to tally **secondary photons** produced by neutron interactions. In that case, append `-coupled-photon` to indicate you want the secondary photon contribution rather than the primary particle:
 
@@ -71,13 +71,13 @@ The only exception is when you want to tally **secondary photons** produced by n
 You can request multiple quantities in a single call:
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
-layers = [pkc.Layer(thickness=10, material=iron)]
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
+layers = [rpk.Layer(thickness=10, material=iron)]
 
-source = pkc.Source("neutron", 14.1e6)
-results = pkc.compute_buildup(
+source = rpk.Source("neutron", 14.1e6)
+results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
     quantities=["dose-AP", "flux"],
@@ -106,21 +106,21 @@ It also has `r.optical_thickness` (the total optical thickness of the geometry).
 The simplest approach. The `calculate_*` functions auto-detect the correct quantity key:
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
-layers = [pkc.Layer(thickness=10, material=iron)]
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
+layers = [rpk.Layer(thickness=10, material=iron)]
 SOURCE = 1e12
 
-source = pkc.Source("photon", 1e6)
-results = pkc.compute_buildup(
+source = rpk.Source("photon", 1e6)
+results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
     quantities=["dose-AP"],
 )
 r = results[0]
 
-corrected = pkc.calculate_dose(
+corrected = rpk.calculate_dose(
     SOURCE, layers, source, "AP",
     buildup=r,
 )
@@ -132,18 +132,18 @@ print(f"Dose with build-up: {corrected.dose_rate:.4e} Sv/hr")
 If you have a known build-up factor from another source:
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
-layers = [pkc.Layer(thickness=10, material=iron)]
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
+layers = [rpk.Layer(thickness=10, material=iron)]
 
-# Apply a fixed buildup factor of 2.5 — this multiplies the PK dose
+# Apply a fixed buildup factor of 2.5 - this multiplies the PK dose
 # by 2.5 regardless of thickness. Useful when you have B from an
 # external source (literature, previous calculation, etc.)
-buildup = pkc.BuildupModel.constant(2.5)
+buildup = rpk.BuildupModel.constant(2.5)
 
-source = pkc.Source("photon", 1e6)
-result = pkc.calculate_dose(
+source = rpk.Source("photon", 1e6)
+result = rpk.calculate_dose(
     1e12, layers, source, "AP",
     buildup=buildup,
 )
@@ -155,8 +155,8 @@ print(f"Dose with B=2.5: {result.dose_rate:.4e} Sv/hr")
 If the `OPENMC_CROSS_SECTIONS` environment variable is not set, pass the path directly:
 
 ```python
-source = pkc.Source("photon", 1e6)
-results = pkc.compute_buildup(
+source = rpk.Source("photon", 1e6)
+results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
     quantities=["dose-AP"],
@@ -169,8 +169,8 @@ results = pkc.compute_buildup(
 When using a neutron source, nuclear reactions in the shield produce secondary gamma rays. To include these, add `"dose-AP-coupled-photon"` to your quantities. The Monte Carlo runs with coupled neutron-photon transport automatically:
 
 ```python
-source = pkc.Source("neutron", 14.1e6)
-results = pkc.compute_buildup(
+source = rpk.Source("neutron", 14.1e6)
+results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
     quantities=["dose-AP", "dose-AP-coupled-photon"],

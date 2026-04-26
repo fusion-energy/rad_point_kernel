@@ -24,9 +24,20 @@ See the [OpenMC installation guide](https://docs.openmc.org/en/stable/usersguide
 
 ## OpenMC cross sections
 
-OpenMC needs nuclear cross section data. There are two ways to provide it:
+OpenMC needs nuclear cross section data. If you don't already have it, one easy way to download ENDF/B-VIII.1 is:
+
+```bash
+python -m pip install openmc_data
+download_endf -r b8.1
+```
+
+Other options and pre-packaged libraries are listed on [openmc.org](https://openmc.org/data/#endf-b-viii-1).
+
+Once the data is on disk, point OpenMC at it one of two ways:
 
 **Environment variable:**
+
+Replace "/path/to/cross_sections.xml" with your actual path to where your cross_section.xml is located.
 
 ```bash
 export OPENMC_CROSS_SECTIONS=/path/to/cross_sections.xml
@@ -35,12 +46,10 @@ export OPENMC_CROSS_SECTIONS=/path/to/cross_sections.xml
 **Pass the path directly:**
 
 ```python
-results = pkc.compute_buildup(
+results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
     quantities=["dose-AP"],
-    cross_sections="~/nuclear_data/cross_sections.xml",
+    cross_sections="/path/to/cross_sections.xml",
 )
 ```
-
-The `~` is expanded automatically. If you pass a directory instead of a file, `/cross_sections.xml` is appended.

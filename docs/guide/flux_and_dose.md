@@ -15,16 +15,16 @@ There are three levels of calculation, each building on the previous:
 ## Uncollided flux
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 layers = [
-    pkc.Layer(thickness=1000),                    # 10 m void
-    pkc.Layer(thickness=10, material=iron),         # 10 cm iron
+    rpk.Layer(thickness=1000),                    # 10 m void
+    rpk.Layer(thickness=10, material=iron),         # 10 cm iron
 ]
 
-source = pkc.Source("photon", 662e3)
-result = pkc.calculate_flux(1e12, layers, source)
+source = rpk.Source("photon", 662e3)
+result = rpk.calculate_flux(1e12, layers, source)
 print(f"Flux: {result.uncollided_flux:.4e} photons/cm2/s")
 print(f"Transmission: {result.transmission_fraction:.4e}")
 print(f"Optical thickness: {result.optical_thickness:.3f}")
@@ -45,16 +45,16 @@ The returned `CalcResult` object has these properties:
 Dose rate adds an ICRP-116 fluence-to-effective-dose conversion. You must specify the irradiation geometry.
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 layers = [
-    pkc.Layer(thickness=1000),                    # 10 m void
-    pkc.Layer(thickness=10, material=iron),         # 10 cm iron
+    rpk.Layer(thickness=1000),                    # 10 m void
+    rpk.Layer(thickness=10, material=iron),         # 10 cm iron
 ]
 
-source = pkc.Source("photon", 662e3)
-result = pkc.calculate_dose(1e12, layers, source, "AP")
+source = rpk.Source("photon", 662e3)
+result = rpk.calculate_dose(1e12, layers, source, "AP")
 print(f"Dose rate: {result.dose_rate:.4e} Sv/hr")
 ```
 
@@ -74,17 +74,17 @@ Six geometries from ICRP-116 are supported:
 AP is the most conservative for most scenarios. Compare all six:
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 layers = [
-    pkc.Layer(thickness=1000),
-    pkc.Layer(thickness=10, material=iron),
+    rpk.Layer(thickness=1000),
+    rpk.Layer(thickness=10, material=iron),
 ]
 
-source = pkc.Source("photon", 662e3)
+source = rpk.Source("photon", 662e3)
 for geo in ["AP", "PA", "RLAT", "LLAT", "ROT", "ISO"]:
-    result = pkc.calculate_dose(1e12, layers, source, geo)
+    result = rpk.calculate_dose(1e12, layers, source, geo)
     print(f"{geo:>4s}: {result.dose_rate:.4e} Sv/hr")
 ```
 
@@ -93,15 +93,15 @@ for geo in ["AP", "PA", "RLAT", "LLAT", "ROT", "ISO"]:
 The same interface applies to neutrons -- just create a neutron `Source`:
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 layers = [
-    pkc.Layer(thickness=1000),
-    pkc.Layer(thickness=10, material=iron),
+    rpk.Layer(thickness=1000),
+    rpk.Layer(thickness=10, material=iron),
 ]
 
-source = pkc.Source("neutron", 14.1e6)
-result = pkc.calculate_dose(1e12, layers, source, "AP")
+source = rpk.Source("neutron", 14.1e6)
+result = rpk.calculate_dose(1e12, layers, source, "AP")
 print(f"Neutron dose rate: {result.dose_rate:.4e} Sv/hr")
 ```

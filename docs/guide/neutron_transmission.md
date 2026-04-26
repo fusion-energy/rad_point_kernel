@@ -7,27 +7,27 @@
 Calculate neutron transmission through 10 cm of iron at 14.1 MeV (D-T fusion):
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
-layers = [pkc.Layer(thickness=10, material=iron)]
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
+layers = [rpk.Layer(thickness=10, material=iron)]
 
-source = pkc.Source("neutron", 14.1e6)
-frac = pkc.calculate_transmission(layers, source)
+source = rpk.Source("neutron", 14.1e6)
+frac = rpk.calculate_transmission(layers, source)
 print(f"Transmission: {frac:.4e}")
 ```
 
 ## Comparing shield thicknesses
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
-source = pkc.Source("neutron", 14.1e6)
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
+source = rpk.Source("neutron", 14.1e6)
 
 for thickness in [5, 10, 20, 50]:
-    layers = [pkc.Layer(thickness=thickness, material=iron)]
-    frac = pkc.calculate_transmission(layers, source)
+    layers = [rpk.Layer(thickness=thickness, material=iron)]
+    frac = rpk.calculate_transmission(layers, source)
     print(f"{thickness:>3d} cm iron: {frac:.4e}")
 ```
 
