@@ -6,7 +6,8 @@ This page shows how to create a dose-vs-thickness plot with Monte Carlo data poi
 
 This example runs Monte Carlo at a few thin concrete shields, builds a GP table, and plots the extrapolated dose across a range of thicknesses.
 
-```python
+```python exec="true" source="material-block" html="true"
+from io import StringIO
 import rad_point_kernel as rpk
 import matplotlib
 matplotlib.use("Agg")
@@ -52,7 +53,7 @@ doses_hi = []
 
 for t in all_thicknesses:
     layers = [rpk.Layer(thickness=t, material=concrete)]
-    bi = table.interpolate(thickness=t)
+    bi = table.interpolate(thickness=t, warn=False)
     pk = rpk.calculate_dose(
         source_strength=SOURCE,
         layers=layers,
@@ -89,13 +90,11 @@ ax.legend(fontsize=11)
 ax.grid(True, which="both", alpha=0.3)
 fig.tight_layout()
 
-fig.savefig("dose_vs_thickness.png", dpi=150, bbox_inches="tight")
-print("Plot saved to dose_vs_thickness.png")
+buf = StringIO()
+fig.savefig(buf, format="svg", bbox_inches="tight")
+plt.close(fig)
+print(buf.getvalue())
 ```
-
-The result looks like this:
-
-![Dose vs thickness](../assets/dose_buildup_comparison.png)
 
 ## Reading the plot
 

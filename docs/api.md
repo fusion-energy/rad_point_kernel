@@ -2,7 +2,7 @@
 
 All public classes and functions are accessible from the top-level `rad_point_kernel` module.
 
-```python
+```python exec="true" source="material-block" result="text" session="api"
 import rad_point_kernel as rpk
 ```
 
@@ -19,7 +19,7 @@ Defines a radiation source by particle type and energy.
 
 **Examples:**
 
-```python
+```python exec="true" source="material-block" result="text" session="api"
 # Monoenergetic Cs-137 photon source
 source = rpk.Source(particle="photon", energy=662e3)
 
@@ -178,7 +178,7 @@ Can be passed directly to any calculation function as the `buildup` argument.
 
 ### `BuildupTable(points, results)`
 
-GP-based interpolation table for build-up factors. Requires the `[gp]` optional dependency.
+GP-based interpolation table for build-up factors.
 
 - `points` - list of dicts defining parameter values (e.g. `[{"thickness": 5}, {"thickness": 10}]`).
 - `results` - list of `BuildupResult`, one per point.
@@ -204,7 +204,7 @@ Can be passed directly to any calculation function as the `buildup` argument.
 
 ### `compute_buildup(geometries, source, quantities, ...)`
 
-Run OpenMC Monte Carlo simulations and compute build-up factors. Requires the `[mc]` optional dependency.
+Run OpenMC Monte Carlo simulations and compute build-up factors. Requires OpenMC; see [Installation](guide/installation.md#openmc-for-monte-carlo-build-up-factors).
 
 **Parameters:**
 

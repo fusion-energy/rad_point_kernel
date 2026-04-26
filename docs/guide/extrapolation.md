@@ -20,7 +20,7 @@ This makes it robust across different materials and geometries without needing t
 
 Run Monte Carlo at 4 thicknesses, then extrapolate to 10:
 
-```python
+```python exec="true" source="material-block" result="text" session="extrapolation"
 import rad_point_kernel as rpk
 
 concrete = rpk.Material(
@@ -87,17 +87,18 @@ for t in all_thicknesses:
 
 Uncertainty grows with distance from data points:
 
-```python
+```python exec="true" source="material-block" result="text" session="extrapolation"
 r_near = table.interpolate(thickness=15)
 r_far = table.interpolate(thickness=200)
-# r_far.sigma will be much larger than r_near.sigma
+print(f"Near MC data (t=15):  sigma = {r_near.sigma:.3f}")
+print(f"Far from data (t=200): sigma = {r_far.sigma:.3f}")
 ```
 
 ## Using InterpolationResult as build-up
 
 You can pass an `InterpolationResult` directly to any calculation function:
 
-```python
+```python exec="true" source="material-block" result="text" session="extrapolation"
 bi = table.interpolate(thickness=50)
 result = rpk.calculate_dose(
     source_strength=1e12,
@@ -106,15 +107,17 @@ result = rpk.calculate_dose(
     geometry="AP",
     buildup=bi,
 )
+print(f"Dose at 50 cm concrete: {result.dose_rate:.4e} Sv/hr (B = {bi.value:.3f})")
 ```
 
 ## Using your own build-up values
 
 You don't have to use `BuildupTable` - if you have build-up factors from another source (literature, your own fitting, a different interpolation method), you can apply them directly:
 
-```python
+```python exec="true" source="material-block" result="text" session="extrapolation"
 # Your own B value from any source
 my_B = 3.2
+layers = [rpk.Layer(thickness=50, material=concrete)]
 result = rpk.calculate_dose(
     source_strength=1e12,
     layers=layers,
@@ -122,6 +125,7 @@ result = rpk.calculate_dose(
     geometry="AP",
     buildup=rpk.BuildupModel.constant(my_B),
 )
+print(f"Dose with B={my_B}: {result.dose_rate:.4e} Sv/hr")
 ```
 
 This means you can use any interpolation or fitting method you prefer (scipy, scikit-learn, a lookup table, or even a hand-drawn curve) and feed the result into the point-kernel calculation.
@@ -130,7 +134,7 @@ This means you can use any interpolation or fitting method you prefer (scipy, sc
 
 `BuildupTable` supports N-dimensional parameter spaces. For example, with water and concrete thicknesses as two axes:
 
-```python
+```python exec="true" source="material-block" result="text" session="multidim"
 import rad_point_kernel as rpk
 
 water = rpk.Material(composition={"H2O": 1.0}, density=1.0)
@@ -173,7 +177,10 @@ print(f"B = {bi.value:.3f} +/- {bi.sigma:.3f}")
 
 ## Plotting build-up factors with uncertainty
 
-```python
+```python exec="true" source="material-block" html="true" session="extrapolation"
+from io import StringIO
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -184,7 +191,7 @@ b_lo = []
 b_hi = []
 
 for t in thicknesses:
-    bi = table.interpolate(thickness=float(t))
+    bi = table.interpolate(thickness=float(t), warn=False)
     b_values.append(bi.value)
     b_lo.append(bi.value - bi.sigma)
     b_hi.append(bi.value + bi.sigma)
@@ -200,13 +207,19 @@ ax.plot(mc_thicknesses, mc_bs, "ko", markersize=7, label="Monte Carlo")
 ax.set_xlabel("Thickness (cm)")
 ax.set_ylabel("Build-up factor B")
 ax.legend()
-```
 
-![Build-up extrapolation](../assets/buildup_example.png)
+buf = StringIO()
+fig.savefig(buf, format="svg")
+plt.close(fig)
+print(buf.getvalue())
+```
 
 ## Plotting dose with uncertainty
 
-```python
+```python exec="true" source="material-block" html="true" session="extrapolation"
+from io import StringIO
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 doses = []
@@ -215,7 +228,7 @@ doses_hi = []
 
 for t in all_thicknesses:
     layers = [rpk.Layer(thickness=t, material=concrete)]
-    bi = table.interpolate(thickness=t)
+    bi = table.interpolate(thickness=t, warn=False)
     pk = rpk.calculate_dose(
         source_strength=SOURCE,
         layers=layers,
@@ -238,6 +251,9 @@ ax.set_xlabel("Thickness (cm)")
 ax.set_ylabel("Dose rate (Sv/hr)")
 ax.set_yscale("log")
 ax.legend()
-```
 
-![Dose extrapolation](../assets/dose_buildup_comparison.png)
+buf = StringIO()
+fig.savefig(buf, format="svg")
+plt.close(fig)
+print(buf.getvalue())
+```
