@@ -17,8 +17,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install rad_point_kernel_core
-      - run: pip install -e .
-      - run: pip install mkdocs mkdocs-material
+      - run: pip install -e .[docs]
       - run: mkdocs build --strict
       - uses: actions/upload-pages-artifact@v5
         with:
