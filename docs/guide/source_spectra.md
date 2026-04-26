@@ -15,7 +15,7 @@ layers = [rpk.Layer(thickness=10, material=iron)]
 # Cs-137: single 662 keV gamma
 source = rpk.Source(particle="photon", energy=662e3)
 frac = rpk.calculate_transmission(layers=layers, source=source)
-print(f"Cs-137 transmission through 10 cm Fe: {frac:.4e}")
+print(f"Cs-137 transmission through 10 cm Fe: {frac}")
 ```
 
 ## Two-line photon source (Co-60)
@@ -30,7 +30,7 @@ layers = [rpk.Layer(thickness=10, material=iron)]
 
 source = rpk.Source(particle="photon", energy=[(1.173e6, 1.0), (1.333e6, 1.0)])
 frac = rpk.calculate_transmission(layers=layers, source=source)
-print(f"Co-60 transmission through 10 cm Fe: {frac:.4e}")
+print(f"Co-60 transmission through 10 cm Fe: {frac}")
 ```
 
 ## Mixed neutron source (D-T + D-D)
@@ -45,7 +45,7 @@ layers = [rpk.Layer(thickness=10, material=iron)]
 
 source = rpk.Source(particle="neutron", energy=[(14.06e6, 95), (2.45e6, 5)])
 frac = rpk.calculate_transmission(layers=layers, source=source)
-print(f"D-T + D-D transmission through 10 cm Fe: {frac:.4e}")
+print(f"D-T + D-D transmission through 10 cm Fe: {frac}")
 ```
 
 ## Weighting

@@ -16,7 +16,7 @@ cross-section library is loaded.
 
 ## What the script does
 
-[`verification_and_validation/beer_lambert_single_slab.py`](https://github.com/shimwell/rad_point_kernel/blob/main/verification_and_validation/beer_lambert_single_slab.py)
+[`verification_and_validation/beer_lambert_single_slab.py`](https://github.com/fusion-energy/rad_point_kernel/blob/main/verification_and_validation/beer_lambert_single_slab.py)
 runs four independent sub-checks over 7 material/source combinations
 (iron, water, lead at a range of neutron and photon energies):
 

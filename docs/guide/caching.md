@@ -62,7 +62,7 @@ else:
     print(f"Saved to {CACHE}")
 
 for t, r in zip(mc_thicknesses, mc_results):
-    print(f"  {t:>2d} cm: B = {r.buildup['dose-AP']:.3f}")
+    print(f"  {t:>2d} cm: B = {r.buildup['dose-AP']}")
 ```
 
 ## Incremental caching
@@ -123,5 +123,5 @@ else:
 
 # Use all cached results
 for t in sorted(cached):
-    print(f"  {t:>2d} cm: B = {cached[t].buildup['dose-AP']:.3f}")
+    print(f"  {t:>2d} cm: B = {cached[t].buildup['dose-AP']}")
 ```

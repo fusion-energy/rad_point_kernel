@@ -1,5 +1,6 @@
 site_name: Rad Point Kernel
 site_description: Fast engineering estimates for neutron and photon shielding
+site_url: https://fusion-energy.github.io/rad_point_kernel/
 repo_url: https://github.com/fusion-energy/rad_point_kernel
 
 theme:
@@ -18,16 +19,25 @@ nav:
     - Build-up factors: theory/buildup_factors.md
   - User guide:
     - Installation: guide/installation.md
-    - Materials and layers: guide/materials_and_layers.md
+    - Materials: guide/materials.md
+    - Layers: guide/layers.md
     - Sources: guide/source_spectra.md
-    - Photon transmission: guide/photon_transmission.md
-    - Neutron transmission: guide/neutron_transmission.md
-    - Flux and dose: guide/flux_and_dose.md
-    - Build-up factors with MC: guide/buildup_mc.md
+    - Transmission (photon): guide/photon_transmission.md
+    - Transmission (neutron): guide/neutron_transmission.md
+    - Flux (photon): guide/photon_flux.md
+    - Flux (neutron): guide/neutron_flux.md
+    - Dose (photon): guide/photon_dose.md
+    - Dose (neutron): guide/neutron_dose.md
+    - Dose (coupled): guide/coupled_dose.md
+    - Calculate build-up with MC: guide/buildup_mc.md
     - Many thicknesses and extrapolation: guide/extrapolation.md
     - Caching MC results: guide/caching.md
     - Plotting results: guide/plotting.md
-    - Shielding studies: guide/studies.md
+    - Shielding studies:
+      - Overview: guide/studies/index.md
+      - Single-layer study: guide/studies/single_layer.md
+      - Multi-layer study: guide/studies/multi_layer.md
+      - Variable material study: guide/studies/variable_material.md
   - API reference: api.md
   - Verification and validation:
     - Overview: vnv/index.md
