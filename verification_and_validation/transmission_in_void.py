@@ -11,7 +11,7 @@ directly) and `calculate_flux` (which exposes `.transmission_fraction` on its
 result). Also verifies that a multi-layer void stack still gives T = 1.
 """
 
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
 
 TOL_ABS = 0.0  # void transmission must be exactly 1.0
@@ -43,13 +43,13 @@ def run() -> int:
     total = 0
 
     for particle, energy in CASES:
-        source = pkc.Source(particle, energy)
+        source = rpk.Source(particle, energy)
         for t in THICKNESSES_CM:
-            layers = [pkc.Layer(thickness=t)]
-            t_trans = pkc.calculate_transmission(layers, source)
+            layers = [rpk.Layer(thickness=t)]
+            t_trans = rpk.calculate_transmission(layers, source)
             # calculate_flux needs r > 0 for inverse-square; use t+1 so we can still read transmission_fraction
             r = t if t > 0 else 1.0
-            t_flux = pkc.calculate_flux(1e12, [pkc.Layer(thickness=r)], source).transmission_fraction
+            t_flux = rpk.calculate_flux(1e12, [rpk.Layer(thickness=r)], source).transmission_fraction
 
             ok_trans = abs(t_trans - 1.0) <= TOL_ABS
             ok_flux = abs(t_flux - 1.0) <= TOL_ABS
@@ -61,10 +61,10 @@ def run() -> int:
 
     print()
     print("multi-layer void stacks (neutron 14.06 MeV):")
-    source = pkc.Source("neutron", 14.06e6)
+    source = rpk.Source("neutron", 14.06e6)
     for stack in MULTILAYER_STACKS:
-        layers = [pkc.Layer(thickness=t) for t in stack]
-        t_trans = pkc.calculate_transmission(layers, source)
+        layers = [rpk.Layer(thickness=t) for t in stack]
+        t_trans = rpk.calculate_transmission(layers, source)
         ok = abs(t_trans - 1.0) <= TOL_ABS
         status = "OK" if ok else "FAIL"
         if not ok:

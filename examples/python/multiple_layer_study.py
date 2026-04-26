@@ -17,7 +17,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
 matplotlib.use("Agg")
 
@@ -25,13 +25,13 @@ matplotlib.use("Agg")
 SOURCE_STRENGTH = 1e12
 GEOMETRY = "AP"
 VOID_THICKNESS = 1000
-source = pkc.Source("neutron", 14.06e6)
+source = rpk.Source("neutron", 14.06e6)
 
 N_DOSE = f"dose-{GEOMETRY}"
 P_DOSE = f"dose-{GEOMETRY}-coupled-photon"
 
-water = pkc.Material(composition={"H2O": 1.0}, density=1.0)
-concrete = pkc.Material(
+water = rpk.Material(composition={"H2O": 1.0}, density=1.0)
+concrete = rpk.Material(
     composition={"H": 0.01, "O": 0.53, "Si": 0.34, "Ca": 0.04, "Al": 0.03, "Fe": 0.01},
     density=2.3,
     fraction="mass",
@@ -48,10 +48,10 @@ CACHE_FILE = RESULTS_DIR / "mc_cache.json"
 
 
 def make_layers(water_t, conc_t):
-    layers = [pkc.Layer(thickness=VOID_THICKNESS)]
+    layers = [rpk.Layer(thickness=VOID_THICKNESS)]
     if water_t > 0:
-        layers.append(pkc.Layer(thickness=water_t, material=water))
-    layers.append(pkc.Layer(thickness=conc_t, material=concrete))
+        layers.append(rpk.Layer(thickness=water_t, material=water))
+    layers.append(rpk.Layer(thickness=conc_t, material=concrete))
     return layers
 
 
@@ -60,14 +60,14 @@ cached = {}
 if CACHE_FILE.exists():
     for entry in json.loads(CACHE_FILE.read_text()):
         key = (entry["water"], entry["conc"])
-        cached[key] = pkc.BuildupResult.from_dict(entry["result"])
+        cached[key] = rpk.BuildupResult.from_dict(entry["result"])
     print(f"Loaded {len(cached)} cached points")
 
 missing = [(w, c) for w in mc_water for c in mc_conc if (w, c) not in cached]
 if missing:
     print(f"Running coupled MC for {len(missing)} geometries...")
     mc_geometries = [make_layers(w, c) for w, c in missing]
-    mc_list = pkc.compute_buildup(
+    mc_list = rpk.compute_buildup(
         geometries=mc_geometries,
         source=source,
         quantities=[N_DOSE, P_DOSE],
@@ -101,7 +101,7 @@ for wt in mc_water:
         )
         pk_neutron = r.pk.get(N_DOSE, 0)
 
-        br = pkc.BuildupResult()
+        br = rpk.BuildupResult()
         br.mc["total"] = mc_total
         br.mc_std_dev["total"] = mc_std
         br.pk["total"] = pk_neutron
@@ -109,7 +109,7 @@ for wt in mc_water:
         br_list.append(br)
         print(f"  water={wt:>2d}, conc={ct:>3d}: B_total={br.buildup['total']:.3f}")
 
-    tables_by_water[wt] = pkc.BuildupTable(
+    tables_by_water[wt] = rpk.BuildupTable(
         points=[{"conc": ct} for ct in mc_conc],
         results=br_list,
     )
@@ -126,14 +126,14 @@ for ct in mc_conc:
         )
         pk_neutron = r.pk.get(N_DOSE, 0)
 
-        br = pkc.BuildupResult()
+        br = rpk.BuildupResult()
         br.mc["total"] = mc_total
         br.mc_std_dev["total"] = mc_std
         br.pk["total"] = pk_neutron
         br.buildup["total"] = mc_total / pk_neutron if pk_neutron > 0 else 1.0
         br_list.append(br)
 
-    tables_by_conc[ct] = pkc.BuildupTable(
+    tables_by_conc[ct] = rpk.BuildupTable(
         points=[{"water": wt} for wt in mc_water],
         results=br_list,
     )
@@ -148,7 +148,7 @@ for wt in mc_water:
     doses, doses_lo, doses_hi = [], [], []
     for ct in all_conc:
         layers = make_layers(wt, ct)
-        pk = pkc.calculate_dose(
+        pk = rpk.calculate_dose(
             source_strength=SOURCE_STRENGTH,
             layers=layers,
             source=source,
@@ -167,7 +167,7 @@ for ct in mc_conc:
     doses, doses_lo, doses_hi = [], [], []
     for wt in all_water:
         layers = make_layers(wt, ct)
-        pk = pkc.calculate_dose(
+        pk = rpk.calculate_dose(
             source_strength=SOURCE_STRENGTH,
             layers=layers,
             source=source,

@@ -10,7 +10,7 @@ T(t) = \exp(-\Sigma\, t)
 $$
 
 where $\Sigma$ is the macroscopic (removal) cross section. This
-verification does **not** assume any particular value of $\Sigma$ — it
+verification does **not** assume any particular value of $\Sigma$ - it
 checks the exponential law itself, which holds regardless of which
 cross-section library is loaded.
 
