@@ -13,7 +13,12 @@ import tempfile
 
 import numpy as np
 
-from rad_point_kernel_core import BuildupResult, InterpolationResult
+from rad_point_kernel_core import (
+    BuildupResult,
+    InterpolationResult,
+    calculate_dose,
+    calculate_flux,
+)
 
 VALID_DOSE_GEOMETRIES = {"AP", "PA", "RLAT", "LLAT", "ROT", "ISO"}
 
@@ -240,6 +245,8 @@ def compute_buildup(
     max_batches=100,
     trigger_rel_err=0.05,
     cross_sections=None,
+    use_weight_windows=True,
+    max_history_splits=100,
 ):
     """Run OpenMC MC on a list of geometries and compute build-up factors.
 
@@ -284,7 +291,6 @@ def compute_buildup(
         result = BuildupResult()
 
         # Optical thickness from PK
-        from . import calculate_flux
         pk_flux = calculate_flux(source_strength=1.0, layers=layers, source=source)
         result.optical_thickness = pk_flux.optical_thickness
 
@@ -292,6 +298,8 @@ def compute_buildup(
         mc_data = _run_mc(
             layers, source, needs_coupled,
             parsed, particles_per_batch, batches, max_batches, trigger_rel_err,
+            use_weight_windows=use_weight_windows,
+            max_history_splits=max_history_splits,
         )
         _populate_result(result, layers, source, parsed, mc_data)
         results.append(result)
@@ -299,7 +307,8 @@ def compute_buildup(
     return results
 
 
-def _run_mc(layers, source, coupled, quantities, particles_per_batch, batches, max_batches, trigger_rel_err):
+def _run_mc(layers, source, coupled, quantities, particles_per_batch, batches, max_batches, trigger_rel_err,
+            *, use_weight_windows=True, max_history_splits=100):
     """Run a single MC simulation. Returns dict: quantity_name -> (mean, std_dev)."""
     import openmc
 
@@ -372,6 +381,17 @@ def _run_mc(layers, source, coupled, quantities, particles_per_batch, batches, m
     settings.trigger_max_batches = max_batches
     settings.trigger_batch_interval = 5
 
+    # Weight-window generation — driven by the user's tally quantities.
+    if use_weight_windows:
+        from .weight_windows import build_weight_windows
+        ww_list = build_weight_windows(
+            layers, source,
+            quantities=[q for q, _ in quantities],
+        )
+        if ww_list:
+            settings.weight_windows = ww_list
+            settings.max_history_splits = max_history_splits
+
     # Tallies
     surface_filter = openmc.SurfaceFilter([spheres[-1]])
     tallies_obj = openmc.Tallies()
@@ -433,8 +453,6 @@ def _run_mc(layers, source, coupled, quantities, particles_per_batch, batches, m
 
 def _populate_result(result, layers, source, quantities, mc_data):
     """Fill a BuildupResult with MC data, PK references, and buildup factors."""
-    from . import calculate_flux, calculate_dose
-
     for q_name, (measure, geo, coupled) in quantities:
         mc_val, mc_std = mc_data[q_name]
         result.mc[q_name] = mc_val
