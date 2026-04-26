@@ -5,7 +5,7 @@ origin and no attenuating medium, the uncollided scalar flux at distance r is
 
     phi(r) = S / (4 * pi * r^2)
 
-This script computes phi(r) with `calculate_transmission` is not needed here —
+This script computes phi(r) with `calculate_transmission` is not needed here -
 we use `calculate_flux` through a single void Layer of thickness r, for a
 logarithmic sweep of r. The point-kernel result must match the analytic
 formula to machine precision for any source energy and particle type (void
@@ -14,7 +14,7 @@ implies zero cross section, so the transmission factor is exactly 1).
 
 import math
 
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
 
 SOURCE_STRENGTH = 1e12  # particles/s
@@ -40,9 +40,9 @@ def run() -> int:
 
     failures = 0
     for particle, energy in CASES:
-        source = pkc.Source(particle, energy)
+        source = rpk.Source(particle, energy)
         for r in DISTANCES_CM:
-            result = pkc.calculate_flux(SOURCE_STRENGTH, [pkc.Layer(thickness=r)], source)
+            result = rpk.calculate_flux(SOURCE_STRENGTH, [rpk.Layer(thickness=r)], source)
             pk = result.uncollided_flux
             ref = analytic(SOURCE_STRENGTH, r)
             rel = abs(pk - ref) / ref

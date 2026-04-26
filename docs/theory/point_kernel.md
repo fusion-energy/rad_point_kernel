@@ -36,20 +36,46 @@ Where $h(E)$ is in pSv$\cdot$cm$^2$ and depends on the particle energy and irrad
 
 ## Removal cross sections
 
-The removal cross section $\sigma_r$ is not the total cross section. It accounts for the fact that forward-scattered particles effectively continue in the beam direction:
+The removal cross section $\sigma_r$ is not the total cross section. It accounts for the fact that forward-scattered particles effectively continue in the beam direction and so shouldn't be counted as "removed":
 
-$$\sigma_r(E) = \sigma_{\text{total}}(E) - f_{\text{forward}}(E) \cdot \sigma_{\text{elastic}}(E)$$
+$$\sigma_r(E) = \sigma_t(E) - f_{\text{fwd}}(E) \cdot \sigma_s(E)$$
 
-Where $f_{\text{forward}}$ is the fraction of elastic scattering into the forward hemisphere, computed from ENDF angular distribution data. This is more accurate than the naive $\sigma_{\text{total}} - \sigma_{\text{elastic}}$ which treats all elastic scattering as forward.
+where $\sigma_s$ is the scattering channel that dominates the forward peak (elastic for neutrons, coherent/Rayleigh for photons), and $f_{\text{fwd}}(E) \in [0, 1]$ is the fraction of that channel scattering into the forward cone $\mu \in [\mu_0, 1]$, with $\mu_0 = \cos\theta_0$. We use $\mu_0 = 0$, i.e. the forward hemisphere ($\theta < 90^\circ$) is treated as "not removed".
 
-For compound materials, the macroscopic removal cross section is:
+### Neutrons
+
+$$\sigma_r(E) = \sigma_t(E) - f_{\text{fwd}}(E) \cdot \sigma_{\text{el}}(E)$$
+
+$f_{\text{fwd}}$ is obtained by integrating the ENDF elastic angular distribution $p(\mu, E)$ from $\mu_0$ to 1:
+
+$$f_{\text{fwd}}(E) = \int_{\mu_0}^{1} p(\mu, E)\, d\mu$$
+
+If no angular distribution is available the scattering is treated as isotropic, giving $f_{\text{fwd}} = (1 - \mu_0)/2 = 0.5$ at $\mu_0 = 0$.
+
+### Photons
+
+$$\sigma_r(E) = \sigma_t(E) - f_{\text{fwd}}(E) \cdot \sigma_{\text{coh}}(E)$$
+
+For photons the forward peak is coherent (Rayleigh) scattering, and $f_{\text{fwd}}$ is computed from the Thomson-weighted atomic form factor $F(x, Z)$:
+
+$$f_{\text{fwd}}(E) = \frac{\displaystyle\int_{\mu_0}^{1} (1 + \mu^2)\,[F(x, Z)]^2\, d\mu}{\displaystyle\int_{-1}^{1} (1 + \mu^2)\,[F(x, Z)]^2\, d\mu}, \qquad x(E, \mu) = \frac{E \sqrt{(1 - \mu)/2}}{hc}$$
+
+Incoherent (Compton) and photoelectric contributions are not subtracted because they genuinely remove the photon from the beam.
+
+### Why not simply $\sigma_t - \sigma_s$?
+
+Subtracting all of the elastic (or coherent) cross section would assume every scattered particle keeps going in the forward direction - an overestimate of transmission. Subtracting nothing (just $\sigma_t$) assumes every scatter removes the particle - an underestimate. Weighting by the angular distribution is between the two and, for anisotropic scatterers at high energy, much closer to reality.
+
+### Compound materials
+
+For a compound the macroscopic removal cross section is:
 
 $$\Sigma_r = \rho \cdot N_A \cdot \sum_i \frac{w_i \cdot \sigma_{r,i}(E)}{A_i}$$
 
-Where $w_i$ is the mass fraction, $A_i$ the atomic mass, and $\rho$ the density.
+where $w_i$ is the mass fraction, $A_i$ the atomic mass, and $\rho$ the density. The microscopic removal cross sections $\sigma_{r,i}$ are pre-computed per nuclide from ENDF/B-VIII.0 using the [`endf`](https://github.com/shimwell/endf-python) package (see `examples/removal_xs_to_json.py` in that repo for the extraction script).
 
 ## Limitations
 
 - **Uncollided only**: Without build-up factors, the method only counts particles that haven't interacted. For thick shields, this severely underestimates the dose.
 - **Spherical geometry**: Layers are concentric spheres. Real geometries with ducts, penetrations, or non-spherical shapes need Monte Carlo.
-- **No energy degradation**: Particles that scatter and lose energy are not tracked — the build-up factor corrects for this empirically.
+- **No energy degradation**: Particles that scatter and lose energy are not tracked - the build-up factor corrects for this empirically.

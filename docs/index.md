@@ -6,12 +6,12 @@ A fast engineering tool for neutron and photon shielding calculations.
 
 Point Kernel Calculator estimates radiation dose and flux behind shielding using the point-kernel method. It handles:
 
-- **Photon sources** — monoenergetic (e.g. Cs-137) or multi-line spectra (e.g. Co-60)
-- **Neutron sources** — monoenergetic (DT) or mixed spectra (DT + DD)
-- **Secondary photons** — gammas produced by neutron interactions in the shield (coupled neutron-photon transport)
-- **Multi-layer shields** — any combination of materials and voids
-- **Build-up factor correction** — Monte Carlo computed (OpenMC), with Gaussian Process extrapolation and uncertainty
-- **ICRP-116 dose coefficients** — 6 irradiation directions (AP, PA, RLAT, LLAT, ROT, ISO)
+- **Photon sources** - monoenergetic (e.g. Cs-137) or multi-line spectra (e.g. Co-60)
+- **Neutron sources** - monoenergetic (DT) or mixed spectra (DT + DD)
+- **Secondary photons** - gammas produced by neutron interactions in the shield (coupled neutron-photon transport)
+- **Multi-layer shields** - any combination of materials and voids
+- **Build-up factor correction** - Monte Carlo computed (OpenMC), with Gaussian Process extrapolation and uncertainty
+- **ICRP-116 dose coefficients** - 6 irradiation directions (AP, PA, RLAT, LLAT, ROT, ISO)
 
 ## When to use it
 
@@ -33,24 +33,24 @@ It is **not** a replacement for Monte Carlo transport codes for final design, bu
 ## Quick start
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
 # Define a material and source
-concrete = pkc.Material(
+concrete = rpk.Material(
     composition={"H": 0.01, "O": 0.53, "Si": 0.34, "Ca": 0.04, "Al": 0.03, "Fe": 0.01},
     density=2.3,
     fraction="mass",
 )
-source = pkc.Source("neutron", 14.1e6)  # D-T fusion
+source = rpk.Source("neutron", 14.1e6)  # D-T fusion
 
 # Define the shield geometry
 layers = [
-    pkc.Layer(thickness=1000),                        # 10 m void
-    pkc.Layer(thickness=100, material=concrete),       # 1 m concrete
+    rpk.Layer(thickness=1000),                    # 10 m void
+    rpk.Layer(thickness=100, material=concrete),  # 1 m concrete
 ]
 
 # Calculate neutron dose rate
-result = pkc.calculate_dose(
+result = rpk.calculate_dose(
     source_strength=1e12,
     layers=layers,
     source=source,
@@ -59,16 +59,4 @@ result = pkc.calculate_dose(
 print(f"Dose rate: {result.dose_rate:.3e} Sv/hr")
 ```
 
-## Installation
-
-```bash
-pip install rad_point_kernel
-```
-
-For Monte Carlo build-up factors, also install OpenMC separately:
-
-```bash
-python -m pip install --extra-index-url https://shimwell.github.io/wheels openmc
-```
-
-See the [installation guide](guide/installation.md) for details on OpenMC and cross section data.
+See the [installation guide](guide/installation.md) for setup, including OpenMC and cross-section data.
