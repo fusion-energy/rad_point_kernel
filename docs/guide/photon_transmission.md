@@ -7,13 +7,13 @@
 Calculate photon transmission through 10 cm of iron at 662 keV (Cs-137 gamma line):
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
-layers = [pkc.Layer(thickness=10, material=iron)]
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
+layers = [rpk.Layer(thickness=10, material=iron)]
 
-source = pkc.Source("photon", 662e3)
-frac = pkc.calculate_transmission(layers, source)
+source = rpk.Source("photon", 662e3)
+frac = rpk.calculate_transmission(layers, source)
 print(f"Transmission: {frac:.4e}")
 ```
 
@@ -22,10 +22,10 @@ print(f"Transmission: {frac:.4e}")
 Transmission through a composite shield:
 
 ```python
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-water = pkc.Material(composition={"H2O": 1.0}, density=1.0)
-concrete = pkc.Material(
+water = rpk.Material(composition={"H2O": 1.0}, density=1.0)
+concrete = rpk.Material(
     composition={
         "H": 0.01, "O": 0.53, "Si": 0.34,
         "Ca": 0.04, "Al": 0.03, "Fe": 0.01,
@@ -35,12 +35,12 @@ concrete = pkc.Material(
 )
 
 layers = [
-    pkc.Layer(thickness=30, material=water),
-    pkc.Layer(thickness=100, material=concrete),
+    rpk.Layer(thickness=30, material=water),
+    rpk.Layer(thickness=100, material=concrete),
 ]
 
-source = pkc.Source("photon", 662e3)
-frac = pkc.calculate_transmission(layers, source)
+source = rpk.Source("photon", 662e3)
+frac = rpk.calculate_transmission(layers, source)
 print(f"Transmission: {frac:.4e}")
 ```
 

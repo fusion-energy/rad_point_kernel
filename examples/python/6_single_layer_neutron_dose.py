@@ -1,17 +1,17 @@
 """Neutron dose with MC-computed buildup factor."""
 
-import rad_point_kernel as pkc
+import rad_point_kernel as rpk
 
-iron = pkc.Material(composition={"Fe": 1.0}, density=7.874)
-layers = [pkc.Layer(thickness=10, material=iron)]
-source = pkc.Source("neutron", 14.1e6)
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
+layers = [rpk.Layer(thickness=10, material=iron)]
+source = rpk.Source("neutron", 14.1e6)
 SOURCE_STRENGTH = 1e12
 
-pk = pkc.calculate_dose(SOURCE_STRENGTH, layers, source, "AP")
+pk = rpk.calculate_dose(SOURCE_STRENGTH, layers, source, "AP")
 print(f"PK dose (no buildup): {pk.dose_rate:.4e} Sv/hr")
 
 print("Running MC...")
-results = pkc.compute_buildup(
+results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
     quantities=["dose-AP"],
@@ -23,6 +23,6 @@ results = pkc.compute_buildup(
 r = results[0]
 print(f"Buildup factor: {r.buildup['dose-AP']:.4f}")
 
-corrected = pkc.calculate_dose(SOURCE_STRENGTH, layers, source, "AP", buildup=r)
+corrected = rpk.calculate_dose(SOURCE_STRENGTH, layers, source, "AP", buildup=r)
 print(f"PK dose with buildup: {corrected.dose_rate:.4e} Sv/hr")
 print(f"MC dose (reference):  {r.mc['dose-AP'] * SOURCE_STRENGTH:.4e} Sv/hr")
