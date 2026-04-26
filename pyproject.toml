@@ -14,6 +14,12 @@ dependencies = [
     "inference-tools",
 ]
 
+[project.optional-dependencies]
+docs = [
+    "mkdocs",
+    "mkdocs-material",
+]
+
 [tool.setuptools.packages.find]
 where = ["python"]
 
