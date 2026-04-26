@@ -143,10 +143,10 @@ data_vs_water = {
     ct: extrapolate(tables_by_conc[ct], all_water, ct, "water") for ct in mc_conc
 }
 
-colors_water = {0: "#7f7f7f", 10: "#1f77b4", 20: "#ff7f0e",
-                30: "#2ca02c", 40: "#d62728", 50: "#9467bd"}
-colors_conc = {10: "#1f77b4", 50: "#ff7f0e", 100: "#2ca02c",
-               200: "#d62728", 400: "#9467bd"}
+colors_water = {0: "#7f7f7f", 5: "#1f77b4", 10: "#ff7f0e",
+                15: "#2ca02c", 20: "#d62728", 25: "#9467bd"}
+colors_conc = {5: "#1f77b4", 25: "#ff7f0e", 50: "#2ca02c",
+               100: "#d62728", 200: "#9467bd"}
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
 
