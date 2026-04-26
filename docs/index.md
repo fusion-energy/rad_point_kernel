@@ -32,7 +32,7 @@ It is **not** a replacement for Monte Carlo transport codes for final design, bu
 
 ## Quick start
 
-```python
+```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
 
 # Define a material and source
@@ -41,7 +41,7 @@ concrete = rpk.Material(
     density=2.3,
     fraction="mass",
 )
-source = rpk.Source("neutron", 14.1e6)  # D-T fusion
+source = rpk.Source(particle="neutron", energy=14.1e6)  # D-T fusion
 
 # Define the shield geometry
 layers = [
