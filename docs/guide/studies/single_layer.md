@@ -143,9 +143,9 @@ for name, mat in materials.items():
             geometry=GEOMETRY,
         ).scale(strength=PARTICLES_PER_SHOT)
         bi = table.interpolate(thickness=t, warn=False)
-        doses.append(pk.dose_rate * bi.value)
-        doses_lo.append(pk.dose_rate * (bi.value - bi.sigma))
-        doses_hi.append(pk.dose_rate * (bi.value + bi.sigma))
+        doses.append(pk.dose * bi.value)
+        doses_lo.append(pk.dose * (bi.value - bi.sigma))
+        doses_hi.append(pk.dose * (bi.value + bi.sigma))
     data[name] = {
         "doses": np.array(doses),
         "doses_lo": np.array(doses_lo),

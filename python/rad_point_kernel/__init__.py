@@ -11,7 +11,7 @@ from rad_point_kernel_core import (
     Source,
     calculate_dose,
     calculate_flux,
-    calculate_secondary_photon_dose_rate,
+    calculate_secondary_photon_dose,
     calculate_transmission,
 )
 from rad_point_kernel.buildup import BuildupTable, compute_buildup
@@ -31,7 +31,7 @@ __all__ = [
     "build_weight_windows",
     "calculate_dose",
     "calculate_flux",
-    "calculate_secondary_photon_dose_rate",
+    "calculate_secondary_photon_dose",
     "calculate_transmission",
     "compute_buildup",
 ]

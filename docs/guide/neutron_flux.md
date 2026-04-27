@@ -24,7 +24,7 @@ layers = [
 source = rpk.Source(particle="neutron", energy=14.1e6)
 # Pulsed DT shot: strength in neutrons per shot, result in /shot
 result = rpk.calculate_flux(layers=layers, source=source).scale(strength=1e16)
-print(f"Flux: {result.uncollided_flux} neutrons/cm2/shot")
+print(f"Flux: {result.flux} neutrons/cm2/shot")
 print(f"Transmission: {result.transmission_fraction}")
 print(f"Optical thickness: {result.optical_thickness}")
 print(f"Distance: {result.total_distance_cm} cm")
@@ -51,7 +51,7 @@ result = rpk.calculate_flux(
     source=source,
     buildup=rpk.BuildupModel.constant(B_flux),
 ).scale(strength=1e16)
-print(f"Flux (B={B_flux}): {result.uncollided_flux} neutrons/cm2/shot")
+print(f"Flux (B={B_flux}): {result.flux} neutrons/cm2/shot")
 print(f"Applied build-up:  {result.buildup_factor}")
 ```
 

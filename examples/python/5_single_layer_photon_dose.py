@@ -15,7 +15,7 @@ PARTICLES_PER_HOUR = 1e12 * 3600  # 1e12 photons/sec activity
 pk = rpk.calculate_dose(layers=layers, source=source, geometry="AP").scale(
     strength=PARTICLES_PER_HOUR
 )
-print(f"PK dose (no buildup): {pk.dose_rate} Sv/hr")
+print(f"PK dose (no buildup): {pk.dose} Sv/hr")
 
 print("Running MC...")
 results = rpk.compute_buildup(
@@ -33,5 +33,5 @@ print(f"Buildup factor: {r.buildup['dose-AP']}")
 corrected = rpk.calculate_dose(
     layers=layers, source=source, geometry="AP", buildup=r
 ).scale(strength=PARTICLES_PER_HOUR)
-print(f"PK dose with buildup: {corrected.dose_rate} Sv/hr")
+print(f"PK dose with buildup: {corrected.dose} Sv/hr")
 print(f"MC dose (reference):  {r.mc['dose-AP']} Sv/hr")
