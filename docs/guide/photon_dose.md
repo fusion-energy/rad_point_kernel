@@ -5,10 +5,10 @@ Three levels of calculation, each building on the previous:
 | Function | What it computes | Considers geometry? |
 |---|---|---|
 | `calculate_transmission` | Material attenuation only (exp(-Sigma*t)) | No |
-| `calculate_flux` | S / (4*pi*R^2) * exp(-Sigma*t) * B | Yes (inverse square law) |
-| **`calculate_dose`** | **Flux * ICRP-116 dose coefficient** | **Yes (inverse square law)** |
+| `calculate_flux` | 1 / (4*pi*R^2) * exp(-Sigma*t) * B per source particle | Yes (inverse square law) |
+| **`calculate_dose`** | **Flux * ICRP-116 dose coefficient (per source particle)** | **Yes (inverse square law)** |
 
-`calculate_dose` adds an ICRP-116 fluence-to-effective-dose conversion on top of `calculate_flux`. You must specify the irradiation geometry.
+`calculate_dose` adds an ICRP-116 fluence-to-effective-dose conversion on top of `calculate_flux`. You must specify the irradiation geometry. The result is per source particle; apply an absolute strength via `result.scale(strength=...)`. If your strength is in particles/sec the resulting dose is in Sv/s; multiply the strength by 3600 to land in Sv/hr; for a pulsed source pass particles/shot to get Sv/shot.
 
 ## Example
 
@@ -22,7 +22,10 @@ layers = [
 ]
 
 source = rpk.Source(particle="photon", energy=662e3)
-result = rpk.calculate_dose(source_strength=1e12, layers=layers, source=source, geometry="AP")
+# Continuous source: 1e12 photons/sec activity, scale by photons per hour
+result = rpk.calculate_dose(layers=layers, source=source, geometry="AP").scale(
+    strength=1e12 * 3600,
+)
 print(f"Dose rate: {result.dose_rate} Sv/hr")
 ```
 
@@ -52,8 +55,10 @@ layers = [
 
 source = rpk.Source(particle="photon", energy=662e3)
 for geo in ["AP", "PA", "RLAT", "LLAT", "ROT", "ISO"]:
-    result = rpk.calculate_dose(source_strength=1e12, layers=layers, source=source, geometry=geo)
-    print(f"{geo:>4s}: {result.dose_rate} Sv/hr")
+    result = rpk.calculate_dose(layers=layers, source=source, geometry=geo).scale(
+        strength=1e12 * 3600,
+    )
+    print(f"{geo}: {result.dose_rate} Sv/hr")
 ```
 
 ## With a manual build-up factor
@@ -73,12 +78,11 @@ source = rpk.Source(particle="photon", energy=662e3)
 
 B_dose = 1.8
 result = rpk.calculate_dose(
-    source_strength=1e12,
     layers=layers,
     source=source,
     geometry="AP",
     buildup=rpk.BuildupModel.constant(B_dose),
-)
+).scale(strength=1e12 * 3600)
 print(f"Dose rate (B={B_dose}): {result.dose_rate} Sv/hr")
 print(f"Applied build-up:     {result.buildup_factor}")
 ```

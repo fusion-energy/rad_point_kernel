@@ -5,10 +5,10 @@ Three levels of calculation, each building on the previous:
 | Function | What it computes | Considers geometry? |
 |---|---|---|
 | `calculate_transmission` | Material attenuation only (exp(-Sigma*t)) | No |
-| `calculate_flux` | S / (4*pi*R^2) * exp(-Sigma*t) * B | Yes (inverse square law) |
-| **`calculate_dose`** | **Flux * ICRP-116 dose coefficient** | **Yes (inverse square law)** |
+| `calculate_flux` | 1 / (4*pi*R^2) * exp(-Sigma*t) * B per source particle | Yes (inverse square law) |
+| **`calculate_dose`** | **Flux * ICRP-116 dose coefficient (per source particle)** | **Yes (inverse square law)** |
 
-The same `calculate_dose` interface applies to neutrons; just create a neutron `Source`. The [irradiation geometries](photon_dose.md#irradiation-geometries) are the same as for photons.
+The same `calculate_dose` interface applies to neutrons; just create a neutron `Source`. The [irradiation geometries](photon_dose.md#irradiation-geometries) are the same as for photons. As with photons, the dose result is per source particle - apply an absolute strength via `result.scale(strength=...)`. For pulsed neutron devices (e.g. an inertial-confinement burn) supply neutrons per shot to get Sv/shot.
 
 ## Example
 
@@ -22,8 +22,11 @@ layers = [
 ]
 
 source = rpk.Source(particle="neutron", energy=14.1e6)
-result = rpk.calculate_dose(source_strength=1e12, layers=layers, source=source, geometry="AP")
-print(f"Neutron dose rate: {result.dose_rate} Sv/hr")
+# Pulsed DT shot: 1e16 neutrons per shot, result in Sv/shot
+result = rpk.calculate_dose(layers=layers, source=source, geometry="AP").scale(
+    strength=1e16,
+)
+print(f"Neutron dose: {result.dose_rate} Sv/shot")
 ```
 
 ## With a manual build-up factor
@@ -41,13 +44,12 @@ source = rpk.Source(particle="neutron", energy=14.1e6)
 
 B_dose = 2.5
 result = rpk.calculate_dose(
-    source_strength=1e12,
     layers=layers,
     source=source,
     geometry="AP",
     buildup=rpk.BuildupModel.constant(B_dose),
-)
-print(f"Neutron dose (B={B_dose}): {result.dose_rate} Sv/hr")
+).scale(strength=1e16)
+print(f"Neutron dose (B={B_dose}): {result.dose_rate} Sv/shot")
 print(f"Applied build-up:        {result.buildup_factor}")
 ```
 

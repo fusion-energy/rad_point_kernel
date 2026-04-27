@@ -82,18 +82,16 @@ def test_buildup_result_applied_to_calculate_dose(iron):
     r = results[0]
 
     corrected = rpk.calculate_dose(
-        source_strength=1e12,
         layers=layers,
         source=source,
         geometry="AP",
         buildup=r,
-    )
+    ).scale(strength=1e12)
     uncollided = rpk.calculate_dose(
-        source_strength=1e12,
         layers=layers,
         source=source,
         geometry="AP",
-    )
+    ).scale(strength=1e12)
 
     assert corrected.dose_rate > uncollided.dose_rate
     assert corrected.buildup_factor == pytest.approx(r.buildup["dose-AP"])
