@@ -32,7 +32,7 @@ concrete = rpk.Material(
     fraction="mass",
 )
 
-PARTICLES_PER_HOUR = 1e12 * 3600  # 1e12 photons/sec activity, scale to /hr
+PARTICLES_PER_HOUR = 1e12 * 3600  # 1e12 photons/sec activity, scale to /hour
 source = rpk.Source(particle="photon", energy=1e6)
 
 # Step 1: Monte Carlo at 4 thicknesses
