@@ -15,6 +15,7 @@ from rad_point_kernel_core import (
     calculate_transmission,
 )
 from rad_point_kernel.buildup import BuildupTable, compute_buildup
+from rad_point_kernel.weight_windows import build_weight_windows
 
 
 __all__ = [
@@ -27,6 +28,7 @@ __all__ = [
     "Material",
     "SecondaryGammaResult",
     "Source",
+    "build_weight_windows",
     "calculate_dose",
     "calculate_flux",
     "calculate_secondary_photon_dose_rate",
