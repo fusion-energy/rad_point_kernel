@@ -129,9 +129,9 @@ def extrapolate(table, ts, key, arg_name):
             source=source,
             geometry=GEOMETRY,
         ).scale(strength=PARTICLES_PER_SHOT)
-        doses.append(pk.dose_rate * bi.value)
-        lo.append(pk.dose_rate * (bi.value - bi.sigma))
-        hi.append(pk.dose_rate * (bi.value + bi.sigma))
+        doses.append(pk.dose * bi.value)
+        lo.append(pk.dose * (bi.value - bi.sigma))
+        hi.append(pk.dose * (bi.value + bi.sigma))
     return doses, lo, hi
 
 

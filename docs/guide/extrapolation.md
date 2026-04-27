@@ -71,7 +71,7 @@ for t in all_thicknesses:
     ).scale(strength=PARTICLES_PER_HOUR)
 
     status = "EXTRAPOLATED" if bi.is_extrapolated else "interpolated"
-    print(f"  {t} cm: dose = {result.dose_rate} Sv/hr, "
+    print(f"  {t} cm: dose = {result.dose} Sv/hr, "
           f"B = {bi.value} +/- {bi.sigma} ({status})")
 ```
 
@@ -105,7 +105,7 @@ result = rpk.calculate_dose(
     geometry="AP",
     buildup=bi,
 ).scale(strength=PARTICLES_PER_HOUR)
-print(f"Dose at 50 cm concrete: {result.dose_rate} Sv/hr (B = {bi.value})")
+print(f"Dose at 50 cm concrete: {result.dose} Sv/hr (B = {bi.value})")
 ```
 
 ## Using your own build-up values
@@ -122,7 +122,7 @@ result = rpk.calculate_dose(
     geometry="AP",
     buildup=rpk.BuildupModel.constant(my_B),
 ).scale(strength=PARTICLES_PER_HOUR)
-print(f"Dose with B={my_B}: {result.dose_rate} Sv/hr")
+print(f"Dose with B={my_B}: {result.dose} Sv/hr")
 ```
 
 This means you can use any interpolation or fitting method you prefer (scipy, scikit-learn, a lookup table, or even a hand-drawn curve) and feed the result into the point-kernel calculation.
@@ -231,9 +231,9 @@ for t in all_thicknesses:
         source=source,
         geometry="AP",
     ).scale(strength=PARTICLES_PER_HOUR)
-    doses.append(pk.dose_rate * bi.value)
-    doses_lo.append(pk.dose_rate * (bi.value - bi.sigma))
-    doses_hi.append(pk.dose_rate * (bi.value + bi.sigma))
+    doses.append(pk.dose * bi.value)
+    doses_lo.append(pk.dose * (bi.value - bi.sigma))
+    doses_hi.append(pk.dose * (bi.value + bi.sigma))
 
 fig, ax = plt.subplots()
 ax.plot(all_thicknesses, doses, "b-", label="PK with build-up")

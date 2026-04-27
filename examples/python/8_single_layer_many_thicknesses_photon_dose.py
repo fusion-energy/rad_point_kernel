@@ -54,9 +54,9 @@ for t, layers in zip(all_thicknesses, all_geometries):
     pk = rpk.calculate_dose(layers=layers, source=source, geometry="AP").scale(
         strength=PARTICLES_PER_HOUR
     )
-    pk_b_doses.append(pk.dose_rate * bi.value)
-    pk_b_lo.append(pk.dose_rate * (bi.value - bi.sigma))
-    pk_b_hi.append(pk.dose_rate * (bi.value + bi.sigma))
+    pk_b_doses.append(pk.dose * bi.value)
+    pk_b_lo.append(pk.dose * (bi.value - bi.sigma))
+    pk_b_hi.append(pk.dose * (bi.value + bi.sigma))
 
 # Plot
 fig, ax = plt.subplots(figsize=(10, 7))

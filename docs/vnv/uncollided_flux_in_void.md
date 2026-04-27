@@ -24,7 +24,7 @@ sweeps:
   **662 keV photon**
 
 For each combination it calls `calculate_flux` through a single `Layer` of
-void (no `material`) and compares `.uncollided_flux` against
+void (no `material`) and compares `.flux` against
 $S / (4\pi r^2)$. It also asserts that `.transmission_fraction == 1.0`
 exactly.
 

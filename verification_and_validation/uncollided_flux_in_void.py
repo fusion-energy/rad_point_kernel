@@ -43,7 +43,7 @@ def run() -> int:
         source = rpk.Source(particle, energy)
         for r in DISTANCES_CM:
             result = rpk.calculate_flux(SOURCE_STRENGTH, [rpk.Layer(thickness=r)], source)
-            pk = result.uncollided_flux
+            pk = result.flux
             ref = analytic(SOURCE_STRENGTH, r)
             rel = abs(pk - ref) / ref
             status = "OK" if rel <= TOL_REL else "FAIL"
