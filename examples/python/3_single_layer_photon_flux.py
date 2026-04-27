@@ -13,7 +13,7 @@ PARTICLES_PER_SECOND = 1e12  # photons/s
 
 # PK flux (no buildup)
 pk = rpk.calculate_flux(layers=layers, source=source).scale(strength=PARTICLES_PER_SECOND)
-print(f"PK flux (no buildup): {pk.uncollided_flux} photons/cm2/s")
+print(f"PK flux (no buildup): {pk.flux} photons/cm2/s")
 
 # MC buildup
 print("Running MC with Co-60 spectrum...")
@@ -33,5 +33,5 @@ print(f"Buildup factor: {r.buildup['flux']}")
 corrected = rpk.calculate_flux(layers=layers, source=source, buildup=r).scale(
     strength=PARTICLES_PER_SECOND
 )
-print(f"PK flux with buildup: {corrected.uncollided_flux} photons/cm2/s")
+print(f"PK flux with buildup: {corrected.flux} photons/cm2/s")
 print(f"MC flux (reference):  {r.mc['flux']} photons/cm2/s")

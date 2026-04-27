@@ -126,7 +126,7 @@ corrected = rpk.calculate_dose(
     geometry="AP",
     buildup=r,
 ).scale(strength=PARTICLES_PER_HOUR)
-print(f"Dose with build-up: {corrected.dose_rate} Sv/hr")
+print(f"Dose with build-up: {corrected.dose} Sv/hr")
 ```
 
 ### Use BuildupModel.constant() manually
@@ -151,7 +151,7 @@ result = rpk.calculate_dose(
     geometry="AP",
     buildup=buildup,
 ).scale(strength=1e12 * 3600)  # photons/hour, dose in Sv/hr
-print(f"Dose with B=2.5: {result.dose_rate} Sv/hr")
+print(f"Dose with B=2.5: {result.dose} Sv/hr")
 ```
 
 ## Cross sections path

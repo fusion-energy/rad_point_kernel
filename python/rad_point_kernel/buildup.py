@@ -480,10 +480,10 @@ def _populate_result(result, layers, source, quantities, mc_data):
         if not coupled:
             if measure == "flux":
                 pk = calculate_flux(layers=layers, source=source)
-                pk_val = pk.uncollided_flux
+                pk_val = pk.flux
             else:
                 pk = calculate_dose(layers=layers, source=source, geometry=geo)
-                pk_val = pk.dose_rate
+                pk_val = pk.dose
 
             result.pk[q_name] = pk_val
             if pk_val and pk_val > 0:
