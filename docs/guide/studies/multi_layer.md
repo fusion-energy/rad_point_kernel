@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 import rad_point_kernel as rpk
 
-SOURCE_STRENGTH = 1e12
+PARTICLES_PER_SHOT = 1e16
 GEOMETRY = "AP"
 VOID_THICKNESS = 1000
 source = rpk.Source(particle="neutron", energy=14.06e6)
@@ -125,11 +125,10 @@ def extrapolate(table, ts, key, arg_name):
             layers = make_layers(t, key)
             bi = table.interpolate(water=t, warn=False)
         pk = rpk.calculate_dose(
-            source_strength=SOURCE_STRENGTH,
             layers=layers,
             source=source,
             geometry=GEOMETRY,
-        )
+        ).scale(strength=PARTICLES_PER_SHOT)
         doses.append(pk.dose_rate * bi.value)
         lo.append(pk.dose_rate * (bi.value - bi.sigma))
         hi.append(pk.dose_rate * (bi.value + bi.sigma))
@@ -157,12 +156,12 @@ for wt in mc_water:
     ax1.fill_between(all_conc, lo, hi, color=c, alpha=0.12)
     mc_vals = [
         (cached[(wt, ct)].mc.get(N_DOSE, 0) + cached[(wt, ct)].mc.get(P_DOSE, 0))
-        * SOURCE_STRENGTH for ct in mc_conc
+        * PARTICLES_PER_SHOT for ct in mc_conc
     ]
     ax1.scatter(mc_conc, mc_vals, color=c, s=30, zorder=5)
 
 ax1.set_xlabel("Concrete thickness (cm)")
-ax1.set_ylabel("Total dose rate (Sv/hr)")
+ax1.set_ylabel("Total dose (Sv/shot)")
 ax1.set_yscale("log")
 ax1.set_title("Total dose vs concrete (per water thickness)")
 ax1.legend(fontsize=9)
@@ -175,12 +174,12 @@ for ct in mc_conc:
     ax2.fill_between(all_water, lo, hi, color=c, alpha=0.12)
     mc_vals = [
         (cached[(wt, ct)].mc.get(N_DOSE, 0) + cached[(wt, ct)].mc.get(P_DOSE, 0))
-        * SOURCE_STRENGTH for wt in mc_water
+        * PARTICLES_PER_SHOT for wt in mc_water
     ]
     ax2.scatter(mc_water, mc_vals, color=c, s=30, zorder=5)
 
 ax2.set_xlabel("Water thickness (cm)")
-ax2.set_ylabel("Total dose rate (Sv/hr)")
+ax2.set_ylabel("Total dose (Sv/shot)")
 ax2.set_yscale("log")
 ax2.set_title("Total dose vs water (per concrete thickness)")
 ax2.legend(fontsize=9)

@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 import rad_point_kernel as rpk
 
-SOURCE_STRENGTH = 1e12
+PARTICLES_PER_SHOT = 1e16
 GEOMETRY = "AP"
 VOID_THICKNESS = 1000
 source = rpk.Source(particle="neutron", energy=14.1e6)
@@ -138,11 +138,10 @@ for name, mat in materials.items():
             rpk.Layer(thickness=t, material=mat),
         ]
         pk = rpk.calculate_dose(
-            source_strength=SOURCE_STRENGTH,
             layers=layers,
             source=source,
             geometry=GEOMETRY,
-        )
+        ).scale(strength=PARTICLES_PER_SHOT)
         bi = table.interpolate(thickness=t, warn=False)
         doses.append(pk.dose_rate * bi.value)
         doses_lo.append(pk.dose_rate * (bi.value - bi.sigma))
@@ -169,21 +168,21 @@ for name in materials:
 
     mc_vals = [
         (mc_cached[name][t].mc.get(N_DOSE, 0) + mc_cached[name][t].mc.get(P_DOSE, 0))
-        * SOURCE_STRENGTH for t in mc_thicknesses
+        * PARTICLES_PER_SHOT for t in mc_thicknesses
     ]
     mc_errs = [
         np.sqrt(
             mc_cached[name][t].mc_std_dev.get(N_DOSE, 0) ** 2
             + mc_cached[name][t].mc_std_dev.get(P_DOSE, 0) ** 2
-        ) * SOURCE_STRENGTH for t in mc_thicknesses
+        ) * PARTICLES_PER_SHOT for t in mc_thicknesses
     ]
     ax.errorbar(mc_thicknesses, mc_vals, yerr=mc_errs,
                 fmt="o", color=c, markersize=6, capsize=3, zorder=5)
 
 ax.set_xlabel("Shield thickness (cm)")
-ax.set_ylabel("Total dose rate (Sv/hr)")
+ax.set_ylabel("Total dose (Sv/shot)")
 ax.set_title(
-    f"Total dose (neutron + secondary gamma) - {source.energy/1e6:.1f} MeV, {GEOMETRY}"
+    f"Total dose (neutron + secondary gamma) - {source.energy/1e6} MeV pulsed DT, {GEOMETRY}"
 )
 ax.set_yscale("log")
 ax.legend()

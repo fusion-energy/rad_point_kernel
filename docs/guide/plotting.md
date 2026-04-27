@@ -23,7 +23,7 @@ concrete = rpk.Material(
     fraction="mass",
 )
 
-SOURCE = 1e12
+PARTICLES_PER_HOUR = 1e12 * 3600  # 1e12 photons/sec activity, scale to /hr
 source = rpk.Source(particle="photon", energy=1e6)
 
 mc_thicknesses = [5, 10, 15, 20]
@@ -55,18 +55,18 @@ for t in all_thicknesses:
     layers = [rpk.Layer(thickness=t, material=concrete)]
     bi = table.interpolate(thickness=t, warn=False)
     pk = rpk.calculate_dose(
-        source_strength=SOURCE,
         layers=layers,
         source=source,
         geometry="AP",
-    )
+    ).scale(strength=PARTICLES_PER_HOUR)
     doses.append(pk.dose_rate * bi.value)
     doses_lo.append(pk.dose_rate * (bi.value - bi.sigma))
     doses_hi.append(pk.dose_rate * (bi.value + bi.sigma))
 
 # Monte Carlo reference points
-mc_doses = [r.mc["dose-AP"] * SOURCE for r in mc_results]
-mc_errs = [r.mc_std_dev["dose-AP"] * SOURCE for r in mc_results]
+mc_scaled = [r.scale(strength=PARTICLES_PER_HOUR) for r in mc_results]
+mc_doses = [r.mc["dose-AP"] for r in mc_scaled]
+mc_errs = [r.mc_std_dev["dose-AP"] for r in mc_scaled]
 
 # Plot
 fig, ax = plt.subplots(figsize=(10, 7))

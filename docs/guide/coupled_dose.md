@@ -20,13 +20,13 @@ results = rpk.compute_buildup(
     quantities=["dose-AP", "dose-AP-coupled-photon"],
 )
 
-r = results[0]
-S = 1e12
-neutron = r.mc["dose-AP"] * S
-gamma = r.mc["dose-AP-coupled-photon"] * S
-print(f"Neutron dose:    {neutron} Sv/hr")
-print(f"Secondary gamma: {gamma} Sv/hr")
-print(f"Total:           {neutron + gamma} Sv/hr")
+# Pulsed DT shot: 1e16 neutrons per shot, dose lands in Sv/shot
+r = results[0].scale(strength=1e16)
+neutron = r.mc["dose-AP"]
+gamma = r.mc["dose-AP-coupled-photon"]
+print(f"Neutron dose:    {neutron} Sv/shot")
+print(f"Secondary gamma: {gamma} Sv/shot")
+print(f"Total:           {neutron + gamma} Sv/shot")
 ```
 
 ## With a manual build-up factor
@@ -46,15 +46,14 @@ source = rpk.Source(particle="neutron", energy=14.1e6)
 
 B_neutron = 2.5
 result = rpk.calculate_secondary_photon_dose_rate(
-    source_strength=1e12,
     layers=layers,
     source=source,
     geometry="AP",
     neutron_buildup=rpk.BuildupModel.constant(B_neutron),
-)
-print(f"Neutron dose (B={B_neutron}): {result.neutron_dose_rate} Sv/hr")
-print(f"Secondary gamma dose:       {result.secondary_photon_dose_rate} Sv/hr")
-print(f"Total dose:                 {result.total_dose_rate} Sv/hr")
+).scale(strength=1e16)
+print(f"Neutron dose (B={B_neutron}): {result.neutron_dose_rate} Sv/shot")
+print(f"Secondary gamma dose:       {result.secondary_photon_dose_rate} Sv/shot")
+print(f"Total dose:                 {result.total_dose_rate} Sv/shot")
 ```
 
 ### Why the manual B is neutron-only
