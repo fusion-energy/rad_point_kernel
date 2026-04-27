@@ -31,7 +31,8 @@ import rad_point_kernel as rpk
 matplotlib.use("Agg")
 
 # Setup
-SOURCE_STRENGTH = 1e12
+PARTICLES_PER_HOUR = 1e12 * 3600  # 1e12 photons/sec activity, scale to /hr
+PARTICLES_PER_SECOND = 1e12  # for the flux plot, label /s
 source = rpk.Source(particle="photon", energy=662e3)
 concrete = rpk.Material(
     composition={"H": 0.01, "O": 0.53, "Si": 0.34, "Ca": 0.04, "Al": 0.03, "Fe": 0.01},
@@ -69,7 +70,7 @@ for t, r in zip(mc_thicknesses, mc_results):
 
 
 def _build_curve(quantity: str):
-    """Return x, pk_uncoll, pk_b, pk_b_lo, pk_b_hi, mc_vals, mc_errs."""
+    """Return pk_uncoll, pk_b, pk_b_lo, pk_b_hi, mc_vals, mc_errs."""
     table = rpk.BuildupTable(
         points=[{"thickness": t} for t in mc_thicknesses],
         results=mc_results,
@@ -78,30 +79,30 @@ def _build_curve(quantity: str):
     pk_b = []
     pk_b_lo = []
     pk_b_hi = []
+    if quantity == "flux":
+        strength = PARTICLES_PER_SECOND
+    else:
+        strength = PARTICLES_PER_HOUR
     for t in all_thicknesses:
         layers = [rpk.Layer(thickness=t, material=concrete)]
         bi = table.interpolate(thickness=t, quantity=quantity, warn=False)
         if quantity == "flux":
-            pk = rpk.calculate_flux(
-                source_strength=SOURCE_STRENGTH,
-                layers=layers,
-                source=source,
+            pk = rpk.calculate_flux(layers=layers, source=source).scale(
+                strength=strength,
             )
             pk_val = pk.uncollided_flux
         else:
             pk = rpk.calculate_dose(
-                source_strength=SOURCE_STRENGTH,
-                layers=layers,
-                source=source,
-                geometry="AP",
-            )
+                layers=layers, source=source, geometry="AP",
+            ).scale(strength=strength)
             pk_val = pk.dose_rate
         pk_uncoll.append(pk_val)
         pk_b.append(pk_val * bi.value)
         pk_b_lo.append(pk_val * max(0.0, bi.value - bi.sigma))
         pk_b_hi.append(pk_val * (bi.value + bi.sigma))
-    mc_vals = [r.mc[quantity] * SOURCE_STRENGTH for r in mc_results]
-    mc_errs = [r.mc_std_dev[quantity] * SOURCE_STRENGTH for r in mc_results]
+    mc_scaled = [r.scale(strength=strength) for r in mc_results]
+    mc_vals = [r.mc[quantity] for r in mc_scaled]
+    mc_errs = [r.mc_std_dev[quantity] for r in mc_scaled]
     return pk_uncoll, pk_b, pk_b_lo, pk_b_hi, mc_vals, mc_errs
 
 

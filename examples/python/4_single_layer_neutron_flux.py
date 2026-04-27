@@ -1,15 +1,20 @@
-"""Neutron flux with MC-computed buildup factor (D-T + D-D source)."""
+"""Neutron flux with MC-computed buildup factor (D-T + D-D source).
+
+This represents a pulsed-fusion shot, so the strength is in neutrons per shot
+and the resulting flux is in neutrons/cm^2 per shot. Swap the strength unit
+(without re-running MC) to model a steady-state generator instead.
+"""
 
 import rad_point_kernel as rpk
 
 iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 layers = [rpk.Layer(thickness=10, material=iron)]
 source = rpk.Source("neutron", [(14.06e6, 95), (2.45e6, 5)])
-SOURCE_STRENGTH = 1e12
+PARTICLES_PER_SHOT = 1e16
 
 # PK flux (no buildup)
-pk = rpk.calculate_flux(SOURCE_STRENGTH, layers, source)
-print(f"PK flux (no buildup): {pk.uncollided_flux:.4e} n/cm2/s")
+pk = rpk.calculate_flux(layers=layers, source=source).scale(strength=PARTICLES_PER_SHOT)
+print(f"PK flux (no buildup): {pk.uncollided_flux} n/cm2/shot")
 
 # MC buildup
 print("Running MC with D-T + D-D spectrum...")
@@ -22,10 +27,12 @@ results = rpk.compute_buildup(
     trigger_rel_err=0.05,
 )
 
-r = results[0]
-print(f"Buildup factor: {r.buildup['flux']:.4f}")
+r = results[0].scale(strength=PARTICLES_PER_SHOT)
+print(f"Buildup factor: {r.buildup['flux']}")
 
 # Apply buildup
-corrected = rpk.calculate_flux(SOURCE_STRENGTH, layers, source, buildup=r)
-print(f"PK flux with buildup: {corrected.uncollided_flux:.4e} n/cm2/s")
-print(f"MC flux (reference):  {r.mc['flux'] * SOURCE_STRENGTH:.4e} n/cm2/s")
+corrected = rpk.calculate_flux(layers=layers, source=source, buildup=r).scale(
+    strength=PARTICLES_PER_SHOT
+)
+print(f"PK flux with buildup: {corrected.uncollided_flux} n/cm2/shot")
+print(f"MC flux (reference):  {r.mc['flux']} n/cm2/shot")

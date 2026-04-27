@@ -110,7 +110,7 @@ import rad_point_kernel as rpk
 
 iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 layers = [rpk.Layer(thickness=10, material=iron)]
-SOURCE = 1e12
+PARTICLES_PER_HOUR = 1e12 * 3600  # 1e12 photons/sec activity
 
 source = rpk.Source(particle="photon", energy=1e6)
 results = rpk.compute_buildup(
@@ -121,12 +121,11 @@ results = rpk.compute_buildup(
 r = results[0]
 
 corrected = rpk.calculate_dose(
-    source_strength=SOURCE,
     layers=layers,
     source=source,
     geometry="AP",
     buildup=r,
-)
+).scale(strength=PARTICLES_PER_HOUR)
 print(f"Dose with build-up: {corrected.dose_rate} Sv/hr")
 ```
 
@@ -147,12 +146,11 @@ buildup = rpk.BuildupModel.constant(2.5)
 
 source = rpk.Source(particle="photon", energy=1e6)
 result = rpk.calculate_dose(
-    source_strength=1e12,
     layers=layers,
     source=source,
     geometry="AP",
     buildup=buildup,
-)
+).scale(strength=1e12 * 3600)  # photons/hour, dose in Sv/hr
 print(f"Dose with B=2.5: {result.dose_rate} Sv/hr")
 ```
 
@@ -187,12 +185,11 @@ results = rpk.compute_buildup(
     quantities=["dose-AP", "dose-AP-coupled-photon"],
 )
 
-r = results[0]
-S = 1e12
-total_dose = (r.mc["dose-AP"] + r.mc["dose-AP-coupled-photon"]) * S
-print(f"Neutron dose:   {r.mc['dose-AP'] * S} Sv/hr")
-print(f"Secondary gamma: {r.mc['dose-AP-coupled-photon'] * S} Sv/hr")
-print(f"Total dose:     {total_dose} Sv/hr")
+r = results[0].scale(strength=1e16)  # neutrons per shot, dose in Sv/shot
+total_dose = r.mc["dose-AP"] + r.mc["dose-AP-coupled-photon"]
+print(f"Neutron dose:    {r.mc['dose-AP']} Sv/shot")
+print(f"Secondary gamma: {r.mc['dose-AP-coupled-photon']} Sv/shot")
+print(f"Total dose:      {total_dose} Sv/shot")
 ```
 
 Since you're already running Monte Carlo for neutron build-up, coupled transport adds some extra compute cost and gives the secondary photon dose.

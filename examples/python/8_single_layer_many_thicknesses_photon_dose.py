@@ -1,6 +1,8 @@
 """Photon dose across many thicknesses with GP-extrapolated buildup.
 
 MC at 4 thin concrete thicknesses, BuildupTable GP extrapolation to 4 m.
+Cs-137 is a continuous source; the strength is supplied in photons per hour
+so the resulting dose is in Sv/hr.
 """
 
 import os
@@ -16,7 +18,7 @@ concrete = rpk.Material(
     fraction="mass",
 )
 source = rpk.Source("photon", 662e3)
-SOURCE_STRENGTH = 1e12
+PARTICLES_PER_HOUR = 1e12 * 3600  # 1e12 photons/sec activity
 
 mc_thicknesses = [5, 10, 15, 20]
 all_thicknesses = mc_thicknesses + list(range(25, 410, 5))
@@ -35,7 +37,7 @@ mc_results = rpk.compute_buildup(
 )
 
 for t, r in zip(mc_thicknesses, mc_results):
-    print(f"  {t:>2d} cm: B = {r.buildup['dose-AP']:.3f}")
+    print(f"  {t} cm: B = {r.buildup['dose-AP']}")
 
 # BuildupTable
 table = rpk.BuildupTable(
@@ -49,7 +51,9 @@ pk_b_doses, pk_b_lo, pk_b_hi = [], [], []
 
 for t, layers in zip(all_thicknesses, all_geometries):
     bi = table.interpolate(thickness=t)
-    pk = rpk.calculate_dose(SOURCE_STRENGTH, layers, source, "AP")
+    pk = rpk.calculate_dose(layers=layers, source=source, geometry="AP").scale(
+        strength=PARTICLES_PER_HOUR
+    )
     pk_b_doses.append(pk.dose_rate * bi.value)
     pk_b_lo.append(pk.dose_rate * (bi.value - bi.sigma))
     pk_b_hi.append(pk.dose_rate * (bi.value + bi.sigma))
@@ -59,8 +63,9 @@ fig, ax = plt.subplots(figsize=(10, 7))
 ax.plot(all_thicknesses, pk_b_doses, "b-", linewidth=2, label="PK with buildup")
 ax.fill_between(all_thicknesses, pk_b_lo, pk_b_hi, color="blue", alpha=0.15)
 
-mc_doses = [r.mc["dose-AP"] * SOURCE_STRENGTH for r in mc_results]
-mc_errs = [r.mc_std_dev["dose-AP"] * SOURCE_STRENGTH for r in mc_results]
+mc_scaled = [r.scale(strength=PARTICLES_PER_HOUR) for r in mc_results]
+mc_doses = [r.mc["dose-AP"] for r in mc_scaled]
+mc_errs = [r.mc_std_dev["dose-AP"] for r in mc_scaled]
 ax.errorbar(
     mc_thicknesses,
     mc_doses,

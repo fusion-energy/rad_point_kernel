@@ -265,8 +265,10 @@ def compute_buildup(
         cross_sections: Path to cross_sections.xml or directory containing it.
 
     Returns:
-        List of BuildupResult, one per geometry. MC flux is in particles/cm²/s,
-        MC dose is in Sv/hr, both per unit source strength.
+        List of BuildupResult, one per geometry. MC flux and dose are returned
+        per source particle. Apply an absolute strength via
+        `result.scale(strength)` to land in the unit you want (Sv/hr for
+        particles/sec, Sv/shot for particles/shot, etc.).
     """
     if isinstance(quantities, str):
         quantities = [quantities]
@@ -291,7 +293,7 @@ def compute_buildup(
         result = BuildupResult()
 
         # Optical thickness from PK
-        pk_flux = calculate_flux(source_strength=1.0, layers=layers, source=source)
+        pk_flux = calculate_flux(layers=layers, source=source)
         result.optical_thickness = pk_flux.optical_thickness
 
         # Run MC
@@ -443,9 +445,14 @@ def _run_mc(layers, source, coupled, quantities, particles_per_batch, batches, m
             if measure == "flux":
                 mc_data[q_name] = (mean / surface_area, std / surface_area)
             else:
+                # Dose tally with EnergyFunctionFilter is in pSv*cm^2 per
+                # source particle integrated over the surface; convert to Sv
+                # per source particle and divide out the surface area to get
+                # the per-cm^2 dose. No time factor: scale(strength) sets the
+                # time unit at the call site.
                 mc_data[q_name] = (
-                    mean / surface_area * 3600.0 * 1e-12,
-                    std / surface_area * 3600.0 * 1e-12,
+                    mean / surface_area * 1e-12,
+                    std / surface_area * 1e-12,
                 )
 
     return mc_data
@@ -472,10 +479,10 @@ def _populate_result(result, layers, source, quantities, mc_data):
         # PK reference - only for primary particle quantities (not coupled secondary)
         if not coupled:
             if measure == "flux":
-                pk = calculate_flux(source_strength=1.0, layers=layers, source=source)
+                pk = calculate_flux(layers=layers, source=source)
                 pk_val = pk.uncollided_flux
             else:
-                pk = calculate_dose(source_strength=1.0, layers=layers, source=source, geometry=geo)
+                pk = calculate_dose(layers=layers, source=source, geometry=geo)
                 pk_val = pk.dose_rate
 
             result.pk[q_name] = pk_val
