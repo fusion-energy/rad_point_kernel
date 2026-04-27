@@ -158,13 +158,13 @@ class TestTransmission:
 class TestFlux:
     def test_inverse_square_law(self):
         s = rpk.Source("neutron", 14.06e6)
-        r10 = rpk.calculate_flux(1e12, [rpk.Layer(thickness=10)], s)
-        r100 = rpk.calculate_flux(1e12, [rpk.Layer(thickness=100)], s)
+        r10 = rpk.calculate_flux([rpk.Layer(thickness=10)], s).scale(1e12)
+        r100 = rpk.calculate_flux([rpk.Layer(thickness=100)], s).scale(1e12)
         assert r10.uncollided_flux / r100.uncollided_flux == pytest.approx(100.0, rel=1e-12)
 
     def test_void_flux_formula(self):
         s = rpk.Source("neutron", 14.06e6)
-        result = rpk.calculate_flux(1e12, [rpk.Layer(thickness=200)], s)
+        result = rpk.calculate_flux([rpk.Layer(thickness=200)], s).scale(1e12)
         expected = 1e12 / (4 * math.pi * 200**2)
         assert result.uncollided_flux == pytest.approx(expected, rel=1e-12)
 
@@ -172,9 +172,39 @@ class TestFlux:
         iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
         layers = [rpk.Layer(thickness=10, material=iron)]
         s = rpk.Source("neutron", 14.06e6)
-        flux = rpk.calculate_flux(1e12, layers, s)
+        flux = rpk.calculate_flux(layers, s)
         trans = rpk.calculate_transmission(layers, s)
         assert flux.transmission_fraction == pytest.approx(trans, rel=1e-12)
+
+    def test_scale_returns_new(self):
+        s = rpk.Source("neutron", 14.06e6)
+        layers = [rpk.Layer(thickness=200)]
+        per_particle = rpk.calculate_flux(layers, s)
+        scaled = per_particle.scale(strength=1e12)
+        assert per_particle.source_strength == 1.0
+        assert scaled.source_strength == 1e12
+        assert scaled.uncollided_flux == pytest.approx(
+            per_particle.uncollided_flux * 1e12, rel=1e-12
+        )
+
+    def test_scale_replaces_not_compounds(self):
+        s = rpk.Source("photon", 662e3)
+        layers = [rpk.Layer(thickness=10)]
+        first = rpk.calculate_flux(layers, s).scale(1e12)
+        second = first.scale(1e10)
+        assert second.source_strength == 1e10
+        per_particle = rpk.calculate_flux(layers, s)
+        assert second.uncollided_flux == pytest.approx(
+            per_particle.uncollided_flux * 1e10, rel=1e-12
+        )
+
+    def test_scale_invalid(self):
+        s = rpk.Source("neutron", 14.06e6)
+        result = rpk.calculate_flux([rpk.Layer(thickness=100)], s)
+        with pytest.raises(ValueError):
+            result.scale(0.0)
+        with pytest.raises(ValueError):
+            result.scale(-1.0)
 
 
 # Dose tests
@@ -185,33 +215,40 @@ class TestDose:
         iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
         layers = [rpk.Layer(thickness=50), rpk.Layer(thickness=10, material=iron)]
         s = rpk.Source("neutron", 14.06e6)
-        result = rpk.calculate_dose(1e12, layers, s, "AP")
+        result = rpk.calculate_dose(layers, s, "AP")
         assert result.dose_rate > 0
 
     def test_photon_dose(self):
         iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
         layers = [rpk.Layer(thickness=50), rpk.Layer(thickness=10, material=iron)]
         s = rpk.Source("photon", 1e6)
-        result = rpk.calculate_dose(1e12, layers, s, "AP")
+        result = rpk.calculate_dose(layers, s, "AP")
         assert result.dose_rate > 0
 
     def test_all_geometries(self):
         s = rpk.Source("neutron", 14.06e6)
         for geo in ["AP", "PA", "RLAT", "LLAT", "ROT", "ISO"]:
-            result = rpk.calculate_dose(1e12, [rpk.Layer(thickness=100)], s, geo)
+            result = rpk.calculate_dose([rpk.Layer(thickness=100)], s, geo)
             assert result.dose_rate > 0, f"Failed for geometry {geo}"
 
     def test_invalid_geometry(self):
         s = rpk.Source("neutron", 14.06e6)
         with pytest.raises(ValueError):
-            rpk.calculate_dose(1e12, [rpk.Layer(thickness=100)], s, "INVALID")
+            rpk.calculate_dose([rpk.Layer(thickness=100)], s, "INVALID")
 
     def test_spectrum_dose(self):
         iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
         layers = [rpk.Layer(thickness=10, material=iron)]
         s = rpk.Source("photon", [(1173e3, 1.0), (1333e3, 1.0)])
-        result = rpk.calculate_dose(1e12, layers, s, "AP")
+        result = rpk.calculate_dose(layers, s, "AP")
         assert result.dose_rate > 0
+
+    def test_scale_dose(self):
+        s = rpk.Source("photon", 662e3)
+        layers = [rpk.Layer(thickness=100)]
+        per_particle = rpk.calculate_dose(layers, s, "AP")
+        scaled = per_particle.scale(strength=1e10)
+        assert scaled.dose_rate == pytest.approx(per_particle.dose_rate * 1e10, rel=1e-12)
 
 
 # Buildup model tests
@@ -221,7 +258,7 @@ class TestBuildup:
     def test_no_buildup(self):
         iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
         s = rpk.Source("neutron", 14.06e6)
-        result = rpk.calculate_flux(1e12, [rpk.Layer(thickness=10, material=iron)], s)
+        result = rpk.calculate_flux([rpk.Layer(thickness=10, material=iron)], s)
         assert result.buildup_factor == pytest.approx(1.0)
 
     def test_linear_buildup(self):
@@ -229,8 +266,8 @@ class TestBuildup:
         layers = [rpk.Layer(thickness=10, material=iron)]
         s = rpk.Source("neutron", 14.06e6)
         buildup = rpk.BuildupModel.linear(a=0.5)
-        r_no = rpk.calculate_flux(1e12, layers, s)
-        r_bu = rpk.calculate_flux(1e12, layers, s, buildup=buildup)
+        r_no = rpk.calculate_flux(layers, s)
+        r_bu = rpk.calculate_flux(layers, s, buildup=buildup)
         assert r_bu.uncollided_flux > r_no.uncollided_flux
 
     def test_buildup_result_auto_resolve(self):
@@ -240,7 +277,7 @@ class TestBuildup:
 
         br = rpk.BuildupResult()
         br.buildup = {"flux": 2.5}
-        result = rpk.calculate_flux(1e12, layers, s, buildup=br)
+        result = rpk.calculate_flux(layers, s, buildup=br)
         assert result.buildup_factor == pytest.approx(2.5)
 
     def test_interpolation_result_as_buildup(self):
@@ -249,7 +286,7 @@ class TestBuildup:
         s = rpk.Source("photon", 662e3)
 
         ir = rpk.InterpolationResult(value=3.0, sigma=0.1)
-        result = rpk.calculate_flux(1e12, layers, s, buildup=ir)
+        result = rpk.calculate_flux(layers, s, buildup=ir)
         assert result.buildup_factor == pytest.approx(3.0)
 
 
@@ -271,20 +308,20 @@ class TestMaterialFractions:
 
 class TestSecondaryPhotonDose:
     def test_void_no_gammas(self):
-        result = rpk.calculate_secondary_photon_dose_rate(1e12, [rpk.Layer(thickness=100)], rpk.Source("neutron", 14.06e6), "AP")
+        result = rpk.calculate_secondary_photon_dose_rate([rpk.Layer(thickness=100)], rpk.Source("neutron", 14.06e6), "AP")
         assert result.secondary_photon_dose_rate == 0.0
         assert result.neutron_dose_rate > 0.0
 
     def test_material_produces_gammas(self):
         iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
         layers = [rpk.Layer(thickness=50), rpk.Layer(thickness=10, material=iron)]
-        result = rpk.calculate_secondary_photon_dose_rate(1e12, layers, rpk.Source("neutron", 14.06e6), "AP")
+        result = rpk.calculate_secondary_photon_dose_rate(layers, rpk.Source("neutron", 14.06e6), "AP")
         assert result.secondary_photon_dose_rate > 0.0
 
     def test_total_is_sum(self):
         iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
         layers = [rpk.Layer(thickness=50), rpk.Layer(thickness=10, material=iron)]
-        result = rpk.calculate_secondary_photon_dose_rate(1e12, layers, rpk.Source("neutron", 14.06e6), "AP")
+        result = rpk.calculate_secondary_photon_dose_rate(layers, rpk.Source("neutron", 14.06e6), "AP")
         assert result.total_dose_rate == pytest.approx(
             result.neutron_dose_rate + result.secondary_photon_dose_rate, rel=1e-12
         )
@@ -292,10 +329,20 @@ class TestSecondaryPhotonDose:
     def test_neutron_dose_matches_standalone(self):
         iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
         layers = [rpk.Layer(thickness=50), rpk.Layer(thickness=10, material=iron)]
-        coupled = rpk.calculate_secondary_photon_dose_rate(1e12, layers, rpk.Source("neutron", 14.06e6), "AP")
+        coupled = rpk.calculate_secondary_photon_dose_rate(layers, rpk.Source("neutron", 14.06e6), "AP")
         s = rpk.Source("neutron", 14.06e6)
-        standalone = rpk.calculate_dose(1e12, layers, s, "AP")
+        standalone = rpk.calculate_dose(layers, s, "AP")
         assert coupled.neutron_dose_rate == pytest.approx(standalone.dose_rate, rel=1e-10)
+
+    def test_scale_secondary_photon(self):
+        iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
+        layers = [rpk.Layer(thickness=50), rpk.Layer(thickness=10, material=iron)]
+        per_particle = rpk.calculate_secondary_photon_dose_rate(layers, rpk.Source("neutron", 14.06e6), "AP")
+        scaled = per_particle.scale(strength=1e12)
+        assert scaled.source_strength == 1e12
+        assert scaled.neutron_dose_rate == pytest.approx(per_particle.neutron_dose_rate * 1e12, rel=1e-12)
+        assert scaled.secondary_photon_dose_rate == pytest.approx(per_particle.secondary_photon_dose_rate * 1e12, rel=1e-12)
+        assert scaled.total_dose_rate == pytest.approx(per_particle.total_dose_rate * 1e12, rel=1e-12)
 
 
 # BuildupResult tests
@@ -332,6 +379,53 @@ class TestBuildupResult:
         r = rpk.BuildupResult()
         assert r.mc == {}
         assert r.optical_thickness == 0.0
+        assert r.source_strength == 1.0
+
+    def test_scale(self):
+        r = rpk.BuildupResult()
+        r.mc = {"dose-AP": 1.5e-11}
+        r.mc_std_dev = {"dose-AP": 1e-13}
+        r.pk = {"dose-AP": 1.2e-11}
+        r.buildup = {"dose-AP": 1.25}
+        r.optical_thickness = 3.5
+
+        scaled = r.scale(strength=1e10)
+        assert scaled.source_strength == 1e10
+        assert scaled.mc["dose-AP"] == pytest.approx(1.5e-11 * 1e10)
+        assert scaled.pk["dose-AP"] == pytest.approx(1.2e-11 * 1e10)
+        # Buildup is a ratio, must be unchanged
+        assert scaled.buildup["dose-AP"] == pytest.approx(1.25)
+        # Original is unchanged
+        assert r.source_strength == 1.0
+        assert r.mc["dose-AP"] == pytest.approx(1.5e-11)
+
+    def test_scale_replaces_not_compounds(self):
+        r = rpk.BuildupResult()
+        r.mc = {"flux": 1e-6}
+        r.pk = {"flux": 1e-6}
+        r.buildup = {"flux": 1.0}
+        once = r.scale(strength=1e12)
+        twice = once.scale(strength=1e10)
+        assert twice.source_strength == 1e10
+        assert twice.mc["flux"] == pytest.approx(1e-6 * 1e10)
+
+    def test_scale_round_trips_in_json(self, tmp_path):
+        r = rpk.BuildupResult()
+        r.mc = {"dose-AP": 1.5e-11}
+        r.buildup = {"dose-AP": 1.25}
+        scaled = r.scale(strength=1e10)
+        path = tmp_path / "cache.json"
+        rpk.BuildupResult.save([scaled], path)
+        loaded = rpk.BuildupResult.load(path)
+        assert loaded[0].source_strength == 1e10
+
+    def test_scale_invalid(self):
+        r = rpk.BuildupResult()
+        r.mc = {"flux": 1e-6}
+        with pytest.raises(ValueError):
+            r.scale(strength=0.0)
+        with pytest.raises(ValueError):
+            r.scale(strength=-1.0)
 
 
 # BuildupTable tests

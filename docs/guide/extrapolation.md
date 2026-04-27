@@ -32,7 +32,7 @@ concrete = rpk.Material(
     fraction="mass",
 )
 
-SOURCE = 1e12
+PARTICLES_PER_HOUR = 1e12 * 3600  # 1e12 photons/sec activity, scale to /hr
 source = rpk.Source(particle="photon", energy=1e6)
 
 # Step 1: Monte Carlo at 4 thicknesses
@@ -64,15 +64,14 @@ for t in all_thicknesses:
     bi = table.interpolate(thickness=t)
 
     result = rpk.calculate_dose(
-        source_strength=SOURCE,
         layers=layers,
         source=source,
         geometry="AP",
         buildup=bi,
-    )
+    ).scale(strength=PARTICLES_PER_HOUR)
 
     status = "EXTRAPOLATED" if bi.is_extrapolated else "interpolated"
-    print(f"  {t:>3d} cm: dose = {result.dose_rate} Sv/hr, "
+    print(f"  {t} cm: dose = {result.dose_rate} Sv/hr, "
           f"B = {bi.value} +/- {bi.sigma} ({status})")
 ```
 
@@ -101,12 +100,11 @@ You can pass an `InterpolationResult` directly to any calculation function:
 ```python exec="true" source="material-block" result="text" session="extrapolation"
 bi = table.interpolate(thickness=50)
 result = rpk.calculate_dose(
-    source_strength=1e12,
     layers=[rpk.Layer(thickness=50, material=concrete)],
     source=source,
     geometry="AP",
     buildup=bi,
-)
+).scale(strength=PARTICLES_PER_HOUR)
 print(f"Dose at 50 cm concrete: {result.dose_rate} Sv/hr (B = {bi.value})")
 ```
 
@@ -119,12 +117,11 @@ You don't have to use `BuildupTable` - if you have build-up factors from another
 my_B = 3.2
 layers = [rpk.Layer(thickness=50, material=concrete)]
 result = rpk.calculate_dose(
-    source_strength=1e12,
     layers=layers,
     source=source,
     geometry="AP",
     buildup=rpk.BuildupModel.constant(my_B),
-)
+).scale(strength=PARTICLES_PER_HOUR)
 print(f"Dose with B={my_B}: {result.dose_rate} Sv/hr")
 ```
 
@@ -230,11 +227,10 @@ for t in all_thicknesses:
     layers = [rpk.Layer(thickness=t, material=concrete)]
     bi = table.interpolate(thickness=t, warn=False)
     pk = rpk.calculate_dose(
-        source_strength=SOURCE,
         layers=layers,
         source=source,
         geometry="AP",
-    )
+    ).scale(strength=PARTICLES_PER_HOUR)
     doses.append(pk.dose_rate * bi.value)
     doses_lo.append(pk.dose_rate * (bi.value - bi.sigma))
     doses_hi.append(pk.dose_rate * (bi.value + bi.sigma))
@@ -244,7 +240,8 @@ ax.plot(all_thicknesses, doses, "b-", label="PK with build-up")
 ax.fill_between(all_thicknesses, doses_lo, doses_hi, color="blue", alpha=0.15)
 
 # Monte Carlo reference points
-mc_doses = [r.mc["dose-AP"] * SOURCE for r in mc_results]
+mc_scaled = [r.scale(strength=PARTICLES_PER_HOUR) for r in mc_results]
+mc_doses = [r.mc["dose-AP"] for r in mc_scaled]
 ax.plot(mc_thicknesses, mc_doses, "ko", markersize=7, label="Monte Carlo")
 
 ax.set_xlabel("Thickness (cm)")

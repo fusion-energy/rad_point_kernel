@@ -49,14 +49,13 @@ layers = [
     rpk.Layer(thickness=100, material=concrete),  # 1 m concrete
 ]
 
-# Calculate neutron dose rate
+# Calculate neutron dose per source particle, then scale by neutrons per shot
 result = rpk.calculate_dose(
-    source_strength=1e12,
     layers=layers,
     source=source,
     geometry="AP",
-)
-print(f"Dose rate: {result.dose_rate} Sv/hr")
+).scale(strength=1e16)
+print(f"Dose: {result.dose_rate} Sv/shot")
 ```
 
 See the [installation guide](guide/installation.md) for setup, including OpenMC and cross-section data.

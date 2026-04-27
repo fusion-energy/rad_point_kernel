@@ -14,7 +14,7 @@ import json
 from pathlib import Path
 import rad_point_kernel as rpk
 
-SOURCE_STRENGTH = 1e12
+PARTICLES_PER_SECOND = 1e12  # steady-state DT generator
 GEOMETRY = "AP"
 VOID_THICKNESS = 1000
 CONCRETE_THICKNESS = 50
@@ -122,15 +122,15 @@ photon = np.zeros_like(neutron)
 for i, bw in enumerate(BORON_WTS):
     for j, sv in enumerate(STEEL_VOLS):
         r = cached[(sv, bw)]
-        neutron[i, j] = r.mc[N_DOSE] * SOURCE_STRENGTH
-        photon[i, j] = r.mc[P_DOSE] * SOURCE_STRENGTH
+        neutron[i, j] = r.mc[N_DOSE] * PARTICLES_PER_SECOND
+        photon[i, j] = r.mc[P_DOSE] * PARTICLES_PER_SECOND
 total = neutron + photon
 
 fig, axes = plt.subplots(1, 3, figsize=(14, 4.5), constrained_layout=True)
 panels = [
-    (axes[0], neutron, "Neutron dose (Sv/hr)"),
-    (axes[1], photon, "Secondary photon dose (Sv/hr)"),
-    (axes[2], total, "Total dose (Sv/hr)"),
+    (axes[0], neutron, "Neutron dose rate (Sv/s)"),
+    (axes[1], photon, "Secondary photon dose rate (Sv/s)"),
+    (axes[2], total, "Total dose rate (Sv/s)"),
 ]
 
 extent = [
@@ -157,7 +157,7 @@ for ax, data, title in panels:
 
 fig.suptitle(
     f"{CONCRETE_THICKNESS} cm Portland concrete, 14.1 MeV neutron, {GEOMETRY}, "
-    f"S = {SOURCE_STRENGTH:.0e} n/s",
+    f"S = {PARTICLES_PER_SECOND} n/s",
     fontsize=11,
 )
 

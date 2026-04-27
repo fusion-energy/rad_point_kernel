@@ -69,7 +69,7 @@ A spherical shell layer with thickness in cm and optional material.
 
 ## Calculation functions
 
-All calculation functions take a `Source` object that specifies the particle type and energy.
+All calculation functions take a `Source` object that specifies the particle type and energy. They return a result normalised **per source particle**. Apply an absolute strength via `result.scale(strength=...)` to land in the unit you want: a strength in particles/sec gives Sv/s and particles/cm^2/s; in particles/hr gives Sv/hr; in particles/shot gives Sv/shot. Re-scaling is a numeric post-process - it never re-runs the simulation.
 
 ### Transmission fraction
 
@@ -82,22 +82,20 @@ Returns a float in [0, 1]: the pure material attenuation exp(-Sum(Sigma_r * t)) 
 
 ### Uncollided flux
 
-#### `calculate_flux(source_strength, layers, source, buildup=None)`
+#### `calculate_flux(layers, source, buildup=None)`
 
-Returns a `CalcResult`. Computes S / (4*pi*R^2) * exp(-Sigma*t) * B.
+Returns a `CalcResult` with flux per source particle. Computes 1 / (4*pi*R^2) * exp(-Sigma*t) * B.
 
-- `source_strength` - source strength in particles/s.
 - `layers` - list of `Layer` objects.
 - `source` - a `Source` object.
 - `buildup` - optional `BuildupModel`, `BuildupResult`, or `InterpolationResult`.
 
 ### Dose rate
 
-#### `calculate_dose(source_strength, layers, source, geometry, buildup=None)`
+#### `calculate_dose(layers, source, geometry, buildup=None)`
 
-Returns a `CalcResult`. Computes uncollided flux multiplied by the ICRP-116 fluence-to-dose conversion coefficient.
+Returns a `CalcResult` with dose per source particle (Sv/particle). Multiplies the per-particle uncollided flux by the ICRP-116 fluence-to-dose conversion coefficient.
 
-- `source_strength` - source strength in particles/s.
 - `layers` - list of `Layer` objects.
 - `source` - a `Source` object.
 - `geometry` - one of `"AP"`, `"PA"`, `"RLAT"`, `"LLAT"`, `"ROT"`, `"ISO"`.
@@ -105,11 +103,10 @@ Returns a `CalcResult`. Computes uncollided flux multiplied by the ICRP-116 flue
 
 ### Secondary photon dose rate
 
-#### `calculate_secondary_photon_dose_rate(source_strength, layers, source, geometry, neutron_buildup=None)`
+#### `calculate_secondary_photon_dose_rate(layers, source, geometry, neutron_buildup=None)`
 
-Returns a `SecondaryGammaResult`. Analytical estimate of the secondary photon dose rate from neutron capture gammas in each material, plus the neutron dose. For more accurate results, prefer a coupled neutron-photon `compute_buildup` run.
+Returns a `SecondaryGammaResult` with dose per source particle. Analytical estimate of the secondary photon dose from neutron capture gammas in each material, plus the neutron dose. For more accurate results, prefer a coupled neutron-photon `compute_buildup` run.
 
-- `source_strength` - source strength in particles/s.
 - `layers` - list of `Layer` objects.
 - `source` - a monoenergetic neutron `Source` object.
 - `geometry` - one of `"AP"`, `"PA"`, `"RLAT"`, `"LLAT"`, `"ROT"`, `"ISO"`.
@@ -121,26 +118,36 @@ Returns a `SecondaryGammaResult`. Analytical estimate of the secondary photon do
 
 ### `CalcResult`
 
-Returned by flux and dose calculations.
+Returned by flux and dose calculations. Numeric fields are normalised per source particle; multiply through with `.scale(strength=...)` to apply an absolute source strength.
 
 **Properties:**
 
-- `uncollided_flux` - flux at the outer surface (particles/cm2/s).
-- `dose_rate` - effective dose rate in Sv/hr (present for dose calculations).
+- `uncollided_flux` - flux at the outer surface (per source particle until scaled).
+- `dose_rate` - effective dose (Sv per source particle until scaled). Present for dose calculations only.
 - `transmission_fraction` - exp(-Sigma*t).
 - `optical_thickness` - Sum(Sigma_r,i * t_i).
 - `buildup_factor` - applied build-up factor (1.0 if none).
 - `total_distance_cm` - total distance from source to detector (cm).
+- `source_strength` - strength baked into `uncollided_flux` and `dose_rate` (1.0 = unscaled).
+
+**Methods:**
+
+- `scale(strength)` - returns a new `CalcResult` with `uncollided_flux` and `dose_rate` multiplied to reflect the given absolute strength. Re-scaling replaces the previous strength rather than compounding. Strength must be > 0.
 
 ### `SecondaryGammaResult`
 
-Returned by `calculate_secondary_photon_dose_rate`.
+Returned by `calculate_secondary_photon_dose_rate`. Dose fields are per source particle until scaled.
 
 **Properties:**
 
-- `neutron_dose_rate` - neutron dose rate in Sv/hr.
-- `secondary_photon_dose_rate` - secondary photon dose rate in Sv/hr.
+- `neutron_dose_rate` - neutron dose (per source particle until scaled).
+- `secondary_photon_dose_rate` - secondary photon dose (per source particle until scaled).
 - `total_dose_rate` - sum of neutron + secondary photon dose.
+- `source_strength` - strength baked into the dose fields (1.0 = unscaled).
+
+**Methods:**
+
+- `scale(strength)` - returns a new result with the dose fields multiplied. Same semantics as `CalcResult.scale`.
 
 ---
 
@@ -158,21 +165,23 @@ Analytical build-up factor models. Created via static methods:
 
 ### `BuildupResult`
 
-Result of a single Monte Carlo build-up computation from `compute_buildup`.
+Result of a single Monte Carlo build-up computation from `compute_buildup`. The `mc`, `mc_std_dev`, and `pk` values are stored per source particle until scaled.
 
 **Attributes (dicts keyed by quantity string):**
 
-- `mc` - Monte Carlo tally value (per source particle).
+- `mc` - Monte Carlo tally value (per source particle until scaled).
 - `mc_std_dev` - Monte Carlo standard deviation.
 - `pk` - point-kernel reference value.
-- `buildup` - build-up factor (mc / pk).
+- `buildup` - build-up factor (mc / pk; dimensionless ratio, never affected by scaling).
 - `optical_thickness` - total optical thickness (float).
+- `source_strength` - strength baked into `mc`, `mc_std_dev`, `pk` (1.0 = unscaled).
 
 Can be passed directly to any calculation function as the `buildup` argument.
 
 **Methods:**
 
-- `to_dict()` / `from_dict(d)` - serialize to/from plain dict.
+- `scale(strength)` - returns a new `BuildupResult` with `mc`, `mc_std_dev`, and `pk` multiplied to reflect the given absolute strength. Re-scaling replaces the previous strength.
+- `to_dict()` / `from_dict(d)` - serialize to/from plain dict (the `source_strength` round-trips).
 - `BuildupResult.save(results, path)` - save a list of results to JSON.
 - `BuildupResult.load(path)` - load a list of results from JSON.
 
@@ -216,4 +225,4 @@ Run OpenMC Monte Carlo simulations and compute build-up factors. Requires OpenMC
 - `trigger_rel_err` - target relative error (default 0.05).
 - `cross_sections` - path to cross_sections.xml or directory (default: uses `OPENMC_CROSS_SECTIONS` env var).
 
-**Returns:** list of `BuildupResult`, one per geometry.
+**Returns:** list of `BuildupResult`, one per geometry. MC and PK values are stored per source particle. Apply absolute scaling with `result.scale(strength=...)` to land in your chosen unit.
