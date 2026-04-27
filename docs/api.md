@@ -103,7 +103,7 @@ Returns a `CalcResult` with dose per source particle (Sv/particle). Multiplies t
 
 ### Secondary photon dose rate
 
-#### `calculate_secondary_photon_dose_rate(layers, source, geometry, neutron_buildup=None)`
+#### `calculate_secondary_photon_dose(layers, source, geometry, neutron_buildup=None)`
 
 Returns a `SecondaryGammaResult` with dose per source particle. Analytical estimate of the secondary photon dose from neutron capture gammas in each material, plus the neutron dose. For more accurate results, prefer a coupled neutron-photon `compute_buildup` run.
 
@@ -122,27 +122,27 @@ Returned by flux and dose calculations. Numeric fields are normalised per source
 
 **Properties:**
 
-- `uncollided_flux` - flux at the outer surface (per source particle until scaled).
-- `dose_rate` - effective dose (Sv per source particle until scaled). Present for dose calculations only.
+- `flux` - flux at the outer surface (per source particle until scaled).
+- `dose` - effective dose (Sv per source particle until scaled). Present for dose calculations only.
 - `transmission_fraction` - exp(-Sigma*t).
 - `optical_thickness` - Sum(Sigma_r,i * t_i).
 - `buildup_factor` - applied build-up factor (1.0 if none).
 - `total_distance_cm` - total distance from source to detector (cm).
-- `source_strength` - strength baked into `uncollided_flux` and `dose_rate` (1.0 = unscaled).
+- `source_strength` - strength baked into `flux` and `dose` (1.0 = unscaled).
 
 **Methods:**
 
-- `scale(strength)` - returns a new `CalcResult` with `uncollided_flux` and `dose_rate` multiplied to reflect the given absolute strength. Re-scaling replaces the previous strength rather than compounding. Strength must be > 0.
+- `scale(strength)` - returns a new `CalcResult` with `flux` and `dose` multiplied to reflect the given absolute strength. Re-scaling replaces the previous strength rather than compounding. Strength must be > 0.
 
 ### `SecondaryGammaResult`
 
-Returned by `calculate_secondary_photon_dose_rate`. Dose fields are per source particle until scaled.
+Returned by `calculate_secondary_photon_dose`. Dose fields are per source particle until scaled.
 
 **Properties:**
 
-- `neutron_dose_rate` - neutron dose (per source particle until scaled).
-- `secondary_photon_dose_rate` - secondary photon dose (per source particle until scaled).
-- `total_dose_rate` - sum of neutron + secondary photon dose.
+- `neutron_dose` - neutron dose (per source particle until scaled).
+- `secondary_photon_dose` - secondary photon dose (per source particle until scaled).
+- `total_dose` - sum of neutron + secondary photon dose.
 - `source_strength` - strength baked into the dose fields (1.0 = unscaled).
 
 **Methods:**

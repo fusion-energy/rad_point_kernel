@@ -14,7 +14,7 @@ PARTICLES_PER_SHOT = 1e16
 pk = rpk.calculate_dose(layers=layers, source=source, geometry="AP").scale(
     strength=PARTICLES_PER_SHOT
 )
-print(f"PK dose (no buildup): {pk.dose_rate} Sv/shot")
+print(f"PK dose (no buildup): {pk.dose} Sv/shot")
 
 print("Running MC...")
 results = rpk.compute_buildup(
@@ -32,5 +32,5 @@ print(f"Buildup factor: {r.buildup['dose-AP']}")
 corrected = rpk.calculate_dose(
     layers=layers, source=source, geometry="AP", buildup=r
 ).scale(strength=PARTICLES_PER_SHOT)
-print(f"PK dose with buildup: {corrected.dose_rate} Sv/shot")
+print(f"PK dose with buildup: {corrected.dose} Sv/shot")
 print(f"MC dose (reference):  {r.mc['dose-AP']} Sv/shot")

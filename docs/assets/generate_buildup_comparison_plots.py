@@ -90,12 +90,12 @@ def _build_curve(quantity: str):
             pk = rpk.calculate_flux(layers=layers, source=source).scale(
                 strength=strength,
             )
-            pk_val = pk.uncollided_flux
+            pk_val = pk.flux
         else:
             pk = rpk.calculate_dose(
                 layers=layers, source=source, geometry="AP",
             ).scale(strength=strength)
-            pk_val = pk.dose_rate
+            pk_val = pk.dose
         pk_uncoll.append(pk_val)
         pk_b.append(pk_val * bi.value)
         pk_b_lo.append(pk_val * max(0.0, bi.value - bi.sigma))

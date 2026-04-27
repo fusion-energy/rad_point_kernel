@@ -3,7 +3,7 @@
 A fast neutron source inside a shield generates secondary photons through inelastic scatter and neutron capture. For a complete dose estimate you need both the primary neutron dose and the secondary photon dose. There are two ways to get this:
 
 - **Coupled Monte Carlo** via `compute_buildup` with a `-coupled-photon` quantity - the most accurate option.
-- **Analytical PK estimate** via `calculate_secondary_photon_dose_rate` - derives the secondary-gamma source per layer from neutron fluence and capture cross-sections, then transports the gammas to the detector. Faster and no MC required, but less accurate.
+- **Analytical PK estimate** via `calculate_secondary_photon_dose` - derives the secondary-gamma source per layer from neutron fluence and capture cross-sections, then transports the gammas to the detector. Faster and no MC required, but less accurate.
 
 ## Coupled MC
 
@@ -31,7 +31,7 @@ print(f"Total:           {neutron + gamma} Sv/shot")
 
 ## With a manual build-up factor
 
-`calculate_secondary_photon_dose_rate` accepts `neutron_buildup` as a `BuildupModel`. If you already have a neutron build-up factor from tabulated data or a prior run, pass it in:
+`calculate_secondary_photon_dose` accepts `neutron_buildup` as a `BuildupModel`. If you already have a neutron build-up factor from tabulated data or a prior run, pass it in:
 
 ```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
@@ -45,15 +45,15 @@ layers = [
 source = rpk.Source(particle="neutron", energy=14.1e6)
 
 B_neutron = 2.5
-result = rpk.calculate_secondary_photon_dose_rate(
+result = rpk.calculate_secondary_photon_dose(
     layers=layers,
     source=source,
     geometry="AP",
     neutron_buildup=rpk.BuildupModel.constant(B_neutron),
 ).scale(strength=1e16)
-print(f"Neutron dose (B={B_neutron}): {result.neutron_dose_rate} Sv/shot")
-print(f"Secondary gamma dose:       {result.secondary_photon_dose_rate} Sv/shot")
-print(f"Total dose:                 {result.total_dose_rate} Sv/shot")
+print(f"Neutron dose (B={B_neutron}): {result.neutron_dose} Sv/shot")
+print(f"Secondary gamma dose:       {result.secondary_photon_dose} Sv/shot")
+print(f"Total dose:                 {result.total_dose} Sv/shot")
 ```
 
 ### Why the manual B is neutron-only

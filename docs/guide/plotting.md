@@ -59,9 +59,9 @@ for t in all_thicknesses:
         source=source,
         geometry="AP",
     ).scale(strength=PARTICLES_PER_HOUR)
-    doses.append(pk.dose_rate * bi.value)
-    doses_lo.append(pk.dose_rate * (bi.value - bi.sigma))
-    doses_hi.append(pk.dose_rate * (bi.value + bi.sigma))
+    doses.append(pk.dose * bi.value)
+    doses_lo.append(pk.dose * (bi.value - bi.sigma))
+    doses_hi.append(pk.dose * (bi.value + bi.sigma))
 
 # Monte Carlo reference points
 mc_scaled = [r.scale(strength=PARTICLES_PER_HOUR) for r in mc_results]

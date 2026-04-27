@@ -23,7 +23,7 @@ layers = [
 
 source = rpk.Source(particle="photon", energy=662e3)
 result = rpk.calculate_flux(layers=layers, source=source).scale(strength=1e12)
-print(f"Flux: {result.uncollided_flux} photons/cm2/s")
+print(f"Flux: {result.flux} photons/cm2/s")
 print(f"Transmission: {result.transmission_fraction}")
 print(f"Optical thickness: {result.optical_thickness}")
 print(f"Build-up factor: {result.buildup_factor}")
@@ -32,7 +32,7 @@ print(f"Distance: {result.total_distance_cm} cm")
 
 The returned `CalcResult` object has these properties:
 
-- `uncollided_flux` - flux at the outer surface; equals geometry * transmission * B (per source particle until you call `.scale`)
+- `flux` - flux at the outer surface; equals geometry * transmission * B (per source particle until you call `.scale`)
 - `transmission_fraction` - exp(-Sigma*t)
 - `optical_thickness` - Sum(Sigma_r,i * t_i)
 - `buildup_factor` - B (1.0 if no build-up model given)
@@ -60,6 +60,6 @@ result = rpk.calculate_flux(
     source=source,
     buildup=rpk.BuildupModel.constant(B_flux),
 ).scale(strength=1e12)
-print(f"Flux (B={B_flux}): {result.uncollided_flux} photons/cm2/s")
+print(f"Flux (B={B_flux}): {result.flux} photons/cm2/s")
 print(f"Applied build-up:  {result.buildup_factor}")
 ```

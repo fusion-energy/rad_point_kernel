@@ -26,7 +26,7 @@ source = rpk.Source(particle="photon", energy=662e3)
 result = rpk.calculate_dose(layers=layers, source=source, geometry="AP").scale(
     strength=1e12 * 3600,
 )
-print(f"Dose rate: {result.dose_rate} Sv/hr")
+print(f"Dose rate: {result.dose} Sv/hr")
 ```
 
 ## Irradiation geometries
@@ -58,7 +58,7 @@ for geo in ["AP", "PA", "RLAT", "LLAT", "ROT", "ISO"]:
     result = rpk.calculate_dose(layers=layers, source=source, geometry=geo).scale(
         strength=1e12 * 3600,
     )
-    print(f"{geo}: {result.dose_rate} Sv/hr")
+    print(f"{geo}: {result.dose} Sv/hr")
 ```
 
 ## With a manual build-up factor
@@ -83,6 +83,6 @@ result = rpk.calculate_dose(
     geometry="AP",
     buildup=rpk.BuildupModel.constant(B_dose),
 ).scale(strength=1e12 * 3600)
-print(f"Dose rate (B={B_dose}): {result.dose_rate} Sv/hr")
+print(f"Dose rate (B={B_dose}): {result.dose} Sv/hr")
 print(f"Applied build-up:     {result.buildup_factor}")
 ```

@@ -26,7 +26,7 @@ source = rpk.Source(particle="neutron", energy=14.1e6)
 result = rpk.calculate_dose(layers=layers, source=source, geometry="AP").scale(
     strength=1e16,
 )
-print(f"Neutron dose: {result.dose_rate} Sv/shot")
+print(f"Neutron dose: {result.dose} Sv/shot")
 ```
 
 ## With a manual build-up factor
@@ -49,7 +49,7 @@ result = rpk.calculate_dose(
     geometry="AP",
     buildup=rpk.BuildupModel.constant(B_dose),
 ).scale(strength=1e16)
-print(f"Neutron dose (B={B_dose}): {result.dose_rate} Sv/shot")
+print(f"Neutron dose (B={B_dose}): {result.dose} Sv/shot")
 print(f"Applied build-up:        {result.buildup_factor}")
 ```
 
