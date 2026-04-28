@@ -132,7 +132,7 @@ class BuildupTable:
             )
 
         sorted_qs = sorted(self._available)
-        self._default_quantity = sorted_qs[0]
+        self._default_quantity = sorted_qs[0] if len(sorted_qs) == 1 else None
         self._gps = {}
 
     @property
@@ -188,9 +188,12 @@ class BuildupTable:
 
     def interpolate(self, quantity=None, warn=True, **kwargs):
         if quantity is None:
+            if self._default_quantity is None:
+                raise ValueError(
+                    f"Table has multiple quantities {sorted(self._available)}; "
+                    f"pass quantity= to disambiguate."
+                )
             quantity = self._default_quantity
-        if quantity is None:
-            raise ValueError("No quantities available in this table")
         if quantity not in self._available:
             raise ValueError(
                 f"Quantity '{quantity}' not available. Available: {sorted(self._available)}"

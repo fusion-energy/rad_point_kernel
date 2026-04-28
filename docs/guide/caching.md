@@ -125,3 +125,12 @@ else:
 for t in sorted(cached):
     print(f"  {t:>2d} cm: B = {cached[t].buildup['dose-AP']}")
 ```
+
+## Caches and version upgrades
+
+`BuildupResult` round-trips through JSON faithfully, but a cache only contains the quantities that existed when it was written. If a later release adds new quantities (for example `dose-{geo}-total` was added in 1.4.0 alongside `dose-{geo}` and `dose-{geo}-coupled-photon`), loading an older cache gives you a `BuildupResult` *without* the new keys. Two consequences to watch for:
+
+- Reading a missing key by name raises `KeyError` (e.g. `r.mc["dose-AP-total"]` on a 1.3.x cache).
+- Building a `BuildupTable` from an older cache produces a table whose `available_quantities` reflects only what was tallied at the time, so `interpolate()` may pick a different default than you expect.
+
+The simplest cure after a minor version bump is to **delete the cache JSON and re-run Monte Carlo**. The cache filename is yours to manage; if your workflow can tolerate it, namespacing by version (e.g. `mc_cache_v1.4.json`) lets old and new caches coexist while you transition.
