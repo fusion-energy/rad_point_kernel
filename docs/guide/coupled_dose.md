@@ -22,12 +22,12 @@ results = rpk.compute_buildup(
 
 # Pulsed DT shot: 1e16 neutrons per shot, dose lands in Sv/shot
 r = results[0].scale(strength=1e16)
-neutron = r.mc["dose-AP"]
-gamma = r.mc["dose-AP-coupled-photon"]
-print(f"Neutron dose:    {neutron} Sv/shot")
-print(f"Secondary gamma: {gamma} Sv/shot")
-print(f"Total:           {neutron + gamma} Sv/shot")
+print(f"Neutron dose:    {r.mc['dose-AP']} Sv/shot")
+print(f"Secondary gamma: {r.mc['dose-AP-coupled-photon']} Sv/shot")
+print(f"Total:           {r.mc['dose-AP-total']} Sv/shot")
 ```
+
+Requesting both `"dose-AP"` and `"dose-AP-coupled-photon"` automatically adds a synthetic `"dose-AP-total"` quantity (sum of the two; standard deviation combined in quadrature). The same applies to any other irradiation geometry: `"dose-PA-total"`, `"dose-ISO-total"`, etc.
 
 ## With a manual build-up factor
 
