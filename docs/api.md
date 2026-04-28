@@ -219,7 +219,7 @@ Run OpenMC Monte Carlo simulations and compute build-up factors. Requires OpenMC
 
 - `geometries` - list of layer lists, each defining a shield geometry.
 - `source` - a `Source` object specifying the particle type and energy.
-- `quantities` - list of quantity strings (e.g. `["flux", "dose-AP"]`).
+- `quantities` - list of quantity strings (e.g. `["flux", "dose-AP"]`). When both `"dose-{geo}"` and `"dose-{geo}-coupled-photon"` are requested for the same geometry (`AP`, `PA`, `RLAT`, `LLAT`, `ROT`, `ISO`), a synthetic `"dose-{geo}-total"` quantity is added to each result. Its MC value equals the neutron + secondary-photon dose; its buildup factor uses the neutron PK as reference.
 - `particles_per_batch` - particles per batch (default 10,000).
 - `max_batches` - maximum batches (default 100).
 - `trigger_rel_err` - target relative error (default 0.05).
