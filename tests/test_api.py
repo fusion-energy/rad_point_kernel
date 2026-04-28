@@ -512,7 +512,8 @@ def _build_paired_result(geo, n_mc, p_mc, n_std, p_std, pk_n):
     r.mc = {n_name: n_mc, p_name: p_mc}
     r.mc_std_dev = {n_name: n_std, p_name: p_std}
     r.pk = {n_name: pk_n}
-    r.buildup = {n_name: n_mc / pk_n}
+    if pk_n > 0:
+        r.buildup = {n_name: n_mc / pk_n}
     return r, n_name, p_name
 
 
@@ -599,8 +600,6 @@ class TestSynthesizeDoseTotals:
         from rad_point_kernel.buildup import _parse_quantity, _synthesize_dose_totals
 
         r, n_name, p_name = _build_paired_result("AP", 1e-12, 4e-13, 0, 0, 0.0)
-        r.pk[n_name] = 0.0
-        r.buildup.pop(n_name, None)
         parsed = [(q, _parse_quantity(q)) for q in [n_name, p_name]]
 
         _synthesize_dose_totals(r, parsed)
