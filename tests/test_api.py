@@ -503,3 +503,105 @@ class TestBuildupTable:
     def test_repr(self):
         table = rpk.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
         assert "BuildupTable" in repr(table)
+
+
+def _build_paired_result(geo, n_mc, p_mc, n_std, p_std, pk_n):
+    r = rpk.BuildupResult()
+    n_name = f"dose-{geo}"
+    p_name = f"dose-{geo}-coupled-photon"
+    r.mc = {n_name: n_mc, p_name: p_mc}
+    r.mc_std_dev = {n_name: n_std, p_name: p_std}
+    r.pk = {n_name: pk_n}
+    if pk_n > 0:
+        r.buildup = {n_name: n_mc / pk_n}
+    return r, n_name, p_name
+
+
+class TestSynthesizeDoseTotals:
+    def test_synthesizes_total_for_paired_dose(self):
+        from rad_point_kernel.buildup import _parse_quantity, _synthesize_dose_totals
+
+        r, n_name, p_name = _build_paired_result("AP", 1.0e-12, 4.0e-13, 5e-14, 3e-14, 8e-13)
+        parsed = [(q, _parse_quantity(q)) for q in [n_name, p_name]]
+
+        _synthesize_dose_totals(r, parsed)
+
+        total = "dose-AP-total"
+        assert r.mc[total] == pytest.approx(1.4e-12)
+        assert r.mc_std_dev[total] == pytest.approx(math.sqrt(5e-14**2 + 3e-14**2))
+        assert r.pk[total] == pytest.approx(8e-13)
+        assert r.buildup[total] == pytest.approx(1.4e-12 / 8e-13)
+
+    def test_no_synthesis_when_only_neutron_dose(self):
+        from rad_point_kernel.buildup import _parse_quantity, _synthesize_dose_totals
+
+        r = rpk.BuildupResult()
+        r.mc = {"dose-AP": 1e-12}
+        r.pk = {"dose-AP": 8e-13}
+        parsed = [("dose-AP", _parse_quantity("dose-AP"))]
+
+        _synthesize_dose_totals(r, parsed)
+        assert "dose-AP-total" not in r.mc
+
+    def test_no_synthesis_when_only_coupled_photon(self):
+        from rad_point_kernel.buildup import _parse_quantity, _synthesize_dose_totals
+
+        r = rpk.BuildupResult()
+        r.mc = {"dose-AP-coupled-photon": 4e-13}
+        parsed = [("dose-AP-coupled-photon", _parse_quantity("dose-AP-coupled-photon"))]
+
+        _synthesize_dose_totals(r, parsed)
+        assert "dose-AP-total" not in r.mc
+
+    def test_flux_is_not_totalled(self):
+        from rad_point_kernel.buildup import _parse_quantity, _synthesize_dose_totals
+
+        r = rpk.BuildupResult()
+        r.mc = {"flux": 1e-6, "flux-coupled-photon": 2e-7}
+        parsed = [(q, _parse_quantity(q)) for q in ["flux", "flux-coupled-photon"]]
+
+        _synthesize_dose_totals(r, parsed)
+        assert "flux-total" not in r.mc
+
+    @pytest.mark.parametrize("geo", ["AP", "PA", "RLAT", "LLAT", "ROT", "ISO"])
+    def test_works_for_all_icrp_geometries(self, geo):
+        from rad_point_kernel.buildup import _parse_quantity, _synthesize_dose_totals
+
+        r, n_name, p_name = _build_paired_result(geo, 1e-12, 5e-13, 0, 0, 8e-13)
+        parsed = [(q, _parse_quantity(q)) for q in [n_name, p_name]]
+
+        _synthesize_dose_totals(r, parsed)
+        assert f"dose-{geo}-total" in r.mc
+        assert r.mc[f"dose-{geo}-total"] == pytest.approx(1.5e-12)
+
+    def test_two_geometries_get_separate_totals(self):
+        from rad_point_kernel.buildup import _parse_quantity, _synthesize_dose_totals
+
+        r = rpk.BuildupResult()
+        r.mc = {
+            "dose-AP": 1e-12, "dose-AP-coupled-photon": 4e-13,
+            "dose-PA": 8e-13, "dose-PA-coupled-photon": 3e-13,
+        }
+        r.mc_std_dev = {k: 0.0 for k in r.mc}
+        r.pk = {"dose-AP": 8e-13, "dose-PA": 7e-13}
+        r.buildup = {"dose-AP": 1.25, "dose-PA": 1.14}
+        parsed = [
+            (q, _parse_quantity(q)) for q in
+            ["dose-AP", "dose-AP-coupled-photon", "dose-PA", "dose-PA-coupled-photon"]
+        ]
+
+        _synthesize_dose_totals(r, parsed)
+        assert r.mc["dose-AP-total"] == pytest.approx(1.4e-12)
+        assert r.mc["dose-PA-total"] == pytest.approx(1.1e-12)
+        assert r.buildup["dose-AP-total"] == pytest.approx(1.4e-12 / 8e-13)
+        assert r.buildup["dose-PA-total"] == pytest.approx(1.1e-12 / 7e-13)
+
+    def test_no_buildup_when_pk_is_zero(self):
+        from rad_point_kernel.buildup import _parse_quantity, _synthesize_dose_totals
+
+        r, n_name, p_name = _build_paired_result("AP", 1e-12, 4e-13, 0, 0, 0.0)
+        parsed = [(q, _parse_quantity(q)) for q in [n_name, p_name]]
+
+        _synthesize_dose_totals(r, parsed)
+        assert "dose-AP-total" in r.mc
+        assert "dose-AP-total" not in r.buildup

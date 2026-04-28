@@ -186,11 +186,12 @@ results = rpk.compute_buildup(
 )
 
 r = results[0].scale(strength=1e16)  # neutrons per shot, dose in Sv/shot
-total_dose = r.mc["dose-AP"] + r.mc["dose-AP-coupled-photon"]
 print(f"Neutron dose:    {r.mc['dose-AP']} Sv/shot")
 print(f"Secondary gamma: {r.mc['dose-AP-coupled-photon']} Sv/shot")
-print(f"Total dose:      {total_dose} Sv/shot")
+print(f"Total dose:      {r.mc['dose-AP-total']} Sv/shot")
 ```
+
+When both `"dose-AP"` and `"dose-AP-coupled-photon"` are requested for the same geometry, a synthetic `"dose-AP-total"` quantity is added automatically (sum of the two; standard deviation combined in quadrature; buildup factor referenced to the neutron PK). The same rule applies to PA, RLAT, LLAT, ROT, and ISO.
 
 Since you're already running Monte Carlo for neutron build-up, coupled transport adds some extra compute cost and gives the secondary photon dose.
 
