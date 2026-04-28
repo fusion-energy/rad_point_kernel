@@ -22,6 +22,7 @@ source = rpk.Source(particle="neutron", energy=14.1e6)
 
 N_DOSE = f"dose-{GEOMETRY}"
 P_DOSE = f"dose-{GEOMETRY}-coupled-photon"
+TOTAL_DOSE = f"dose-{GEOMETRY}-total"  # auto-synthesized by compute_buildup
 
 STEEL_VOLS = [0.0, 0.02, 0.05, 0.10]
 BORON_WTS = [0.0, 0.01, 0.025, 0.05]
@@ -119,12 +120,13 @@ matplotlib.use("Agg")
 
 neutron = np.zeros((len(BORON_WTS), len(STEEL_VOLS)))
 photon = np.zeros_like(neutron)
+total = np.zeros_like(neutron)
 for i, bw in enumerate(BORON_WTS):
     for j, sv in enumerate(STEEL_VOLS):
         r = cached[(sv, bw)]
         neutron[i, j] = r.mc[N_DOSE] * PARTICLES_PER_SECOND
         photon[i, j] = r.mc[P_DOSE] * PARTICLES_PER_SECOND
-total = neutron + photon
+        total[i, j] = r.mc[TOTAL_DOSE] * PARTICLES_PER_SECOND
 
 fig, axes = plt.subplots(1, 3, figsize=(14, 4.5), constrained_layout=True)
 panels = [

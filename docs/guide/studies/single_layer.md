@@ -12,11 +12,12 @@ import rad_point_kernel as rpk
 
 PARTICLES_PER_SHOT = 1e16
 GEOMETRY = "AP"
-VOID_THICKNESS = 1000
+VOID_THICKNESS = 1000  # source-to-shield air gap, cm
 source = rpk.Source(particle="neutron", energy=14.1e6)
 
 N_DOSE = f"dose-{GEOMETRY}"
 P_DOSE = f"dose-{GEOMETRY}-coupled-photon"
+TOTAL_DOSE = f"dose-{GEOMETRY}-total"  # auto-synthesized by compute_buildup
 
 mc_thicknesses = [10, 20, 30, 40, 50, 60]
 all_thicknesses = mc_thicknesses + list(range(70, 410, 10))
@@ -96,23 +97,9 @@ for name, mat in materials.items():
         ]
         cache_file.write_text(json.dumps(cache_data, indent=2))
 
-    br_list = []
-    for t in mc_thicknesses:
-        r = cached[t]
-        mc_total = r.mc.get(N_DOSE, 0) + r.mc.get(P_DOSE, 0)
-        mc_std = np.sqrt(
-            r.mc_std_dev.get(N_DOSE, 0) ** 2 + r.mc_std_dev.get(P_DOSE, 0) ** 2
-        )
-        pk_neutron = r.pk.get(N_DOSE, 0)
-        br = rpk.BuildupResult()
-        br.mc["total"] = mc_total
-        br.mc_std_dev["total"] = mc_std
-        br.pk["total"] = pk_neutron
-        br.buildup["total"] = mc_total / pk_neutron if pk_neutron > 0 else 1.0
-        br_list.append(br)
-
     tables[name] = rpk.BuildupTable(
-        points=[{"thickness": t} for t in mc_thicknesses], results=br_list
+        points=[{"thickness": t} for t in mc_thicknesses],
+        results=[cached[t] for t in mc_thicknesses],
     )
     mc_cached[name] = cached
 
@@ -142,7 +129,7 @@ for name, mat in materials.items():
             source=source,
             geometry=GEOMETRY,
         ).scale(strength=PARTICLES_PER_SHOT)
-        bi = table.interpolate(thickness=t, warn=False)
+        bi = table.interpolate(thickness=t, quantity=TOTAL_DOSE, warn=False)
         doses.append(pk.dose * bi.value)
         doses_lo.append(pk.dose * (bi.value - bi.sigma))
         doses_hi.append(pk.dose * (bi.value + bi.sigma))
@@ -166,16 +153,8 @@ for name in materials:
                     d["doses_lo"][v2], d["doses_hi"][v2],
                     color=c, alpha=0.15)
 
-    mc_vals = [
-        (mc_cached[name][t].mc.get(N_DOSE, 0) + mc_cached[name][t].mc.get(P_DOSE, 0))
-        * PARTICLES_PER_SHOT for t in mc_thicknesses
-    ]
-    mc_errs = [
-        np.sqrt(
-            mc_cached[name][t].mc_std_dev.get(N_DOSE, 0) ** 2
-            + mc_cached[name][t].mc_std_dev.get(P_DOSE, 0) ** 2
-        ) * PARTICLES_PER_SHOT for t in mc_thicknesses
-    ]
+    mc_vals = [mc_cached[name][t].mc[TOTAL_DOSE] * PARTICLES_PER_SHOT for t in mc_thicknesses]
+    mc_errs = [mc_cached[name][t].mc_std_dev[TOTAL_DOSE] * PARTICLES_PER_SHOT for t in mc_thicknesses]
     ax.errorbar(mc_thicknesses, mc_vals, yerr=mc_errs,
                 fmt="o", color=c, markersize=6, capsize=3, zorder=5)
 

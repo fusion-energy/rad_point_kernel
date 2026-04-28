@@ -474,6 +474,23 @@ class TestBuildupTable:
         table = rpk.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
         assert table.interpolate(t=15).value > 0
 
+    def test_multi_quantity_default_raises(self):
+        results = []
+        for b_neutron, b_total in [(1.2, 1.5), (1.3, 1.7)]:
+            r = rpk.BuildupResult()
+            r.mc = {"dose-AP": b_neutron * 1e-11, "dose-AP-total": b_total * 1e-11}
+            r.mc_std_dev = {"dose-AP": 1e-13, "dose-AP-total": 1e-13}
+            r.pk = {"dose-AP": 1e-11, "dose-AP-total": 1e-11}
+            r.buildup = {"dose-AP": b_neutron, "dose-AP-total": b_total}
+            results.append(r)
+        table = rpk.BuildupTable([{"t": 10}, {"t": 20}], results)
+
+        with pytest.raises(ValueError, match="multiple quantities"):
+            table.interpolate(t=15)
+
+        # Explicit quantity= still works.
+        assert table.interpolate(t=15, quantity="dose-AP-total").value > 0
+
     def test_invalid_quantity_raises(self):
         table = rpk.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
         with pytest.raises(ValueError, match="not available"):
