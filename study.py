@@ -74,20 +74,10 @@ def total_buildup_result(r):
     br.buildup["total"] = mc_total / pk_neutron if pk_neutron > 0 else 1.0
     return br
 
-tables_by_poly = {
-    wt: rpk.BuildupTable(
-        points=[{"conc": ct} for ct in mc_conc],
-        results=[total_buildup_result(cached[(wt, ct)]) for ct in mc_conc],
-    )
-    for wt in mc_poly
-}
-tables_by_conc = {
-    ct: rpk.BuildupTable(
-        points=[{"poly": wt} for wt in mc_poly],
-        results=[total_buildup_result(cached[(wt, ct)]) for wt in mc_poly],
-    )
-    for ct in mc_conc
-}
+table = rpk.BuildupTable(
+    points=[{"poly": wt, "conc": ct} for wt in mc_poly for ct in mc_conc],
+    results=[total_buildup_result(cached[(wt, ct)]) for wt in mc_poly for ct in mc_conc],
+)
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -95,32 +85,23 @@ import matplotlib.pyplot as plt
 matplotlib.use("Agg")
 
 
-def extrapolate(table, ts, key, arg_name):
-    doses, lo, hi = [], [], []
-    for t in ts:
-        if arg_name == "conc":
-            layers = make_layers(key, t)
-            bi = table.interpolate(conc=t, warn=False)
-        else:
-            layers = make_layers(t, key)
-            bi = table.interpolate(poly=t, warn=False)
-        pk = rpk.calculate_dose(
-            layers=layers,
-            source=source,
-            geometry=GEOMETRY,
-        ).scale(strength=PARTICLES_PER_HOUR)
-        doses.append(pk.dose * bi.value)
-        lo.append(pk.dose * (bi.value - bi.sigma))
-        hi.append(pk.dose * (bi.value + bi.sigma))
-    return doses, lo, hi
+def dose_at(poly_t, conc_t):
+    layers = make_layers(poly_t, conc_t)
+    bi = table.interpolate(poly=poly_t, conc=conc_t, warn=False)
+    pk = rpk.calculate_dose(
+        layers=layers, source=source, geometry=GEOMETRY,
+    ).scale(strength=PARTICLES_PER_HOUR)
+    return pk.dose * bi.value, pk.dose * (bi.value - bi.sigma), pk.dose * (bi.value + bi.sigma)
 
 
-data_vs_conc = {
-    wt: extrapolate(tables_by_poly[wt], all_conc, wt, "conc") for wt in mc_poly
-}
-data_vs_poly = {
-    ct: extrapolate(tables_by_conc[ct], all_poly, ct, "poly") for ct in mc_conc
-}
+def curve(poly_ts, conc_ts):
+    rows = [dose_at(p, c) for p, c in zip(poly_ts, conc_ts)]
+    doses, lo, hi = zip(*rows)
+    return list(doses), list(lo), list(hi)
+
+
+data_vs_conc = {wt: curve([wt] * len(all_conc), all_conc) for wt in mc_poly}
+data_vs_poly = {ct: curve(all_poly, [ct] * len(all_poly)) for ct in mc_conc}
 
 colors_poly = {0: "#7f7f7f", 5: "#1f77b4", 10: "#ff7f0e",
                 15: "#2ca02c", 20: "#d62728", 25: "#9467bd"}
