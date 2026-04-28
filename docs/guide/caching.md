@@ -2,6 +2,8 @@
 
 Monte Carlo simulations are expensive. `BuildupResult` provides `save` and `load` methods to cache results to JSON files, so you only run Monte Carlo once.
 
+For a flat list of `BuildupResult`, prefer `BuildupResult.save([...])` and `BuildupResult.load(path)`. The lower-level `to_dict()` and `from_dict()` are for when you need to embed a `BuildupResult` inside your own JSON envelope (for example, alongside per-result metadata that the library doesn't track for you).
+
 ## Save and load
 
 ```python exec="true" source="material-block" result="text"
@@ -67,7 +69,7 @@ for t, r in zip(mc_thicknesses, mc_results):
 
 ## Incremental caching
 
-When you need to add more thicknesses to an existing study, load the cache, run Monte Carlo only for the missing points, and save the combined results.
+When you need to add more thicknesses to an existing study, load the cache, run Monte Carlo only for the missing points, and save the combined results. `BuildupResult.save/load` is for the result payload; a small sidecar JSON keeps the thickness-keyed metadata aligned by position.
 
 ```python exec="true" source="material-block" result="text"
 import json
@@ -85,43 +87,36 @@ concrete = rpk.Material(
 
 mc_thicknesses = [5, 10, 15, 20, 30, 40]
 CACHE = Path("mc_incremental.json")
+KEYS = CACHE.with_suffix(".thicknesses.json")
 
-# Load existing cache as {thickness: BuildupResult}
-cached = {}
-if CACHE.exists():
-    for entry in json.loads(CACHE.read_text()):
-        cached[entry["thickness"]] = rpk.BuildupResult.from_dict(entry["result"])
-    print(f"Loaded {len(cached)} cached thicknesses")
+# Load existing cache (results + parallel list of thicknesses)
+if CACHE.exists() and KEYS.exists():
+    cached_thicknesses = json.loads(KEYS.read_text())
+    cached_results = rpk.BuildupResult.load(CACHE)
+    print(f"Loaded {len(cached_thicknesses)} cached thicknesses")
+else:
+    cached_thicknesses, cached_results = [], []
 
-# Find missing thicknesses
+cached = dict(zip(cached_thicknesses, cached_results))
 missing = [t for t in mc_thicknesses if t not in cached]
 
 if missing:
     print(f"Running Monte Carlo for {missing}...")
-    geometries = [
-        [rpk.Layer(thickness=t, material=concrete)]
-        for t in missing
-    ]
-    source = rpk.Source(particle="photon", energy=1e6)
     new_results = rpk.compute_buildup(
-        geometries=geometries,
-        source=source,
+        geometries=[[rpk.Layer(thickness=t, material=concrete)] for t in missing],
+        source=rpk.Source(particle="photon", energy=1e6),
         quantities=["dose-AP"],
     )
-    for t, r in zip(missing, new_results):
-        cached[t] = r
+    cached.update(zip(missing, new_results))
 
-    # Save all results
-    cache_data = [
-        {"thickness": t, "result": cached[t].to_dict()}
-        for t in sorted(cached)
-    ]
-    CACHE.write_text(json.dumps(cache_data, indent=2))
+    # Re-save: results + parallel sidecar of keys
+    keys_sorted = sorted(cached)
+    rpk.BuildupResult.save([cached[t] for t in keys_sorted], CACHE)
+    KEYS.write_text(json.dumps(keys_sorted))
     print(f"Saved {len(cached)} thicknesses")
 else:
     print("All thicknesses already cached")
 
-# Use all cached results
 for t in sorted(cached):
     print(f"  {t:>2d} cm: B = {cached[t].buildup['dose-AP']}")
 ```

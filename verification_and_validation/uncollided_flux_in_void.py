@@ -42,7 +42,9 @@ def run() -> int:
     for particle, energy in CASES:
         source = rpk.Source(particle, energy)
         for r in DISTANCES_CM:
-            result = rpk.calculate_flux(SOURCE_STRENGTH, [rpk.Layer(thickness=r)], source)
+            result = rpk.calculate_flux(
+                layers=[rpk.Layer(thickness=r)], source=source,
+            ).scale(strength=SOURCE_STRENGTH)
             pk = result.flux
             ref = analytic(SOURCE_STRENGTH, r)
             rel = abs(pk - ref) / ref
