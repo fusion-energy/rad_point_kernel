@@ -5,6 +5,12 @@ Quantity naming convention for compute_buildup:
     dose-AP                     Dose of the source particle at AP geometry
     flux-coupled-photon         Secondary photon flux (neutron source only)
     dose-AP-coupled-photon      Secondary photon dose at AP (neutron source only)
+    dose-AP-total               Auto-synthesized when both 'dose-AP' and
+                                'dose-AP-coupled-photon' are requested. Equals
+                                the neutron + secondary-photon dose; the
+                                buildup factor uses the neutron PK as
+                                reference. Same rule applies to PA, RLAT,
+                                LLAT, ROT, ISO.
 """
 
 import math
@@ -255,7 +261,11 @@ def compute_buildup(
             (Layer thicknesses in cm).
         source: Source object with particle type and energy (eV).
         quantities: List of quantity strings. Examples: "flux", "dose-AP",
-            "flux-coupled-photon", "dose-AP-coupled-photon".
+            "flux-coupled-photon", "dose-AP-coupled-photon". When both
+            "dose-{geo}" and "dose-{geo}-coupled-photon" are requested for
+            the same geometry, a synthetic "dose-{geo}-total" quantity is
+            added to each result (sum of the two doses; buildup factor uses
+            the neutron PK as reference).
         particles_per_batch: Particles per batch (default 10,000).
         batches: Minimum number of batches before the trigger can stop the
             run early (default 10). Gives the tally enough statistics to
@@ -304,9 +314,40 @@ def compute_buildup(
             max_history_splits=max_history_splits,
         )
         _populate_result(result, layers, source, parsed, mc_data)
+        _synthesize_dose_totals(result, parsed)
         results.append(result)
 
     return results
+
+
+def _synthesize_dose_totals(result, parsed):
+    """Add 'dose-{geo}-total' for each geometry where both the neutron and
+    coupled-photon dose were tallied. Total dose = neutron + secondary photon;
+    the buildup factor uses the neutron PK as reference (secondary photons
+    have no analytic PK)."""
+    quantities = {q_name for q_name, _ in parsed}
+
+    for q_name, (measure, geo, coupled) in parsed:
+        if measure != "dose" or coupled:
+            continue
+        coupled_name = f"dose-{geo}-coupled-photon"
+        if coupled_name not in quantities:
+            continue
+
+        total_name = f"dose-{geo}-total"
+        n_mc = result.mc.get(q_name, 0.0)
+        p_mc = result.mc.get(coupled_name, 0.0)
+        n_std = result.mc_std_dev.get(q_name, 0.0)
+        p_std = result.mc_std_dev.get(coupled_name, 0.0)
+
+        result.mc[total_name] = n_mc + p_mc
+        result.mc_std_dev[total_name] = math.sqrt(n_std ** 2 + p_std ** 2)
+
+        pk_n = result.pk.get(q_name)
+        if pk_n is not None:
+            result.pk[total_name] = pk_n
+            if pk_n > 0:
+                result.buildup[total_name] = (n_mc + p_mc) / pk_n
 
 
 def _run_mc(layers, source, coupled, quantities, particles_per_batch, batches, max_batches, trigger_rel_err,
