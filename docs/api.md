@@ -196,7 +196,7 @@ GP-based interpolation table for build-up factors.
 
 **Methods:**
 
-- `interpolate(quantity=None, warn=True, **kwargs)` - returns an `InterpolationResult` at the given parameter values.
+- `interpolate(quantity=None, warn=True, **kwargs)` - returns an `InterpolationResult` at the given parameter values. If the table has more than one available quantity (e.g. both `dose-AP` and `dose-AP-total`), `quantity=` is required to disambiguate; otherwise it defaults to the only one.
 
 ### `InterpolationResult`
 
