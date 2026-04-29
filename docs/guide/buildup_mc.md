@@ -182,7 +182,7 @@ source = rpk.Source(particle="neutron", energy=14.1e6)
 results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
-    quantities=["dose-AP", "dose-AP-coupled-photon"],
+    quantities=["dose-AP-total"],
 )
 
 r = results[0].scale(strength=1e16)  # neutrons per shot, dose in Sv/shot

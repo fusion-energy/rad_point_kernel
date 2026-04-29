@@ -7,31 +7,31 @@ with long run times, the relative error stays unusable.
 
 `rad_point_kernel` generates **weight windows (WW)** automatically for every
 MC run. The WW come from the same point-kernel physics the rest of the
-package uses, so no extra MC pre-iteration is needed — they are built
+package uses, so no extra MC pre-iteration is needed - they are built
 analytically in milliseconds before the MC starts.
 
 ## What weight windows do
 
 A weight window is an importance map over space and energy. When a particle
 enters a region of higher importance (deeper into the shield), the MC code
-splits it into multiple daughters with smaller weights — many particles now
+splits it into multiple daughters with smaller weights - many particles now
 sample the region that would otherwise see almost no statistics. When a
 particle enters a region of lower importance, it is Russian-rouletted,
 probabilistically killed (with weight compensated on the survivors) so that
 CPU is not spent on histories that won't contribute to the tally.
 
-Splitting and rouletting are *unbiased* — they change variance, not the
+Splitting and rouletting are *unbiased* - they change variance, not the
 expected value of the tally.
 
 ## How `rad_point_kernel` chooses the map
 
 Three things need to be decided:
 
-1. **The radial mesh** — where to put the boundaries of the weight-window
+1. **The radial mesh** - where to put the boundaries of the weight-window
    cells in radius.
-2. **The per-cell importance values** — the lower weight-window bound in each
+2. **The per-cell importance values** - the lower weight-window bound in each
    cell and energy group.
-3. **The energy bin structure** — so that fast and slow particles can be
+3. **The energy bin structure** - so that fast and slow particles can be
    biased differently.
 
 All three are driven by the **point-kernel importance curve** for the
@@ -45,7 +45,7 @@ bin centre, normalised so the innermost bin has lower bound 1.
 
 Voids and material changes get a mesh boundary automatically. A void cell
 stays as a single cell (no attenuation inside it, so there's nothing to
-bias). A thin material layer — thinner than one mean free path — also gets
+bias). A thin material layer - thinner than one mean free path - also gets
 exactly one cell. Thick layers get subdivided into $\lceil \tau / \ln(e)
 \rceil$ cells of roughly equal optical thickness.
 
@@ -60,10 +60,10 @@ For coupled neutron → photon simulations, a second `WeightWindows` object
 is built for the photon population, using the secondary-gamma importance
 curve.
 
-## Limitations — why this isn't "perfect"
+## Limitations - why this isn't "perfect"
 
-The weight windows are built from the **bare attenuation** physics — the
-same $\exp(-\Sigma_r \, t)$ attenuation the point-kernel computes — **with
+The weight windows are built from the **bare attenuation** physics - the
+same $\exp(-\Sigma_r \, t)$ attenuation the point-kernel computes - **with
 the build-up factor set to 1**. The build-up factor isn't used during WW
 construction because:
 
@@ -72,7 +72,7 @@ construction because:
 - The MC run itself is what measures the true build-up.
 
 This means the analytic WW **underestimate the flux** at depth when
-scattering (build-up) is significant — e.g. dose behind a hydrogenous
+scattering (build-up) is significant - e.g. dose behind a hydrogenous
 shield. In practice the WW still produce enormous speedups (often 10× to
 1000×) because the $\exp(-\Sigma_r t)$ shape dominates, and the under-bias
 only costs a modest amount of variance efficiency on the scattered tail.
@@ -81,7 +81,7 @@ Similar caveats apply to fissile materials (point-kernel doesn't model
 neutron multiplication) and to strongly-downscattered spectra (the
 per-energy bound uses a mono-at-bin-centre approximation). For those cases,
 MAGIC-style iterative refinement seeded from the analytic WW is a future
-upgrade path — but for the fast-neutron / photon shielding problems
+upgrade path - but for the fast-neutron / photon shielding problems
 `rad_point_kernel` targets, the analytic WW is "good enough" and costs
 nothing.
 
@@ -99,7 +99,7 @@ results = rpk.compute_buildup(
 )
 ```
 
-The builder skips itself when it wouldn't help — if the geometry has
+The builder skips itself when it wouldn't help - if the geometry has
 total $\tau < 2$ (trivial attenuation) or produces a mesh with $\leq 2$
 cells, it returns an empty WW list and `compute_buildup` just runs plain
 MC. An INFO log is emitted so you know this happened.

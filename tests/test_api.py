@@ -536,12 +536,8 @@ def _build_paired_result(geo, n_mc, p_mc, n_std, p_std, pk_n):
 
 class TestSynthesizeDoseTotals:
     def test_synthesizes_total_for_paired_dose(self):
-        from rad_point_kernel.buildup import _parse_quantity, _synthesize_dose_totals
-
-        r, n_name, p_name = _build_paired_result("AP", 1.0e-12, 4.0e-13, 5e-14, 3e-14, 8e-13)
-        parsed = [(q, _parse_quantity(q)) for q in [n_name, p_name]]
-
-        _synthesize_dose_totals(r, parsed)
+        r, _, _ = _build_paired_result("AP", 1.0e-12, 4.0e-13, 5e-14, 3e-14, 8e-13)
+        r.synthesize_dose_totals()
 
         total = "dose-AP-total"
         assert r.mc[total] == pytest.approx(1.4e-12)
@@ -550,50 +546,32 @@ class TestSynthesizeDoseTotals:
         assert r.buildup[total] == pytest.approx(1.4e-12 / 8e-13)
 
     def test_no_synthesis_when_only_neutron_dose(self):
-        from rad_point_kernel.buildup import _parse_quantity, _synthesize_dose_totals
-
         r = rpk.BuildupResult()
         r.mc = {"dose-AP": 1e-12}
         r.pk = {"dose-AP": 8e-13}
-        parsed = [("dose-AP", _parse_quantity("dose-AP"))]
-
-        _synthesize_dose_totals(r, parsed)
+        r.synthesize_dose_totals()
         assert "dose-AP-total" not in r.mc
 
     def test_no_synthesis_when_only_coupled_photon(self):
-        from rad_point_kernel.buildup import _parse_quantity, _synthesize_dose_totals
-
         r = rpk.BuildupResult()
         r.mc = {"dose-AP-coupled-photon": 4e-13}
-        parsed = [("dose-AP-coupled-photon", _parse_quantity("dose-AP-coupled-photon"))]
-
-        _synthesize_dose_totals(r, parsed)
+        r.synthesize_dose_totals()
         assert "dose-AP-total" not in r.mc
 
     def test_flux_is_not_totalled(self):
-        from rad_point_kernel.buildup import _parse_quantity, _synthesize_dose_totals
-
         r = rpk.BuildupResult()
         r.mc = {"flux": 1e-6, "flux-coupled-photon": 2e-7}
-        parsed = [(q, _parse_quantity(q)) for q in ["flux", "flux-coupled-photon"]]
-
-        _synthesize_dose_totals(r, parsed)
+        r.synthesize_dose_totals()
         assert "flux-total" not in r.mc
 
     @pytest.mark.parametrize("geo", ["AP", "PA", "RLAT", "LLAT", "ROT", "ISO"])
     def test_works_for_all_icrp_geometries(self, geo):
-        from rad_point_kernel.buildup import _parse_quantity, _synthesize_dose_totals
-
-        r, n_name, p_name = _build_paired_result(geo, 1e-12, 5e-13, 0, 0, 8e-13)
-        parsed = [(q, _parse_quantity(q)) for q in [n_name, p_name]]
-
-        _synthesize_dose_totals(r, parsed)
+        r, _, _ = _build_paired_result(geo, 1e-12, 5e-13, 0, 0, 8e-13)
+        r.synthesize_dose_totals()
         assert f"dose-{geo}-total" in r.mc
         assert r.mc[f"dose-{geo}-total"] == pytest.approx(1.5e-12)
 
     def test_two_geometries_get_separate_totals(self):
-        from rad_point_kernel.buildup import _parse_quantity, _synthesize_dose_totals
-
         r = rpk.BuildupResult()
         r.mc = {
             "dose-AP": 1e-12, "dose-AP-coupled-photon": 4e-13,
@@ -602,23 +580,115 @@ class TestSynthesizeDoseTotals:
         r.mc_std_dev = {k: 0.0 for k in r.mc}
         r.pk = {"dose-AP": 8e-13, "dose-PA": 7e-13}
         r.buildup = {"dose-AP": 1.25, "dose-PA": 1.14}
-        parsed = [
-            (q, _parse_quantity(q)) for q in
-            ["dose-AP", "dose-AP-coupled-photon", "dose-PA", "dose-PA-coupled-photon"]
-        ]
-
-        _synthesize_dose_totals(r, parsed)
+        r.synthesize_dose_totals()
         assert r.mc["dose-AP-total"] == pytest.approx(1.4e-12)
         assert r.mc["dose-PA-total"] == pytest.approx(1.1e-12)
         assert r.buildup["dose-AP-total"] == pytest.approx(1.4e-12 / 8e-13)
         assert r.buildup["dose-PA-total"] == pytest.approx(1.1e-12 / 7e-13)
 
     def test_no_buildup_when_pk_is_zero(self):
-        from rad_point_kernel.buildup import _parse_quantity, _synthesize_dose_totals
-
-        r, n_name, p_name = _build_paired_result("AP", 1e-12, 4e-13, 0, 0, 0.0)
-        parsed = [(q, _parse_quantity(q)) for q in [n_name, p_name]]
-
-        _synthesize_dose_totals(r, parsed)
+        r, _, _ = _build_paired_result("AP", 1e-12, 4e-13, 0, 0, 0.0)
+        r.synthesize_dose_totals()
         assert "dose-AP-total" in r.mc
         assert "dose-AP-total" not in r.buildup
+
+    def test_idempotent(self):
+        r, _, _ = _build_paired_result("AP", 1e-12, 4e-13, 0, 0, 8e-13)
+        r.synthesize_dose_totals()
+        r.synthesize_dose_totals()  # second call must not break anything
+        assert r.mc["dose-AP-total"] == pytest.approx(1.4e-12)
+
+
+class TestBuildupResultValidation:
+    def test_setter_rejects_non_float_value(self):
+        r = rpk.BuildupResult()
+        with pytest.raises(TypeError, match="must be float"):
+            r.mc = {"dose-AP": "not a number"}
+
+    def test_setter_rejects_non_float_in_buildup(self):
+        r = rpk.BuildupResult()
+        with pytest.raises(TypeError, match="BuildupResult.buildup"):
+            r.buildup = {"dose-AP": [1.0]}
+
+    def test_from_dict_rejects_empty_dict(self):
+        with pytest.raises(ValueError, match="malformed"):
+            rpk.BuildupResult.from_dict({})
+
+    def test_from_dict_rejects_dict_with_no_known_keys(self):
+        with pytest.raises(ValueError, match="malformed"):
+            rpk.BuildupResult.from_dict({"junk": 1, "other": 2})
+
+    def test_from_dict_accepts_partial_payload(self):
+        # Building from buildup-only is valid (e.g. for resolve_buildup_py).
+        r = rpk.BuildupResult.from_dict({"buildup": {"dose-AP": 1.5}})
+        assert r.buildup["dose-AP"] == 1.5
+
+    def test_from_dict_rejects_non_float_inside(self):
+        with pytest.raises(TypeError, match="must be float"):
+            rpk.BuildupResult.from_dict({"mc": {"dose-AP": "string"}})
+
+
+class TestTotalDoseRequest:
+    def test_expands_total_to_both_halves(self):
+        from rad_point_kernel.buildup import _expand_total_requests
+
+        s = rpk.Source("neutron", 14e6)
+        out = _expand_total_requests(["dose-AP-total"], s)
+        assert out == ["dose-AP", "dose-AP-coupled-photon"]
+
+    def test_dedups_when_halves_already_listed(self):
+        from rad_point_kernel.buildup import _expand_total_requests
+
+        s = rpk.Source("neutron", 14e6)
+        out = _expand_total_requests(
+            ["dose-AP", "dose-AP-total", "dose-AP-coupled-photon"], s
+        )
+        assert out == ["dose-AP", "dose-AP-coupled-photon"]
+
+    def test_preserves_other_quantities(self):
+        from rad_point_kernel.buildup import _expand_total_requests
+
+        s = rpk.Source("neutron", 14e6)
+        out = _expand_total_requests(["flux", "dose-AP-total"], s)
+        assert out == ["flux", "dose-AP", "dose-AP-coupled-photon"]
+
+    def test_rejects_total_for_photon_source(self):
+        from rad_point_kernel.buildup import _expand_total_requests
+
+        s = rpk.Source("photon", 1e6)
+        with pytest.raises(ValueError, match="requires a neutron source"):
+            _expand_total_requests(["dose-AP-total"], s)
+
+    def test_rejects_invalid_geometry(self):
+        from rad_point_kernel.buildup import _expand_total_requests
+
+        s = rpk.Source("neutron", 14e6)
+        with pytest.raises(ValueError, match="must be one of"):
+            _expand_total_requests(["dose-OBLIQUE-total"], s)
+
+
+class TestDoseGeometryValidation:
+    def test_calculate_dose_rejects_lowercase_geometry(self):
+        layers = [rpk.Layer(thickness=10)]
+        s = rpk.Source("photon", 662e3)
+        with pytest.raises(ValueError, match="invalid geometry"):
+            rpk.calculate_dose(layers=layers, source=s, geometry="ap")
+
+    def test_calculate_dose_rejects_unknown_geometry(self):
+        layers = [rpk.Layer(thickness=10)]
+        s = rpk.Source("photon", 662e3)
+        with pytest.raises(ValueError, match="invalid geometry"):
+            rpk.calculate_dose(layers=layers, source=s, geometry="OBLIQUE")
+
+    def test_calculate_dose_rejects_geometry_with_whitespace(self):
+        layers = [rpk.Layer(thickness=10)]
+        s = rpk.Source("photon", 662e3)
+        with pytest.raises(ValueError, match="invalid geometry"):
+            rpk.calculate_dose(layers=layers, source=s, geometry="AP ")
+
+    def test_calculate_dose_accepts_all_six_geometries(self):
+        layers = [rpk.Layer(thickness=10)]
+        s = rpk.Source("photon", 662e3)
+        for geo in ("AP", "PA", "RLAT", "LLAT", "ROT", "ISO"):
+            result = rpk.calculate_dose(layers=layers, source=s, geometry=geo)
+            assert result.dose > 0
