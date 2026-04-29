@@ -23,8 +23,6 @@ matplotlib.use("Agg")
 
 GEOMETRY = "AP"
 VOID_THICKNESS = 1000  # source-to-shield air gap, cm
-N_DOSE = f"dose-{GEOMETRY}"
-P_DOSE = f"dose-{GEOMETRY}-coupled-photon"
 TOTAL_DOSE = f"dose-{GEOMETRY}-total"
 
 source = rpk.Source(particle="neutron", energy=14.06e6)
@@ -64,7 +62,7 @@ if missing:
     new_results = rpk.compute_buildup(
         geometries=[make_layers(w, c) for w, c in missing],
         source=source,
-        quantities=[N_DOSE, P_DOSE],
+        quantities=[TOTAL_DOSE],
         particles_per_batch=5_000,
         max_batches=200,
         trigger_rel_err=0.05,

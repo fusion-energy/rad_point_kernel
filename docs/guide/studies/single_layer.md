@@ -15,9 +15,7 @@ GEOMETRY = "AP"
 VOID_THICKNESS = 1000  # source-to-shield air gap, cm
 source = rpk.Source(particle="neutron", energy=14.1e6)
 
-N_DOSE = f"dose-{GEOMETRY}"
-P_DOSE = f"dose-{GEOMETRY}-coupled-photon"
-TOTAL_DOSE = f"dose-{GEOMETRY}-total"  # auto-synthesized by compute_buildup
+TOTAL_DOSE = f"dose-{GEOMETRY}-total"
 
 mc_thicknesses = [10, 20, 30, 40, 50, 60]
 all_thicknesses = mc_thicknesses + list(range(70, 410, 10))
@@ -85,7 +83,7 @@ for name, mat in materials.items():
         new_results = rpk.compute_buildup(
             geometries=geometries,
             source=source,
-            quantities=[N_DOSE, P_DOSE],
+            quantities=[TOTAL_DOSE],
             particles_per_batch=10_000,
             max_batches=100,
             trigger_rel_err=0.05,
