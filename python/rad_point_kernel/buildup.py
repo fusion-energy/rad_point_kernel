@@ -5,17 +5,16 @@ Quantity naming convention for compute_buildup:
     dose-AP                     Dose of the source particle at AP geometry
     flux-coupled-photon         Secondary photon flux (neutron source only)
     dose-AP-coupled-photon      Secondary photon dose at AP (neutron source only)
-    dose-AP-total               Auto-synthesized when both 'dose-AP' and
-                                'dose-AP-coupled-photon' are requested. Equals
-                                the neutron + secondary-photon dose; the
-                                buildup factor uses the neutron PK as
-                                reference. Same rule applies to PA, RLAT,
-                                LLAT, ROT, ISO.
+    dose-AP-total               Neutron + secondary-photon dose. Accepted as
+                                input shorthand (expands to both halves) and
+                                auto-added to the output. The buildup factor
+                                uses the neutron PK as reference. Same rule
+                                applies to PA, RLAT, LLAT, ROT, ISO.
 """
 
 import math
-import sys
 import tempfile
+import warnings
 
 import numpy as np
 
@@ -49,6 +48,40 @@ def _parse_quantity(q):
         return ("dose", geo, coupled)
 
     raise ValueError(f"Invalid quantity '{q}': must be 'flux' or 'dose-{{geometry}}'")
+
+
+def _expand_total_requests(quantities, source):
+    """Expand 'dose-{geo}-total' shorthand into the two halves it implies:
+    'dose-{geo}' and 'dose-{geo}-coupled-photon'. The auto-synth on the
+    output side fills the total key back in, so the user can request and
+    read the same string. Order-preserving and dedup'd.
+    """
+    out = []
+    seen = set()
+
+    def add(q):
+        if q not in seen:
+            seen.add(q)
+            out.append(q)
+
+    for q in quantities:
+        if q.startswith("dose-") and q.endswith("-total"):
+            geo = q[len("dose-") : -len("-total")]
+            if geo not in VALID_DOSE_GEOMETRIES:
+                raise ValueError(
+                    f"Invalid quantity '{q}': geometry must be one of "
+                    f"{sorted(VALID_DOSE_GEOMETRIES)}"
+                )
+            if source.particle != "neutron":
+                raise ValueError(
+                    f"'{q}' requires a neutron source; got {source.particle!r}. "
+                    f"Photon sources don't produce secondary photons in this tool."
+                )
+            add(f"dose-{geo}")
+            add(f"dose-{geo}-coupled-photon")
+        else:
+            add(q)
+    return out
 
 
 class BuildupTable:
@@ -106,19 +139,21 @@ class BuildupTable:
             kept = [i for i, r in enumerate(results) if r.buildup[q] != 0.0]
             dropped = [points[i] for i, r in enumerate(results) if r.buildup[q] == 0.0]
             if dropped:
-                print(
-                    f"WARNING: BuildupTable dropping {len(dropped)} point(s) "
+                warnings.warn(
+                    f"BuildupTable dropping {len(dropped)} point(s) "
                     f"with build-up = 0 for quantity '{q}' at {dropped}. "
                     f"Usually the MC tally returned 0 (insufficient statistics); "
                     f"the GP would be pulled toward 0 and extrapolation unreliable. "
                     f"Re-run MC with more particles or use variance reduction.",
-                    file=sys.stderr,
+                    UserWarning,
+                    stacklevel=2,
                 )
             if len(kept) < 2:
-                print(
-                    f"WARNING: Quantity '{q}' has only {len(kept)} non-zero "
+                warnings.warn(
+                    f"Quantity '{q}' has only {len(kept)} non-zero "
                     f"point(s); need >= 2 to fit a GP. Removing from table.",
-                    file=sys.stderr,
+                    UserWarning,
+                    stacklevel=2,
                 )
                 continue
             self._kept_indices[q] = kept
@@ -221,10 +256,11 @@ class BuildupTable:
                 f"{ax}={val} is outside simulated range [{lo}, {hi}]"
                 for ax, (val, lo, hi) in extrapolated_axes.items()
             ]
-            print(
-                f"WARNING: Extrapolating: {'; '.join(parts)}. "
+            warnings.warn(
+                f"Extrapolating: {'; '.join(parts)}. "
                 "Build-up factor may be inaccurate.",
-                file=sys.stderr,
+                UserWarning,
+                stacklevel=2,
             )
 
         gp = self._get_gp(quantity)
@@ -248,7 +284,7 @@ class BuildupTable:
 def compute_buildup(
     geometries,
     source,
-    quantities=("flux",),
+    quantities,
     particles_per_batch=10_000,
     batches=10,
     max_batches=100,
@@ -263,12 +299,13 @@ def compute_buildup(
         geometries: List of layer lists, each defining a shield geometry
             (Layer thicknesses in cm).
         source: Source object with particle type and energy (eV).
-        quantities: List of quantity strings. Examples: "flux", "dose-AP",
-            "flux-coupled-photon", "dose-AP-coupled-photon". When both
-            "dose-{geo}" and "dose-{geo}-coupled-photon" are requested for
-            the same geometry, a synthetic "dose-{geo}-total" quantity is
-            added to each result (sum of the two doses; buildup factor uses
-            the neutron PK as reference).
+        quantities: Required. List of quantity strings. Examples: "flux",
+            "dose-AP", "flux-coupled-photon", "dose-AP-coupled-photon".
+            "dose-{geo}-total" is accepted as a shorthand for both halves
+            (requires a neutron source); the result still carries all
+            three keys. When both halves are present in the result a
+            "dose-{geo}-total" entry is auto-synthesized (sum of the two
+            doses; buildup factor uses the neutron PK as reference).
         particles_per_batch: Particles per batch (default 10,000).
         batches: Minimum number of batches before the trigger can stop the
             run early (default 10). Gives the tally enough statistics to
@@ -276,6 +313,7 @@ def compute_buildup(
         max_batches: Safety cap on number of batches (default 100).
         trigger_rel_err: Target relative error on tallies (default 0.05).
         cross_sections: Path to cross_sections.xml or directory containing it.
+            Restored to its previous value when this call returns.
 
     Returns:
         List of BuildupResult, one per geometry. MC flux and dose are returned
@@ -286,13 +324,36 @@ def compute_buildup(
     if isinstance(quantities, str):
         quantities = [quantities]
     quantities = list(quantities)
+    if not quantities:
+        raise ValueError("compute_buildup: 'quantities' must be non-empty")
+    quantities = _expand_total_requests(quantities, source)
 
+    geometries = list(geometries)
+    if not geometries:
+        raise ValueError("compute_buildup: 'geometries' must be non-empty")
+    for i, layers in enumerate(geometries):
+        if not layers:
+            raise ValueError(
+                f"compute_buildup: geometries[{i}] has no layers - need at "
+                f"least one Layer to define an outer surface."
+            )
+        total_thickness = sum(layer.thickness for layer in layers)
+        if total_thickness <= 0:
+            raise ValueError(
+                f"compute_buildup: geometries[{i}] has zero or negative total "
+                f"thickness ({total_thickness} cm); detector surface would be "
+                f"at the origin."
+            )
+
+    sentinel = object()
+    prev_xs = sentinel
     if cross_sections is not None:
         import openmc
         from pathlib import Path
         path = Path(cross_sections).expanduser()
         if path.is_dir():
             path = path / "cross_sections.xml"
+        prev_xs = openmc.config.get("cross_sections", sentinel)
         openmc.config["cross_sections"] = str(path)
 
     # Parse quantities
@@ -302,55 +363,33 @@ def compute_buildup(
     needs_coupled = any(p[2] for _, p in parsed)
 
     results = []
-    for layers in geometries:
-        result = BuildupResult()
+    try:
+        for layers in geometries:
+            result = BuildupResult()
 
-        # Optical thickness from PK
-        pk_flux = calculate_flux(layers=layers, source=source)
-        result.optical_thickness = pk_flux.optical_thickness
+            # Optical thickness from PK
+            pk_flux = calculate_flux(layers=layers, source=source)
+            result.optical_thickness = pk_flux.optical_thickness
 
-        # Run MC
-        mc_data = _run_mc(
-            layers, source, needs_coupled,
-            parsed, particles_per_batch, batches, max_batches, trigger_rel_err,
-            use_weight_windows=use_weight_windows,
-            max_history_splits=max_history_splits,
-        )
-        _populate_result(result, layers, source, parsed, mc_data)
-        _synthesize_dose_totals(result, parsed)
-        results.append(result)
+            # Run MC
+            mc_data = _run_mc(
+                layers, source, needs_coupled,
+                parsed, particles_per_batch, batches, max_batches, trigger_rel_err,
+                use_weight_windows=use_weight_windows,
+                max_history_splits=max_history_splits,
+            )
+            _populate_result(result, layers, source, parsed, mc_data)
+            result.synthesize_dose_totals()
+            results.append(result)
+    finally:
+        if cross_sections is not None:
+            import openmc
+            if prev_xs is sentinel:
+                openmc.config.pop("cross_sections", None)
+            else:
+                openmc.config["cross_sections"] = prev_xs
 
     return results
-
-
-def _synthesize_dose_totals(result, parsed):
-    """Add 'dose-{geo}-total' for each geometry where both the neutron and
-    coupled-photon dose were tallied. Total dose = neutron + secondary photon;
-    the buildup factor uses the neutron PK as reference (secondary photons
-    have no analytic PK)."""
-    quantities = {q_name for q_name, _ in parsed}
-
-    for q_name, (measure, geo, coupled) in parsed:
-        if measure != "dose" or coupled:
-            continue
-        coupled_name = f"dose-{geo}-coupled-photon"
-        if coupled_name not in quantities:
-            continue
-
-        total_name = f"dose-{geo}-total"
-        n_mc = result.mc.get(q_name, 0.0)
-        p_mc = result.mc.get(coupled_name, 0.0)
-        n_std = result.mc_std_dev.get(q_name, 0.0)
-        p_std = result.mc_std_dev.get(coupled_name, 0.0)
-
-        result.mc[total_name] = n_mc + p_mc
-        result.mc_std_dev[total_name] = math.sqrt(n_std ** 2 + p_std ** 2)
-
-        pk_n = result.pk.get(q_name)
-        if pk_n is not None:
-            result.pk[total_name] = pk_n
-            if pk_n > 0:
-                result.buildup[total_name] = (n_mc + p_mc) / pk_n
 
 
 def _run_mc(layers, source, coupled, quantities, particles_per_batch, batches, max_batches, trigger_rel_err,
@@ -511,13 +550,14 @@ def _populate_result(result, layers, source, quantities, mc_data):
 
         if mc_val == 0.0:
             thicknesses = [layer.thickness for layer in layers]
-            print(
-                f"WARNING: MC tally '{q_name}' returned 0 for geometry with "
+            warnings.warn(
+                f"MC tally '{q_name}' returned 0 for geometry with "
                 f"layer thicknesses {thicknesses} cm - not enough particles "
                 f"penetrated the shield. Increase particles_per_batch or "
                 f"max_batches, or use variance reduction. Build-up factor "
                 f"from this result will be unreliable.",
-                file=sys.stderr,
+                UserWarning,
+                stacklevel=2,
             )
 
         # PK reference - only for primary particle quantities (not coupled secondary)

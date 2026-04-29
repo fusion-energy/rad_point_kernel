@@ -66,7 +66,7 @@ else:
     print(f"Saved cache to {CACHE_FILE.name}")
 
 for t, r in zip(mc_thicknesses, mc_results):
-    print(f"  {t:>3d} cm: B_flux={r.buildup['flux']:.3f}, B_dose={r.buildup['dose-AP']:.3f}")
+    print(f"  {t:>3d} cm: B_flux={r.buildup['flux']}, B_dose={r.buildup['dose-AP']}")
 
 
 def _build_curve(quantity: str):

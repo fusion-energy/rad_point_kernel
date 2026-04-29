@@ -20,31 +20,21 @@ from rad_point_kernel_core import (
     importance_at,
 )
 
-from rad_point_kernel.buildup import VALID_DOSE_GEOMETRIES
+from rad_point_kernel.buildup import _parse_quantity as _parse_quantity_str
 
 _log = logging.getLogger("rad_point_kernel.weight_windows")
 
 
 def _parse_quantity(q: str) -> tuple[Quantity, bool]:
-    """Parse ``"flux" | "dose-AP" | "dose-AP-coupled-photon" | ...`` into
-    a rust ``Quantity`` and a bool indicating coupled-photon mode.
+    """Parse a quantity string into a Rust ``Quantity`` enum + coupled flag.
+
+    Shares vocabulary with ``rad_point_kernel.buildup._parse_quantity`` so
+    that string validation and the dose-geometry whitelist live in one place.
     """
-    coupled = q.endswith("-coupled-photon")
-    base = q[: -len("-coupled-photon")] if coupled else q
-
-    if base == "flux":
+    measure, geo, coupled = _parse_quantity_str(q)
+    if measure == "flux":
         return Quantity.flux(), coupled
-
-    if base.startswith("dose-"):
-        geo = base[5:]
-        if geo not in VALID_DOSE_GEOMETRIES:
-            raise ValueError(
-                f"Invalid quantity '{q}': dose geometry must be one of "
-                f"{sorted(VALID_DOSE_GEOMETRIES)}"
-            )
-        return Quantity.dose(geo), coupled
-
-    raise ValueError(f"Invalid quantity '{q}': must be 'flux' or 'dose-<geometry>'")
+    return Quantity.dose(geo), coupled
 
 
 def _geom_from(q: str) -> str:
@@ -143,7 +133,7 @@ def build_weight_windows(
     Returns
     -------
     list[openmc.WeightWindows]
-        Length 0 if the skip-gate fired (τ < 2 or n_bins ≤ 2).
+        Length 0 if the skip-gate fired (τ < 3 or n_bins ≤ 2).
         Length 1 for a non-coupled simulation (single primary particle).
         Length 2 for coupled n→γ: first element is the neutron WW, second is
         the photon WW driven by secondary-photon dose importance.
@@ -163,7 +153,7 @@ def build_weight_windows(
     )
     if plan is None:
         _log.info(
-            "Weight windows skipped: geometry too thin (τ < 2 or n_bins ≤ 2) "
+            "Weight windows skipped: geometry too thin (τ < 3 or n_bins ≤ 2) "
             "for driving quantity %r.",
             driving,
         )
@@ -192,7 +182,7 @@ def build_weight_windows(
         )
         if plan_g is None:
             _log.info(
-                "Photon WW skipped: τ < 2 or n_bins ≤ 2 for the secondary-gamma "
+                "Photon WW skipped: τ < 3 or n_bins ≤ 2 for the secondary-gamma "
                 "importance curve.",
             )
         else:
