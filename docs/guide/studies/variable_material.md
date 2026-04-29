@@ -90,7 +90,7 @@ if missing:
     new_results = rpk.compute_buildup(
         geometries=geometries,
         source=source,
-        quantities=[N_DOSE, P_DOSE],
+        quantities=[TOTAL_DOSE],
         particles_per_batch=10_000,
         max_batches=100,
         trigger_rel_err=0.05,

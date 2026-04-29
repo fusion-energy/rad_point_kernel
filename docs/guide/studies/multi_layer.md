@@ -14,9 +14,7 @@ GEOMETRY = "AP"
 VOID_THICKNESS = 1000  # source-to-shield air gap, cm
 source = rpk.Source(particle="neutron", energy=14.06e6)
 
-N_DOSE = f"dose-{GEOMETRY}"
-P_DOSE = f"dose-{GEOMETRY}-coupled-photon"
-TOTAL_DOSE = f"dose-{GEOMETRY}-total"  # auto-synthesized by compute_buildup
+TOTAL_DOSE = f"dose-{GEOMETRY}-total"
 
 water = rpk.Material(composition={"H2O": 1.0}, density=1.0)
 concrete = rpk.Material(
@@ -56,7 +54,7 @@ if missing:
     new_results = rpk.compute_buildup(
         geometries=mc_geometries,
         source=source,
-        quantities=[N_DOSE, P_DOSE],
+        quantities=[TOTAL_DOSE],
         particles_per_batch=10_000,
         max_batches=100,
         trigger_rel_err=0.05,
