@@ -7,27 +7,51 @@ A fast neutron source inside a shield generates secondary photons through inelas
 
 ## Coupled MC
 
+Ask for the total. The library runs coupled neutron-photon transport, tallies both halves, and adds the sum to the result automatically:
+
 ```python exec="true" source="material-block" result="text"
 import rad_point_kernel as rpk
 
 iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 layers = [rpk.Layer(thickness=10, material=iron)]
-
 source = rpk.Source(particle="neutron", energy=14.1e6)
+
 results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
-    quantities=["dose-AP", "dose-AP-coupled-photon"],
+    quantities=["dose-AP-total"],
 )
 
 # Pulsed DT shot: 1e16 neutrons per shot, dose lands in Sv/shot
+r = results[0].scale(strength=1e16)
+print(f"Total dose: {r.mc['dose-AP-total']} Sv/shot")
+```
+
+The same shorthand works for any irradiation geometry: `"dose-PA-total"`, `"dose-RLAT-total"`, `"dose-LLAT-total"`, `"dose-ROT-total"`, `"dose-ISO-total"`. It requires a neutron source.
+
+### Getting the neutron and photon contributions
+
+The two component doses are still in the result if you need them - the shorthand expands to both halves under the hood, so nothing has to be re-run:
+
+```python exec="true" source="material-block" result="text"
+import rad_point_kernel as rpk
+
+iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
+layers = [rpk.Layer(thickness=10, material=iron)]
+source = rpk.Source(particle="neutron", energy=14.1e6)
+
+results = rpk.compute_buildup(
+    geometries=[layers],
+    source=source,
+    quantities=["dose-AP-total"],
+)
 r = results[0].scale(strength=1e16)
 print(f"Neutron dose:    {r.mc['dose-AP']} Sv/shot")
 print(f"Secondary gamma: {r.mc['dose-AP-coupled-photon']} Sv/shot")
 print(f"Total:           {r.mc['dose-AP-total']} Sv/shot")
 ```
 
-Requesting both `"dose-AP"` and `"dose-AP-coupled-photon"` automatically adds a synthetic `"dose-AP-total"` quantity (sum of the two; standard deviation combined in quadrature). The same applies to any other irradiation geometry: `"dose-PA-total"`, `"dose-ISO-total"`, etc.
+If you only ever want one of the components, you can also request it directly with `"dose-AP"` (neutron only) or `"dose-AP-coupled-photon"` (secondary photon only) - the latter still flips on coupled transport.
 
 ## With a manual build-up factor
 

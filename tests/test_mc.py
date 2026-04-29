@@ -128,3 +128,27 @@ def test_compute_buildup_synthesizes_dose_total(iron):
     assert r.buildup["dose-AP-total"] == pytest.approx(
         r.mc["dose-AP-total"] / r.pk["dose-AP"], rel=1e-12
     )
+
+
+def test_compute_buildup_accepts_total_dose_shorthand(iron):
+    """quantities=['dose-AP-total'] is shorthand for both halves; the result
+    must carry all three keys (neutron, coupled-photon, total)."""
+    layers = [rpk.Layer(thickness=5, material=iron)]
+    source = rpk.Source(particle="neutron", energy=14.06e6)
+
+    results = rpk.compute_buildup(
+        geometries=[layers],
+        source=source,
+        quantities=["dose-AP-total"],
+        particles_per_batch=2_000,
+        max_batches=20,
+        trigger_rel_err=0.1,
+    )
+
+    r = results[0]
+    assert "dose-AP" in r.mc
+    assert "dose-AP-coupled-photon" in r.mc
+    assert "dose-AP-total" in r.mc
+    assert r.mc["dose-AP-total"] == pytest.approx(
+        r.mc["dose-AP"] + r.mc["dose-AP-coupled-photon"], rel=1e-12
+    )
