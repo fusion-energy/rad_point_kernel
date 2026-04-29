@@ -70,7 +70,9 @@ def test_parse_quantity_invalid_raises():
 
 def test_returns_one_ww_for_neutron_flux(water, neutron_14mev):
     pytest.importorskip("openmc")
-    layers = [rpk.Layer(50.0, water)]
+    # 70 cm water gives tau approx 3.5 for 14 MeV neutron flux, comfortably
+    # above the skip-gate threshold of 3.0.
+    layers = [rpk.Layer(70.0, water)]
     ww = rpk.build_weight_windows(
         layers=layers, source=neutron_14mev, quantities=["flux"],
     )
