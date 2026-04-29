@@ -49,7 +49,9 @@ def run() -> int:
             t_trans = rpk.calculate_transmission(layers, source)
             # calculate_flux needs r > 0 for inverse-square; use t+1 so we can still read transmission_fraction
             r = t if t > 0 else 1.0
-            t_flux = rpk.calculate_flux(1e12, [rpk.Layer(thickness=r)], source).transmission_fraction
+            t_flux = rpk.calculate_flux(
+                layers=[rpk.Layer(thickness=r)], source=source,
+            ).transmission_fraction
 
             ok_trans = abs(t_trans - 1.0) <= TOL_ABS
             ok_flux = abs(t_flux - 1.0) <= TOL_ABS
