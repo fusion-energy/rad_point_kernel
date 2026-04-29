@@ -5,12 +5,11 @@ Quantity naming convention for compute_buildup:
     dose-AP                     Dose of the source particle at AP geometry
     flux-coupled-photon         Secondary photon flux (neutron source only)
     dose-AP-coupled-photon      Secondary photon dose at AP (neutron source only)
-    dose-AP-total               Auto-synthesized when both 'dose-AP' and
-                                'dose-AP-coupled-photon' are requested. Equals
-                                the neutron + secondary-photon dose; the
-                                buildup factor uses the neutron PK as
-                                reference. Same rule applies to PA, RLAT,
-                                LLAT, ROT, ISO.
+    dose-AP-total               Neutron + secondary-photon dose. Accepted as
+                                input shorthand (expands to both halves) and
+                                auto-added to the output. The buildup factor
+                                uses the neutron PK as reference. Same rule
+                                applies to PA, RLAT, LLAT, ROT, ISO.
 """
 
 import math
@@ -49,6 +48,40 @@ def _parse_quantity(q):
         return ("dose", geo, coupled)
 
     raise ValueError(f"Invalid quantity '{q}': must be 'flux' or 'dose-{{geometry}}'")
+
+
+def _expand_total_requests(quantities, source):
+    """Expand 'dose-{geo}-total' shorthand into the two halves it implies:
+    'dose-{geo}' and 'dose-{geo}-coupled-photon'. The auto-synth on the
+    output side fills the total key back in, so the user can request and
+    read the same string. Order-preserving and dedup'd.
+    """
+    out = []
+    seen = set()
+
+    def add(q):
+        if q not in seen:
+            seen.add(q)
+            out.append(q)
+
+    for q in quantities:
+        if q.startswith("dose-") and q.endswith("-total"):
+            geo = q[len("dose-") : -len("-total")]
+            if geo not in VALID_DOSE_GEOMETRIES:
+                raise ValueError(
+                    f"Invalid quantity '{q}': geometry must be one of "
+                    f"{sorted(VALID_DOSE_GEOMETRIES)}"
+                )
+            if source.particle != "neutron":
+                raise ValueError(
+                    f"'{q}' requires a neutron source; got {source.particle!r}. "
+                    f"Photon sources don't produce secondary photons in this tool."
+                )
+            add(f"dose-{geo}")
+            add(f"dose-{geo}-coupled-photon")
+        else:
+            add(q)
+    return out
 
 
 class BuildupTable:
@@ -267,11 +300,12 @@ def compute_buildup(
             (Layer thicknesses in cm).
         source: Source object with particle type and energy (eV).
         quantities: Required. List of quantity strings. Examples: "flux",
-            "dose-AP", "flux-coupled-photon", "dose-AP-coupled-photon". When
-            both "dose-{geo}" and "dose-{geo}-coupled-photon" are requested
-            for the same geometry, a synthetic "dose-{geo}-total" quantity
-            is added to each result (sum of the two doses; buildup factor
-            uses the neutron PK as reference).
+            "dose-AP", "flux-coupled-photon", "dose-AP-coupled-photon".
+            "dose-{geo}-total" is accepted as a shorthand for both halves
+            (requires a neutron source); the result still carries all
+            three keys. When both halves are present in the result a
+            "dose-{geo}-total" entry is auto-synthesized (sum of the two
+            doses; buildup factor uses the neutron PK as reference).
         particles_per_batch: Particles per batch (default 10,000).
         batches: Minimum number of batches before the trigger can stop the
             run early (default 10). Gives the tally enough statistics to
@@ -292,6 +326,7 @@ def compute_buildup(
     quantities = list(quantities)
     if not quantities:
         raise ValueError("compute_buildup: 'quantities' must be non-empty")
+    quantities = _expand_total_requests(quantities, source)
 
     geometries = list(geometries)
     if not geometries:

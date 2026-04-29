@@ -628,6 +628,45 @@ class TestBuildupResultValidation:
             rpk.BuildupResult.from_dict({"mc": {"dose-AP": "string"}})
 
 
+class TestTotalDoseRequest:
+    def test_expands_total_to_both_halves(self):
+        from rad_point_kernel.buildup import _expand_total_requests
+
+        s = rpk.Source("neutron", 14e6)
+        out = _expand_total_requests(["dose-AP-total"], s)
+        assert out == ["dose-AP", "dose-AP-coupled-photon"]
+
+    def test_dedups_when_halves_already_listed(self):
+        from rad_point_kernel.buildup import _expand_total_requests
+
+        s = rpk.Source("neutron", 14e6)
+        out = _expand_total_requests(
+            ["dose-AP", "dose-AP-total", "dose-AP-coupled-photon"], s
+        )
+        assert out == ["dose-AP", "dose-AP-coupled-photon"]
+
+    def test_preserves_other_quantities(self):
+        from rad_point_kernel.buildup import _expand_total_requests
+
+        s = rpk.Source("neutron", 14e6)
+        out = _expand_total_requests(["flux", "dose-AP-total"], s)
+        assert out == ["flux", "dose-AP", "dose-AP-coupled-photon"]
+
+    def test_rejects_total_for_photon_source(self):
+        from rad_point_kernel.buildup import _expand_total_requests
+
+        s = rpk.Source("photon", 1e6)
+        with pytest.raises(ValueError, match="requires a neutron source"):
+            _expand_total_requests(["dose-AP-total"], s)
+
+    def test_rejects_invalid_geometry(self):
+        from rad_point_kernel.buildup import _expand_total_requests
+
+        s = rpk.Source("neutron", 14e6)
+        with pytest.raises(ValueError, match="must be one of"):
+            _expand_total_requests(["dose-OBLIQUE-total"], s)
+
+
 class TestDoseGeometryValidation:
     def test_calculate_dose_rejects_lowercase_geometry(self):
         layers = [rpk.Layer(thickness=10)]
