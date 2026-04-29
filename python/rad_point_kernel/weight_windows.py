@@ -133,7 +133,7 @@ def build_weight_windows(
     Returns
     -------
     list[openmc.WeightWindows]
-        Length 0 if the skip-gate fired (τ < 2 or n_bins ≤ 2).
+        Length 0 if the skip-gate fired (τ < 3 or n_bins ≤ 2).
         Length 1 for a non-coupled simulation (single primary particle).
         Length 2 for coupled n→γ: first element is the neutron WW, second is
         the photon WW driven by secondary-photon dose importance.
@@ -153,7 +153,7 @@ def build_weight_windows(
     )
     if plan is None:
         _log.info(
-            "Weight windows skipped: geometry too thin (τ < 2 or n_bins ≤ 2) "
+            "Weight windows skipped: geometry too thin (τ < 3 or n_bins ≤ 2) "
             "for driving quantity %r.",
             driving,
         )
@@ -182,7 +182,7 @@ def build_weight_windows(
         )
         if plan_g is None:
             _log.info(
-                "Photon WW skipped: τ < 2 or n_bins ≤ 2 for the secondary-gamma "
+                "Photon WW skipped: τ < 3 or n_bins ≤ 2 for the secondary-gamma "
                 "importance curve.",
             )
         else:
