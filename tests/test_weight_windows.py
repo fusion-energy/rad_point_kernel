@@ -132,20 +132,19 @@ def test_skips_all_void(neutron_14mev):
 # ---- Grid structure --------------------------------------------------------
 
 def test_layer_edges_present_in_grid(water, neutron_14mev):
-    # Voids should give forced layer edges.
+    # Voids should give forced layer edges. 40 + 40 void + 40 cm water gives
+    # tau approx 4 for 14 MeV neutron flux, above the skip-gate threshold.
     pytest.importorskip("openmc")
     layers = [
-        rpk.Layer(30.0, water),
+        rpk.Layer(40.0, water),
         rpk.Layer(40.0, None),     # void between
-        rpk.Layer(30.0, water),
+        rpk.Layer(40.0, water),
     ]
     ww = rpk.build_weight_windows(
         layers=layers, source=neutron_14mev, quantities=["flux"],
     )
-    if not ww:
-        pytest.skip("skip gate fired; no grid to check")
     r_grid = list(ww[0].mesh.r_grid)
-    for edge in (30.0, 70.0, 100.0):
+    for edge in (40.0, 80.0, 120.0):
         assert any(abs(r - edge) < 1e-6 for r in r_grid), \
             f"layer edge {edge} missing from r_grid {r_grid}"
 
@@ -153,35 +152,32 @@ def test_layer_edges_present_in_grid(water, neutron_14mev):
 def test_no_bins_inside_void(water, neutron_14mev):
     pytest.importorskip("openmc")
     layers = [
-        rpk.Layer(30.0, water),
+        rpk.Layer(40.0, water),
         rpk.Layer(40.0, None),
-        rpk.Layer(30.0, water),
+        rpk.Layer(40.0, water),
     ]
     ww = rpk.build_weight_windows(
         layers=layers, source=neutron_14mev, quantities=["flux"],
     )
-    if not ww:
-        pytest.skip("skip gate fired")
     r_grid = list(ww[0].mesh.r_grid)
     for a, b in zip(r_grid, r_grid[1:]):
         centre = 0.5 * (a + b)
-        in_void = (centre > 30.0 + 1e-6) and (centre < 70.0 - 1e-6)
+        in_void = (centre > 40.0 + 1e-6) and (centre < 80.0 - 1e-6)
         if in_void:
-            # must be the whole-void cell [30, 70]
-            assert abs(a - 30.0) < 1e-6 and abs(b - 70.0) < 1e-6, \
+            # must be the whole-void cell [40, 80]
+            assert abs(a - 40.0) < 1e-6 and abs(b - 80.0) < 1e-6, \
                 f"intra-void bin: [{a}, {b}]"
 
 
 # ---- Bounds shape ----------------------------------------------------------
 
 def test_lower_bounds_shape(water, neutron_14mev):
+    # 70 cm water gives tau approx 3.5, above the skip-gate threshold.
     pytest.importorskip("openmc")
-    layers = [rpk.Layer(50.0, water)]
+    layers = [rpk.Layer(70.0, water)]
     ww = rpk.build_weight_windows(
         layers=layers, source=neutron_14mev, quantities=["flux"],
     )
-    if not ww:
-        pytest.skip("skip gate fired")
     lb = np.asarray(ww[0].lower_ww_bounds)
     # shape (nr, 1, 1, nE)
     assert lb.ndim == 4
@@ -211,11 +207,11 @@ def test_driving_quantity_picks_steepest(water, neutron_14mev):
 # ---- Photon-source symmetry ------------------------------------------------
 
 def test_photon_source_produces_photon_ww(concrete, photon_1mev):
+    # 30 cm concrete gives tau approx 4.4 for 1 MeV photons, above the
+    # skip-gate threshold.
     pytest.importorskip("openmc")
-    layers = [rpk.Layer(20.0, concrete)]
+    layers = [rpk.Layer(30.0, concrete)]
     ww = rpk.build_weight_windows(
         layers=layers, source=photon_1mev, quantities=["flux"],
     )
-    if not ww:
-        pytest.skip("skip gate fired")
     assert str(ww[0].particle_type) == "photon"
