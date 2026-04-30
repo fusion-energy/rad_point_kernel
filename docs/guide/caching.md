@@ -134,12 +134,4 @@ The simplest cure after a minor version bump is to **delete the cache JSON and r
 
 Version 2.0 made the source particle part of every quantity key. Old caches use bare names like `flux` and `dose-AP`; new caches use `flux-neutron` / `flux-photon` and `dose-AP-neutron` / `dose-AP-photon` so the cache is unambiguous on its own. Loading an old cache and asking for the new key name will `KeyError`.
 
-`tools/migrate_cache.py` rewrites a cache file in place (or to a new path) using the new names. The source particle is auto-detected when the cache contains any `*-coupled-photon` keys (only neutron sources produce secondary photons); otherwise pass `--particle neutron` or `--particle photon`:
-
-```
-python tools/migrate_cache.py path/to/cache.json
-python tools/migrate_cache.py path/to/cache.json --particle photon
-python tools/migrate_cache.py path/to/cache.json --output new_cache.json
-```
-
-The tool is a no-op on already-migrated caches, so it's safe to run unconditionally on a directory of mixed-version files. It handles both the canonical `BuildupResult.save()` format and study-style JSON envelopes that wrap each result in extra metadata.
+A standalone migration script for upgrading existing cache files in place is posted as a comment on [PR #20](https://github.com/fusion-energy/rad_point_kernel/pull/20). It auto-detects the source particle when the cache contains any `*-coupled-photon` keys (only neutron sources produce secondary photons); otherwise pass `--particle neutron` or `--particle photon`. The script is a no-op on already-migrated caches.
