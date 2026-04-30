@@ -30,14 +30,14 @@ mc_geometries = [[rpk.Layer(thickness=t, material=concrete)] for t in mc_thickne
 mc_results = rpk.compute_buildup(
     geometries=mc_geometries,
     source=source,
-    quantities=["dose-AP"],
+    quantities=["dose-AP-photon"],
     particles_per_batch=10_000,
     max_batches=50,
     trigger_rel_err=0.05,
 )
 
 for t, r in zip(mc_thicknesses, mc_results):
-    print(f"  {t} cm: B = {r.buildup['dose-AP']}")
+    print(f"  {t} cm: B = {r.buildup['dose-AP-photon']}")
 
 # BuildupFit (Shin-Ishii in 1D, RBF for multi-layer)
 fit = rpk.BuildupFit(
@@ -61,8 +61,8 @@ fig, ax = plt.subplots(figsize=(10, 7))
 ax.plot(all_thicknesses, pk_b_doses, "b-", linewidth=2, label="PK with buildup")
 
 mc_scaled = [r.scale(strength=PARTICLES_PER_HOUR) for r in mc_results]
-mc_doses = [r.mc["dose-AP"] for r in mc_scaled]
-mc_errs = [r.mc_std_dev["dose-AP"] for r in mc_scaled]
+mc_doses = [r.mc["dose-AP-photon"] for r in mc_scaled]
+mc_errs = [r.mc_std_dev["dose-AP-photon"] for r in mc_scaled]
 ax.errorbar(
     mc_thicknesses,
     mc_doses,

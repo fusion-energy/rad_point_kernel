@@ -40,7 +40,7 @@ else:
     mc_results = rpk.compute_buildup(
         geometries=mc_geometries,
         source=source,
-        quantities=["dose-AP"],
+        quantities=["dose-AP-photon"],
         particles_per_batch=10_000,
         max_batches=50,
         trigger_rel_err=0.05,
@@ -49,7 +49,7 @@ else:
     print(f"Saved to {CACHE_FILE}")
 
 for t, r in zip(mc_thicknesses, mc_results):
-    print(f"  {t} cm: B = {r.buildup['dose-AP']}")
+    print(f"  {t} cm: B = {r.buildup['dose-AP-photon']}")
 
 # BuildupFit + dose
 fit = rpk.BuildupFit(
@@ -69,8 +69,8 @@ for t, layers in zip(all_thicknesses, all_geometries):
 fig, ax = plt.subplots(figsize=(10, 7))
 ax.plot(all_thicknesses, pk_b_doses, "b-", linewidth=2, label="PK with buildup")
 mc_scaled = [r.scale(strength=PARTICLES_PER_HOUR) for r in mc_results]
-mc_doses = [r.mc["dose-AP"] for r in mc_scaled]
-mc_errs = [r.mc_std_dev["dose-AP"] for r in mc_scaled]
+mc_doses = [r.mc["dose-AP-photon"] for r in mc_scaled]
+mc_errs = [r.mc_std_dev["dose-AP-photon"] for r in mc_scaled]
 ax.errorbar(
     mc_thicknesses,
     mc_doses,

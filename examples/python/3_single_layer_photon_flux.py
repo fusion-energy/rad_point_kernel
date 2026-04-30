@@ -20,18 +20,18 @@ print("Running MC with Co-60 spectrum...")
 results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
-    quantities=["flux"],
+    quantities=["flux-photon"],
     particles_per_batch=10_000,
     max_batches=50,
     trigger_rel_err=0.05,
 )
 
 r = results[0].scale(strength=PARTICLES_PER_SECOND)
-print(f"Buildup factor: {r.buildup['flux']}")
+print(f"Buildup factor: {r.buildup['flux-photon']}")
 
 # Apply buildup
 corrected = rpk.calculate_flux(layers=layers, source=source, buildup=r).scale(
     strength=PARTICLES_PER_SECOND
 )
 print(f"PK flux with buildup: {corrected.flux} photons/cm2/s")
-print(f"MC flux (reference):  {r.mc['flux']} photons/cm2/s")
+print(f"MC flux (reference):  {r.mc['flux-photon']} photons/cm2/s")
