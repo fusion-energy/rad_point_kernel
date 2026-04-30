@@ -563,6 +563,80 @@ class TestBuildupFit:
         b_c = fit.interpolate(t=1e-6, quantity="dose-AP-coupled-photon", warn=False).value
         assert abs(b_c) < 1e-3, f"expected B(0)~0, got {b_c}"
 
+    def test_total_is_sum_of_components_on_u_shape_data(self):
+        # Regression for: 1D dose-AP-total used to be fit independently
+        # of dose-AP and dose-AP-coupled-photon. On poly-style data the
+        # total is U-shaped (neutron-dominated near the surface, secondary
+        # photon-dominated at depth), and Shin-Ishii (sum of two decaying
+        # exponentials) cannot represent a U, so the direct B_total fit
+        # used to drift >30% off the MC anchors and explode by ~60x in
+        # extrapolation. Fix: when both component fits are available,
+        # dose-{geo}-total is now derived as their sum, preserving the
+        # B_t = B_n + B_p identity that holds in the MC inputs.
+        t_anchors = [25, 50, 75, 125, 175, 250]
+        # U-shaped MC: B_n decays, B_p grows as a power, sum dips near
+        # 125 cm and climbs again at 250 cm.
+        b_n = [math.exp(-0.040 * (t - 25)) * 0.97 for t in t_anchors]
+        b_p = [2.52e-5 * t**1.976 for t in t_anchors]
+        b_t = [n + p for n, p in zip(b_n, b_p)]
+        # Sanity: sum is U-shaped over the anchor range.
+        assert b_t[0] > b_t[3] and b_t[-1] > b_t[3]
+
+        results = []
+        for n, p, t in zip(b_n, b_p, b_t):
+            r = rpk.BuildupResult()
+            r.mc = {
+                "dose-AP": n * 1e-11,
+                "dose-AP-coupled-photon": p * 1e-11,
+                "dose-AP-total": t * 1e-11,
+            }
+            r.mc_std_dev = {
+                "dose-AP": 1e-13,
+                "dose-AP-coupled-photon": 1e-13,
+                "dose-AP-total": 1e-13,
+            }
+            r.pk = {
+                "dose-AP": 1e-11,
+                "dose-AP-coupled-photon": 1e-11,
+                "dose-AP-total": 1e-11,
+            }
+            r.buildup = {"dose-AP": n, "dose-AP-coupled-photon": p, "dose-AP-total": t}
+            results.append(r)
+
+        fit = rpk.BuildupFit([{"t": t} for t in t_anchors], results)
+
+        # 1) Identity holds at every training anchor (machine precision).
+        #    Under the old code dose-AP-total came from an independent
+        #    Shin-Ishii fit and drifted up to ~34% off the sum; this is
+        #    the assertion that would have failed.
+        for t, n_mc, p_mc, t_mc in zip(t_anchors, b_n, b_p, b_t):
+            bn = fit.interpolate(t=t, quantity="dose-AP").value
+            bp = fit.interpolate(t=t, quantity="dose-AP-coupled-photon").value
+            bt = fit.interpolate(t=t, quantity="dose-AP-total").value
+            assert bt == pytest.approx(bn + bp, rel=1e-12), (
+                f"At t={t}, total {bt} != sum {bn + bp}"
+            )
+            # And the sum (and therefore total) stays close to MC; under
+            # the old code the direct total fit was off by 30%+ at the
+            # tails of this U-shape.
+            assert bt == pytest.approx(t_mc, rel=0.10), (
+                f"At t={t}, total {bt} drifted from MC {t_mc}"
+            )
+
+        # 2) Extrapolation stays bounded. The old direct fit on this
+        #    U-shape exploded (~60x) at deep thickness; the composite
+        #    stays equal to the sum of components (each of which
+        #    extrapolates within its own form).
+        for t in [10, 400, 500]:
+            bn = fit.interpolate(t=t, quantity="dose-AP", warn=False).value
+            bp = fit.interpolate(
+                t=t, quantity="dose-AP-coupled-photon", warn=False
+            ).value
+            bt = fit.interpolate(
+                t=t, quantity="dose-AP-total", warn=False
+            ).value
+            assert bt == pytest.approx(bn + bp, rel=1e-12)
+
 
 def _build_paired_result(geo, n_mc, p_mc, n_std, p_std, pk_n):
     r = rpk.BuildupResult()
