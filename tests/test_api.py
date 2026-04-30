@@ -276,7 +276,7 @@ class TestBuildup:
         s = rpk.Source("neutron", 14.06e6)
 
         br = rpk.BuildupResult()
-        br.buildup = {"flux": 2.5}
+        br.buildup = {"flux-neutron": 2.5}
         result = rpk.calculate_flux(layers, s, buildup=br)
         assert result.buildup_factor == pytest.approx(2.5)
 
@@ -351,10 +351,10 @@ class TestSecondaryPhotonDose:
 class TestBuildupResult:
     def test_to_dict_round_trip(self):
         r = rpk.BuildupResult()
-        r.mc = {"dose-AP": 1.5e-11}
-        r.mc_std_dev = {"dose-AP": 1e-13}
-        r.pk = {"dose-AP": 1.2e-11}
-        r.buildup = {"dose-AP": 1.25}
+        r.mc = {"dose-AP-neutron": 1.5e-11}
+        r.mc_std_dev = {"dose-AP-neutron": 1e-13}
+        r.pk = {"dose-AP-neutron": 1.2e-11}
+        r.buildup = {"dose-AP-neutron": 1.25}
         r.optical_thickness = 3.5
         d = r.to_dict()
         r2 = rpk.BuildupResult.from_dict(d)
@@ -364,11 +364,11 @@ class TestBuildupResult:
 
     def test_save_load_round_trip(self, tmp_path):
         r1 = rpk.BuildupResult()
-        r1.mc = {"flux": 1e-6}
-        r1.buildup = {"flux": 1.25}
+        r1.mc = {"flux-neutron": 1e-6}
+        r1.buildup = {"flux-neutron": 1.25}
         r2 = rpk.BuildupResult()
-        r2.mc = {"flux": 5e-7}
-        r2.buildup = {"flux": 1.3}
+        r2.mc = {"flux-neutron": 5e-7}
+        r2.buildup = {"flux-neutron": 1.3}
         path = tmp_path / "cache.json"
         rpk.BuildupResult.save([r1, r2], path)
         loaded = rpk.BuildupResult.load(path)
@@ -383,36 +383,36 @@ class TestBuildupResult:
 
     def test_scale(self):
         r = rpk.BuildupResult()
-        r.mc = {"dose-AP": 1.5e-11}
-        r.mc_std_dev = {"dose-AP": 1e-13}
-        r.pk = {"dose-AP": 1.2e-11}
-        r.buildup = {"dose-AP": 1.25}
+        r.mc = {"dose-AP-neutron": 1.5e-11}
+        r.mc_std_dev = {"dose-AP-neutron": 1e-13}
+        r.pk = {"dose-AP-neutron": 1.2e-11}
+        r.buildup = {"dose-AP-neutron": 1.25}
         r.optical_thickness = 3.5
 
         scaled = r.scale(strength=1e10)
         assert scaled.source_strength == 1e10
-        assert scaled.mc["dose-AP"] == pytest.approx(1.5e-11 * 1e10)
-        assert scaled.pk["dose-AP"] == pytest.approx(1.2e-11 * 1e10)
+        assert scaled.mc["dose-AP-neutron"] == pytest.approx(1.5e-11 * 1e10)
+        assert scaled.pk["dose-AP-neutron"] == pytest.approx(1.2e-11 * 1e10)
         # Buildup is a ratio, must be unchanged
-        assert scaled.buildup["dose-AP"] == pytest.approx(1.25)
+        assert scaled.buildup["dose-AP-neutron"] == pytest.approx(1.25)
         # Original is unchanged
         assert r.source_strength == 1.0
-        assert r.mc["dose-AP"] == pytest.approx(1.5e-11)
+        assert r.mc["dose-AP-neutron"] == pytest.approx(1.5e-11)
 
     def test_scale_replaces_not_compounds(self):
         r = rpk.BuildupResult()
-        r.mc = {"flux": 1e-6}
-        r.pk = {"flux": 1e-6}
-        r.buildup = {"flux": 1.0}
+        r.mc = {"flux-neutron": 1e-6}
+        r.pk = {"flux-neutron": 1e-6}
+        r.buildup = {"flux-neutron": 1.0}
         once = r.scale(strength=1e12)
         twice = once.scale(strength=1e10)
         assert twice.source_strength == 1e10
-        assert twice.mc["flux"] == pytest.approx(1e-6 * 1e10)
+        assert twice.mc["flux-neutron"] == pytest.approx(1e-6 * 1e10)
 
     def test_scale_round_trips_in_json(self, tmp_path):
         r = rpk.BuildupResult()
-        r.mc = {"dose-AP": 1.5e-11}
-        r.buildup = {"dose-AP": 1.25}
+        r.mc = {"dose-AP-neutron": 1.5e-11}
+        r.buildup = {"dose-AP-neutron": 1.25}
         scaled = r.scale(strength=1e10)
         path = tmp_path / "cache.json"
         rpk.BuildupResult.save([scaled], path)
@@ -421,7 +421,7 @@ class TestBuildupResult:
 
     def test_scale_invalid(self):
         r = rpk.BuildupResult()
-        r.mc = {"flux": 1e-6}
+        r.mc = {"flux-neutron": 1e-6}
         with pytest.raises(ValueError):
             r.scale(strength=0.0)
         with pytest.raises(ValueError):
@@ -431,7 +431,7 @@ class TestBuildupResult:
 # BuildupFit tests
 
 
-def _make_results(b_values, quantity="dose-AP"):
+def _make_results(b_values, quantity="dose-AP-neutron"):
     results = []
     for b in b_values:
         r = rpk.BuildupResult()
@@ -473,8 +473,8 @@ class TestBuildupFit:
         assert 1.0 < r.value < 1.5
 
     def test_available_quantities(self):
-        table = rpk.BuildupFit([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3], "flux"))
-        assert "flux" in table.available_quantities
+        table = rpk.BuildupFit([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3], "flux-neutron"))
+        assert "flux-neutron" in table.available_quantities
 
     def test_default_quantity(self):
         table = rpk.BuildupFit([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
@@ -484,10 +484,10 @@ class TestBuildupFit:
         results = []
         for b_neutron, b_total in [(1.2, 1.5), (1.3, 1.7)]:
             r = rpk.BuildupResult()
-            r.mc = {"dose-AP": b_neutron * 1e-11, "dose-AP-total": b_total * 1e-11}
-            r.mc_std_dev = {"dose-AP": 1e-13, "dose-AP-total": 1e-13}
-            r.pk = {"dose-AP": 1e-11, "dose-AP-total": 1e-11}
-            r.buildup = {"dose-AP": b_neutron, "dose-AP-total": b_total}
+            r.mc = {"dose-AP-neutron": b_neutron * 1e-11, "dose-AP-total": b_total * 1e-11}
+            r.mc_std_dev = {"dose-AP-neutron": 1e-13, "dose-AP-total": 1e-13}
+            r.pk = {"dose-AP-neutron": 1e-11, "dose-AP-total": 1e-11}
+            r.buildup = {"dose-AP-neutron": b_neutron, "dose-AP-total": b_total}
             results.append(r)
         table = rpk.BuildupFit([{"t": 10}, {"t": 20}], results)
 
@@ -500,7 +500,7 @@ class TestBuildupFit:
     def test_invalid_quantity_raises(self):
         table = rpk.BuildupFit([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
         with pytest.raises(ValueError, match="not available"):
-            table.interpolate(t=15, quantity="flux")
+            table.interpolate(t=15, quantity="flux-neutron")
 
     def test_wrong_axes_raises(self):
         table = rpk.BuildupFit([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
@@ -540,10 +540,10 @@ class TestBuildupFit:
             B_c = 0.04 * t ** 1.1 * (1 - 2.71828 ** (-0.6 * t))  # rises from 0
             r = rpk.BuildupResult()
             r.optical_thickness = t
-            r.mc = {"dose-AP": B_n * 1e-11, "dose-AP-coupled-photon": B_c * 1e-11}
-            r.mc_std_dev = {"dose-AP": 1e-13, "dose-AP-coupled-photon": 1e-13}
-            r.pk = {"dose-AP": 1e-11}
-            r.buildup = {"dose-AP": B_n}
+            r.mc = {"dose-AP-neutron": B_n * 1e-11, "dose-AP-coupled-photon": B_c * 1e-11}
+            r.mc_std_dev = {"dose-AP-neutron": 1e-13, "dose-AP-coupled-photon": 1e-13}
+            r.pk = {"dose-AP-neutron": 1e-11}
+            r.buildup = {"dose-AP-neutron": B_n}
             r.synthesize_dose_totals()
             # synthesize_dose_totals adds dose-AP-coupled-photon and
             # dose-AP-total to pk and buildup using pk_neutron as reference.
@@ -551,12 +551,12 @@ class TestBuildupFit:
 
         fit = rpk.BuildupFit([{"t": t} for t in thicks], results)
         avail = sorted(fit.available_quantities)
-        assert "dose-AP" in avail
+        assert "dose-AP-neutron" in avail
         assert "dose-AP-coupled-photon" in avail
         assert "dose-AP-total" in avail
 
         # B(0) ~= 1 for primary (Shin-Ishii)
-        b_n = fit.interpolate(t=1e-6, quantity="dose-AP", warn=False).value
+        b_n = fit.interpolate(t=1e-6, quantity="dose-AP-neutron", warn=False).value
         assert abs(b_n - 1.0) < 0.05
 
         # B(0) ~= 0 for coupled photon (Power x saturator)
@@ -586,21 +586,21 @@ class TestBuildupFit:
         for n, p, t in zip(b_n, b_p, b_t):
             r = rpk.BuildupResult()
             r.mc = {
-                "dose-AP": n * 1e-11,
+                "dose-AP-neutron": n * 1e-11,
                 "dose-AP-coupled-photon": p * 1e-11,
                 "dose-AP-total": t * 1e-11,
             }
             r.mc_std_dev = {
-                "dose-AP": 1e-13,
+                "dose-AP-neutron": 1e-13,
                 "dose-AP-coupled-photon": 1e-13,
                 "dose-AP-total": 1e-13,
             }
             r.pk = {
-                "dose-AP": 1e-11,
+                "dose-AP-neutron": 1e-11,
                 "dose-AP-coupled-photon": 1e-11,
                 "dose-AP-total": 1e-11,
             }
-            r.buildup = {"dose-AP": n, "dose-AP-coupled-photon": p, "dose-AP-total": t}
+            r.buildup = {"dose-AP-neutron": n, "dose-AP-coupled-photon": p, "dose-AP-total": t}
             results.append(r)
 
         fit = rpk.BuildupFit([{"t": t} for t in t_anchors], results)
@@ -610,7 +610,7 @@ class TestBuildupFit:
         #    Shin-Ishii fit and drifted up to ~34% off the sum; this is
         #    the assertion that would have failed.
         for t, n_mc, p_mc, t_mc in zip(t_anchors, b_n, b_p, b_t):
-            bn = fit.interpolate(t=t, quantity="dose-AP").value
+            bn = fit.interpolate(t=t, quantity="dose-AP-neutron").value
             bp = fit.interpolate(t=t, quantity="dose-AP-coupled-photon").value
             bt = fit.interpolate(t=t, quantity="dose-AP-total").value
             assert bt == pytest.approx(bn + bp, rel=1e-12), (
@@ -628,7 +628,7 @@ class TestBuildupFit:
         #    stays equal to the sum of components (each of which
         #    extrapolates within its own form).
         for t in [10, 400, 500]:
-            bn = fit.interpolate(t=t, quantity="dose-AP", warn=False).value
+            bn = fit.interpolate(t=t, quantity="dose-AP-neutron", warn=False).value
             bp = fit.interpolate(
                 t=t, quantity="dose-AP-coupled-photon", warn=False
             ).value
@@ -640,7 +640,7 @@ class TestBuildupFit:
 
 def _build_paired_result(geo, n_mc, p_mc, n_std, p_std, pk_n):
     r = rpk.BuildupResult()
-    n_name = f"dose-{geo}"
+    n_name = f"dose-{geo}-neutron"
     p_name = f"dose-{geo}-coupled-photon"
     r.mc = {n_name: n_mc, p_name: p_mc}
     r.mc_std_dev = {n_name: n_std, p_name: p_std}
@@ -663,8 +663,8 @@ class TestSynthesizeDoseTotals:
 
     def test_no_synthesis_when_only_neutron_dose(self):
         r = rpk.BuildupResult()
-        r.mc = {"dose-AP": 1e-12}
-        r.pk = {"dose-AP": 8e-13}
+        r.mc = {"dose-AP-neutron": 1e-12}
+        r.pk = {"dose-AP-neutron": 8e-13}
         r.synthesize_dose_totals()
         assert "dose-AP-total" not in r.mc
 
@@ -676,7 +676,7 @@ class TestSynthesizeDoseTotals:
 
     def test_flux_is_not_totalled(self):
         r = rpk.BuildupResult()
-        r.mc = {"flux": 1e-6, "flux-coupled-photon": 2e-7}
+        r.mc = {"flux-neutron": 1e-6, "flux-coupled-photon": 2e-7}
         r.synthesize_dose_totals()
         assert "flux-total" not in r.mc
 
@@ -690,12 +690,12 @@ class TestSynthesizeDoseTotals:
     def test_two_geometries_get_separate_totals(self):
         r = rpk.BuildupResult()
         r.mc = {
-            "dose-AP": 1e-12, "dose-AP-coupled-photon": 4e-13,
-            "dose-PA": 8e-13, "dose-PA-coupled-photon": 3e-13,
+            "dose-AP-neutron": 1e-12, "dose-AP-coupled-photon": 4e-13,
+            "dose-PA-neutron": 8e-13, "dose-PA-coupled-photon": 3e-13,
         }
         r.mc_std_dev = {k: 0.0 for k in r.mc}
-        r.pk = {"dose-AP": 8e-13, "dose-PA": 7e-13}
-        r.buildup = {"dose-AP": 1.25, "dose-PA": 1.14}
+        r.pk = {"dose-AP-neutron": 8e-13, "dose-PA-neutron": 7e-13}
+        r.buildup = {"dose-AP-neutron": 1.25, "dose-PA-neutron": 1.14}
         r.synthesize_dose_totals()
         assert r.mc["dose-AP-total"] == pytest.approx(1.4e-12)
         assert r.mc["dose-PA-total"] == pytest.approx(1.1e-12)
@@ -719,12 +719,12 @@ class TestBuildupResultValidation:
     def test_setter_rejects_non_float_value(self):
         r = rpk.BuildupResult()
         with pytest.raises(TypeError, match="must be float"):
-            r.mc = {"dose-AP": "not a number"}
+            r.mc = {"dose-AP-neutron": "not a number"}
 
     def test_setter_rejects_non_float_in_buildup(self):
         r = rpk.BuildupResult()
         with pytest.raises(TypeError, match="BuildupResult.buildup"):
-            r.buildup = {"dose-AP": [1.0]}
+            r.buildup = {"dose-AP-neutron": [1.0]}
 
     def test_from_dict_rejects_empty_dict(self):
         with pytest.raises(ValueError, match="malformed"):
@@ -736,12 +736,12 @@ class TestBuildupResultValidation:
 
     def test_from_dict_accepts_partial_payload(self):
         # Building from buildup-only is valid (e.g. for resolve_buildup_py).
-        r = rpk.BuildupResult.from_dict({"buildup": {"dose-AP": 1.5}})
-        assert r.buildup["dose-AP"] == 1.5
+        r = rpk.BuildupResult.from_dict({"buildup": {"dose-AP-neutron": 1.5}})
+        assert r.buildup["dose-AP-neutron"] == 1.5
 
     def test_from_dict_rejects_non_float_inside(self):
         with pytest.raises(TypeError, match="must be float"):
-            rpk.BuildupResult.from_dict({"mc": {"dose-AP": "string"}})
+            rpk.BuildupResult.from_dict({"mc": {"dose-AP-neutron": "string"}})
 
 
 class TestTotalDoseRequest:
@@ -750,23 +750,23 @@ class TestTotalDoseRequest:
 
         s = rpk.Source("neutron", 14e6)
         out = _expand_total_requests(["dose-AP-total"], s)
-        assert out == ["dose-AP", "dose-AP-coupled-photon"]
+        assert out == ["dose-AP-neutron", "dose-AP-coupled-photon"]
 
     def test_dedups_when_halves_already_listed(self):
         from rad_point_kernel.buildup import _expand_total_requests
 
         s = rpk.Source("neutron", 14e6)
         out = _expand_total_requests(
-            ["dose-AP", "dose-AP-total", "dose-AP-coupled-photon"], s
+            ["dose-AP-neutron", "dose-AP-total", "dose-AP-coupled-photon"], s
         )
-        assert out == ["dose-AP", "dose-AP-coupled-photon"]
+        assert out == ["dose-AP-neutron", "dose-AP-coupled-photon"]
 
     def test_preserves_other_quantities(self):
         from rad_point_kernel.buildup import _expand_total_requests
 
         s = rpk.Source("neutron", 14e6)
-        out = _expand_total_requests(["flux", "dose-AP-total"], s)
-        assert out == ["flux", "dose-AP", "dose-AP-coupled-photon"]
+        out = _expand_total_requests(["flux-neutron", "dose-AP-total"], s)
+        assert out == ["flux-neutron", "dose-AP-neutron", "dose-AP-coupled-photon"]
 
     def test_rejects_total_for_photon_source(self):
         from rad_point_kernel.buildup import _expand_total_requests

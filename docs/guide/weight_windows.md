@@ -94,7 +94,7 @@ with:
 results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
-    quantities=["dose-AP"],
+    quantities=["dose-AP-photon"],
     use_weight_windows=False,   # default True
 )
 ```
@@ -112,7 +112,7 @@ from rad_point_kernel.weight_windows import build_weight_windows
 ww_list = build_weight_windows(
     layers=layers,
     source=source,
-    quantities=["dose-AP"],
+    quantities=["dose-AP-photon"],
     log_ratio_per_bin=1.0,         # factor of e per bin (default)
     min_bin_width_cm=0.5,
     upper_bound_ratio=5.0,
@@ -123,7 +123,7 @@ my_openmc_settings.weight_windows = ww_list
 
 ## When to tally both flux and dose
 
-If `quantities` contains more than one tally (e.g. `["flux", "dose-AP"]`),
+If `quantities` contains more than one tally (e.g. `["flux-photon", "dose-AP-photon"]`),
 the builder uses the importance curve that drops the fastest across the
 shield to drive the WW. That curve needs the most variance help; WW sized
 for it is automatically adequate for the gentler quantity. The cost is a
