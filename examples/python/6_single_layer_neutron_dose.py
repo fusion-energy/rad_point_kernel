@@ -20,17 +20,17 @@ print("Running MC...")
 results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
-    quantities=["dose-AP"],
+    quantities=["dose-AP-neutron"],
     particles_per_batch=10_000,
     max_batches=50,
     trigger_rel_err=0.05,
 )
 
 r = results[0].scale(strength=PARTICLES_PER_SHOT)
-print(f"Buildup factor: {r.buildup['dose-AP']}")
+print(f"Buildup factor: {r.buildup['dose-AP-neutron']}")
 
 corrected = rpk.calculate_dose(
     layers=layers, source=source, geometry="AP", buildup=r
 ).scale(strength=PARTICLES_PER_SHOT)
 print(f"PK dose with buildup: {corrected.dose} Sv/shot")
-print(f"MC dose (reference):  {r.mc['dose-AP']} Sv/shot")
+print(f"MC dose (reference):  {r.mc['dose-AP-neutron']} Sv/shot")

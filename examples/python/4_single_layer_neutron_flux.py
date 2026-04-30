@@ -21,18 +21,18 @@ print("Running MC with D-T + D-D spectrum...")
 results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
-    quantities=["flux"],
+    quantities=["flux-neutron"],
     particles_per_batch=10_000,
     max_batches=50,
     trigger_rel_err=0.05,
 )
 
 r = results[0].scale(strength=PARTICLES_PER_SHOT)
-print(f"Buildup factor: {r.buildup['flux']}")
+print(f"Buildup factor: {r.buildup['flux-neutron']}")
 
 # Apply buildup
 corrected = rpk.calculate_flux(layers=layers, source=source, buildup=r).scale(
     strength=PARTICLES_PER_SHOT
 )
 print(f"PK flux with buildup: {corrected.flux} n/cm2/shot")
-print(f"MC flux (reference):  {r.mc['flux']} n/cm2/shot")
+print(f"MC flux (reference):  {r.mc['flux-neutron']} n/cm2/shot")

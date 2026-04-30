@@ -1,64 +1,64 @@
 [
   {
     "mc": {
-      "dose-AP": 7.002896550217807e-15
+      "dose-AP-photon": 7.002896550217807e-15
     },
     "mc_std_dev": {
-      "dose-AP": 1.254104242248478e-17
+      "dose-AP-photon": 1.254104242248478e-17
     },
     "pk": {
-      "dose-AP": 4.1265392657143226e-15
+      "dose-AP-photon": 4.1265392657143226e-15
     },
     "buildup": {
-      "dose-AP": 1.6970386319601818
+      "dose-AP-photon": 1.6970386319601818
     },
     "optical_thickness": 0.8941476895276392,
     "source_strength": 1.0
   },
   {
     "mc": {
-      "dose-AP": 1.1110712823948674e-15
+      "dose-AP-photon": 1.1110712823948674e-15
     },
     "mc_std_dev": {
-      "dose-AP": 3.1079875364976893e-18
+      "dose-AP-photon": 3.1079875364976893e-18
     },
     "pk": {
-      "dose-AP": 4.2189325586026765e-16
+      "dose-AP-photon": 4.2189325586026765e-16
     },
     "buildup": {
-      "dose-AP": 2.633536485738131
+      "dose-AP-photon": 2.633536485738131
     },
     "optical_thickness": 1.7882953790552785,
     "source_strength": 1.0
   },
   {
     "mc": {
-      "dose-AP": 2.8781569627127824e-16
+      "dose-AP-photon": 2.8781569627127824e-16
     },
     "mc_std_dev": {
-      "dose-AP": 1.2955706877640527e-18
+      "dose-AP-photon": 1.2955706877640527e-18
     },
     "pk": {
-      "dose-AP": 7.668256958367193e-17
+      "dose-AP-photon": 7.668256958367193e-17
     },
     "buildup": {
-      "dose-AP": 3.7533392247273234
+      "dose-AP-photon": 3.7533392247273234
     },
     "optical_thickness": 2.6824430685829177,
     "source_strength": 1.0
   },
   {
     "mc": {
-      "dose-AP": 8.877337704731061e-17
+      "dose-AP-photon": 8.877337704731061e-17
     },
     "mc_std_dev": {
-      "dose-AP": 6.615219703588597e-19
+      "dose-AP-photon": 6.615219703588597e-19
     },
     "pk": {
-      "dose-AP": 1.7639886100422195e-17
+      "dose-AP-photon": 1.7639886100422195e-17
     },
     "buildup": {
-      "dose-AP": 5.032536862309213
+      "dose-AP-photon": 5.032536862309213
     },
     "optical_thickness": 3.576590758110557,
     "source_strength": 1.0
