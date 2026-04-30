@@ -180,9 +180,12 @@ b_values = [fit.interpolate(thickness=float(t), warn=False).value for t in thick
 fig, ax = plt.subplots()
 ax.plot(thicknesses, b_values, "b-", label="Shin-Ishii fit")
 
-# Monte Carlo points
+# Monte Carlo points with statistical error bars on B
+# sigma_B = mc_std_dev / pk (the same per-point sigma that weights the fit)
 mc_bs = [r.buildup["dose-AP"] for r in mc_results]
-ax.plot(mc_thicknesses, mc_bs, "ko", markersize=7, label="Monte Carlo")
+mc_b_err = [r.mc_std_dev["dose-AP"] / r.pk["dose-AP"] for r in mc_results]
+ax.errorbar(mc_thicknesses, mc_bs, yerr=mc_b_err,
+            fmt="ko", markersize=7, capsize=3, label="Monte Carlo")
 
 ax.set_xlabel("Thickness (cm)")
 ax.set_ylabel("Build-up factor B")
