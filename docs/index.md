@@ -10,7 +10,7 @@ Point Kernel Calculator estimates radiation dose and flux behind shielding using
 - **Neutron sources** - monoenergetic (DT) or mixed spectra (DT + DD)
 - **Secondary photons** - gammas produced by neutron interactions in the shield (coupled neutron-photon transport)
 - **Multi-layer shields** - any combination of materials and voids
-- **Build-up factor correction** - Monte Carlo computed (OpenMC), with Gaussian Process extrapolation and uncertainty
+- **Build-up factor correction** - Monte Carlo computed (OpenMC), with analytical-form extrapolation (Shin-Ishii double-exponential in 1D, thin-plate-spline RBF for multi-layer)
 - **ICRP-116 dose coefficients** - 6 irradiation directions (AP, PA, RLAT, LLAT, ROT, ISO)
 
 ## When to use it
@@ -28,7 +28,7 @@ It is **not** a replacement for Monte Carlo transport codes for final design, bu
 
 1. **Point kernel** (Rust, instant): Computes uncollided flux through concentric spherical layers using removal cross sections and secondary photon production cross sections generated from ENDF/B-VIII.0
 2. **Build-up correction** (OpenMC): Runs Monte Carlo on a few thin shields to determine how much scattered radiation adds to the uncollided estimate
-3. **GP extrapolation** ([inference-tools](https://github.com/C-bowman/inference-tools), instant): Fits a Gaussian Process to the Monte Carlo build-up factors and predicts B at any thickness with uncertainty bounds
+3. **Analytical-fit extrapolation** (instant): Fits a Shin-Ishii double-exponential to the Monte Carlo build-up factors per layer, or a thin-plate-spline RBF for multi-layer geometries, and predicts B at any thickness
 
 ## Quick start
 

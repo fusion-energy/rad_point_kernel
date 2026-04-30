@@ -1,6 +1,6 @@
 # Multi-layer study
 
-Scans two thickness parameters simultaneously (water then concrete) and shows total dose as a function of each, with the other held at a few representative values. MC is run on a sparse 2D grid; a single 2D GP table extrapolates across both axes.
+Scans two thickness parameters simultaneously (water then concrete) and shows total dose as a function of each, with the other held at a few representative values. MC is run on a sparse 2D grid; a single 2D `BuildupFit` (thin-plate-spline RBF) interpolates across both axes.
 
 ## Setup
 
@@ -72,14 +72,14 @@ print(f"Grid: {len(mc_water)} water x {len(mc_conc)} concrete = {len(cached)} MC
 
 ## Build a 2D buildup table
 
-`compute_buildup` adds `dose-{GEOMETRY}-total` automatically because both the neutron and coupled-photon dose were requested. A single 2D `BuildupTable` keyed on water and concrete thicknesses is enough to interpolate anywhere on the grid:
+`compute_buildup` adds `dose-{GEOMETRY}-total` automatically because both the neutron and coupled-photon dose were requested. A single 2D `BuildupFit` keyed on water and concrete thicknesses is enough to interpolate anywhere on the grid:
 
 ```python exec="true" source="material-block" session="multi" result="text"
-table = rpk.BuildupTable(
+fit = rpk.BuildupFit(
     points=[{"water": wt, "conc": ct} for wt in mc_water for ct in mc_conc],
     results=[cached[(wt, ct)] for wt in mc_water for ct in mc_conc],
 )
-print(f"Built 2D table over {table.axis_ranges}")
+print(f"Built 2D fit over {fit.axis_ranges}")
 ```
 
 ## Extrapolate and plot
@@ -94,17 +94,15 @@ matplotlib.use("Agg")
 
 def dose_at(water_t, conc_t):
     layers = make_layers(water_t, conc_t)
-    bi = table.interpolate(water=water_t, conc=conc_t, quantity=TOTAL_DOSE, warn=False)
+    bi = fit.interpolate(water=water_t, conc=conc_t, quantity=TOTAL_DOSE, warn=False)
     pk = rpk.calculate_dose(
         layers=layers, source=source, geometry=GEOMETRY,
     ).scale(strength=PARTICLES_PER_SHOT)
-    return pk.dose * bi.value, pk.dose * (bi.value - bi.sigma), pk.dose * (bi.value + bi.sigma)
+    return pk.dose * bi.value
 
 
 def curve(water_ts, conc_ts):
-    rows = [dose_at(w, c) for w, c in zip(water_ts, conc_ts)]
-    doses, lo, hi = zip(*rows)
-    return list(doses), list(lo), list(hi)
+    return [dose_at(w, c) for w, c in zip(water_ts, conc_ts)]
 
 
 data_vs_conc = {wt: curve([wt] * len(all_conc), all_conc) for wt in mc_water}
@@ -119,9 +117,8 @@ fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
 
 for wt in mc_water:
     c = colors_water[wt]
-    d, lo, hi = data_vs_conc[wt]
+    d = data_vs_conc[wt]
     ax1.plot(all_conc, d, color=c, linewidth=2, label=f"{wt} cm water")
-    ax1.fill_between(all_conc, lo, hi, color=c, alpha=0.12)
     mc_vals = [cached[(wt, ct)].mc[TOTAL_DOSE] * PARTICLES_PER_SHOT for ct in mc_conc]
     ax1.scatter(mc_conc, mc_vals, color=c, s=30, zorder=5)
 
@@ -134,9 +131,8 @@ ax1.grid(True, which="both", alpha=0.3)
 
 for ct in mc_conc:
     c = colors_conc[ct]
-    d, lo, hi = data_vs_water[ct]
+    d = data_vs_water[ct]
     ax2.plot(all_water, d, color=c, linewidth=2, label=f"{ct} cm concrete")
-    ax2.fill_between(all_water, lo, hi, color=c, alpha=0.12)
     mc_vals = [cached[(wt, ct)].mc[TOTAL_DOSE] * PARTICLES_PER_SHOT for wt in mc_water]
     ax2.scatter(mc_water, mc_vals, color=c, s=30, zorder=5)
 

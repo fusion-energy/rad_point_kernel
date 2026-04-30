@@ -1,10 +1,10 @@
 # Plotting results
 
-This page shows how to create a dose-vs-thickness plot with Monte Carlo data points, a PK + build-up line, and a GP uncertainty band using matplotlib.
+This page shows how to create a dose-vs-thickness plot with Monte Carlo data points and a PK + build-up line using matplotlib.
 
 ## Dose vs thickness plot
 
-This example runs Monte Carlo at a few thin concrete shields, builds a GP table, and plots the extrapolated dose across a range of thicknesses.
+This example runs Monte Carlo at a few thin concrete shields, fits a `BuildupFit`, and plots the extrapolated dose across a range of thicknesses.
 
 ```python exec="true" source="material-block" html="true"
 from io import StringIO
@@ -40,28 +40,24 @@ mc_results = rpk.compute_buildup(
     quantities=["dose-AP"],
 )
 
-# Build GP table
-table = rpk.BuildupTable(
+# Fit
+fit = rpk.BuildupFit(
     points=[{"thickness": t} for t in mc_thicknesses],
     results=mc_results,
 )
 
 # Compute dose at all thicknesses
 doses = []
-doses_lo = []
-doses_hi = []
 
 for t in all_thicknesses:
     layers = [rpk.Layer(thickness=t, material=concrete)]
-    bi = table.interpolate(thickness=t, warn=False)
+    bi = fit.interpolate(thickness=t, warn=False)
     pk = rpk.calculate_dose(
         layers=layers,
         source=source,
         geometry="AP",
     ).scale(strength=PARTICLES_PER_HOUR)
     doses.append(pk.dose * bi.value)
-    doses_lo.append(pk.dose * (bi.value - bi.sigma))
-    doses_hi.append(pk.dose * (bi.value + bi.sigma))
 
 # Monte Carlo reference points
 mc_scaled = [r.scale(strength=PARTICLES_PER_HOUR) for r in mc_results]
@@ -72,10 +68,6 @@ mc_errs = [r.mc_std_dev["dose-AP"] for r in mc_scaled]
 fig, ax = plt.subplots(figsize=(10, 7))
 
 ax.plot(all_thicknesses, doses, "b-", linewidth=2, label="PK with build-up")
-ax.fill_between(
-    all_thicknesses, doses_lo, doses_hi,
-    color="blue", alpha=0.15, label="GP uncertainty",
-)
 ax.errorbar(
     mc_thicknesses, mc_doses, yerr=mc_errs,
     fmt="ko", markersize=7, capsize=4, zorder=5,
@@ -99,6 +91,7 @@ print(buf.getvalue())
 ## Reading the plot
 
 - **Black points with error bars**: direct Monte Carlo simulation results (ground truth).
-- **Blue line**: point-kernel dose multiplied by the GP-predicted build-up factor.
-- **Blue band**: 1-sigma GP uncertainty. The band is tight near Monte Carlo data points and widens as you move further away, especially in the extrapolation region beyond the thickest Monte Carlo shield.
+- **Blue line**: point-kernel dose multiplied by the fitted build-up factor.
 - **Dashed line** (if shown): point-kernel uncollided dose without build-up correction. The gap between this and the solid line shows how much scattered radiation the build-up factor adds.
+
+`BuildupFit` does not currently expose a predictive sigma (the field is NaN). If you need an uncertainty band, propagate the Monte Carlo `mc_std_dev / pk` envelope through your own fit, or watch the project roadmap for a future bootstrap-based predictive sigma.

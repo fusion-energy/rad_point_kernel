@@ -6,7 +6,7 @@ Produces:
 
 Each plot compares:
   - PK uncollided (dashed, no buildup)  - underestimates
-  - PK * B with GP-extrapolated MC buildup (solid + uncertainty band)
+  - PK * B with fit-extrapolated MC buildup (solid)
   - MC reference points
 
 Uses a 662 keV photon source through concrete; the same "canonical" setup
@@ -70,22 +70,20 @@ for t, r in zip(mc_thicknesses, mc_results):
 
 
 def _build_curve(quantity: str):
-    """Return pk_uncoll, pk_b, pk_b_lo, pk_b_hi, mc_vals, mc_errs."""
-    table = rpk.BuildupTable(
+    """Return pk_uncoll, pk_b, mc_vals, mc_errs."""
+    fit = rpk.BuildupFit(
         points=[{"thickness": t} for t in mc_thicknesses],
         results=mc_results,
     )
     pk_uncoll = []
     pk_b = []
-    pk_b_lo = []
-    pk_b_hi = []
     if quantity == "flux":
         strength = PARTICLES_PER_SECOND
     else:
         strength = PARTICLES_PER_HOUR
     for t in all_thicknesses:
         layers = [rpk.Layer(thickness=t, material=concrete)]
-        bi = table.interpolate(thickness=t, quantity=quantity, warn=False)
+        bi = fit.interpolate(thickness=t, quantity=quantity, warn=False)
         if quantity == "flux":
             pk = rpk.calculate_flux(layers=layers, source=source).scale(
                 strength=strength,
@@ -98,20 +96,17 @@ def _build_curve(quantity: str):
             pk_val = pk.dose
         pk_uncoll.append(pk_val)
         pk_b.append(pk_val * bi.value)
-        pk_b_lo.append(pk_val * max(0.0, bi.value - bi.sigma))
-        pk_b_hi.append(pk_val * (bi.value + bi.sigma))
     mc_scaled = [r.scale(strength=strength) for r in mc_results]
     mc_vals = [r.mc[quantity] for r in mc_scaled]
     mc_errs = [r.mc_std_dev[quantity] for r in mc_scaled]
-    return pk_uncoll, pk_b, pk_b_lo, pk_b_hi, mc_vals, mc_errs
+    return pk_uncoll, pk_b, mc_vals, mc_errs
 
 
 def _plot(quantity: str, ylabel: str, title: str, outfile: str):
-    pk_u, pk_b, pk_lo, pk_hi, mc_v, mc_e = _build_curve(quantity)
+    pk_u, pk_b, mc_v, mc_e = _build_curve(quantity)
     fig, ax = plt.subplots(figsize=(10, 7))
     ax.plot(all_thicknesses, pk_u, "k--", linewidth=2, label="PK uncollided (no buildup)")
     ax.plot(all_thicknesses, pk_b, "b-", linewidth=2, label="PK * B (MC-calibrated)")
-    ax.fill_between(all_thicknesses, pk_lo, pk_hi, color="blue", alpha=0.15, label="1-sigma")
     ax.errorbar(
         mc_thicknesses, mc_v, yerr=mc_e, fmt="ro", markersize=7, capsize=4,
         ecolor="red", zorder=5, label="Monte Carlo",

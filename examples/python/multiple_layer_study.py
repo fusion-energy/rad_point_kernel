@@ -75,21 +75,19 @@ if missing:
         indent=2,
     ))
 
-# 2D table over the water x concrete grid
-table = rpk.BuildupTable(
+# 2D fit over the water x concrete grid (RBF thin-plate-spline)
+fit = rpk.BuildupFit(
     points=[{"water": w, "conc": c} for w in mc_water for c in mc_conc],
     results=[cached[(w, c)] for w in mc_water for c in mc_conc],
 )
 
 
 def b_curve(water_t):
-    values, lo, hi = [], [], []
+    values = []
     for c in all_conc:
-        ir = table.interpolate(water=water_t, conc=c, quantity=TOTAL_DOSE, warn=False)
+        ir = fit.interpolate(water=water_t, conc=c, quantity=TOTAL_DOSE, warn=False)
         values.append(ir.value)
-        lo.append(ir.value - ir.sigma)
-        hi.append(ir.value + ir.sigma)
-    return np.array(values), np.array(lo), np.array(hi)
+    return np.array(values)
 
 
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -98,9 +96,8 @@ colors = {0: "#7f7f7f", 10: "#1f77b4", 20: "#ff7f0e",
 
 for w in mc_water:
     c_color = colors[w]
-    b, b_lo, b_hi = b_curve(w)
+    b = b_curve(w)
     ax.plot(all_conc, b, color=c_color, linewidth=2, label=f"{w} cm water")
-    ax.fill_between(all_conc, b_lo, b_hi, color=c_color, alpha=0.15)
 
     mc_b = [cached[(w, c)].buildup[TOTAL_DOSE] for c in mc_conc]
     mc_err = [cached[(w, c)].mc_std_dev[TOTAL_DOSE] / cached[(w, c)].pk[TOTAL_DOSE]

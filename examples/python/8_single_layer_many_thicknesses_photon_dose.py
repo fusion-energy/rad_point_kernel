@@ -1,8 +1,8 @@
-"""Photon dose across many thicknesses with GP-extrapolated buildup.
+"""Photon dose across many thicknesses with analytical-fit buildup.
 
-MC at 4 thin concrete thicknesses, BuildupTable GP extrapolation to 4 m.
-Cs-137 is a continuous source; the strength is supplied in photons per hour
-so the resulting dose is in Sv/hr.
+MC at 4 thin concrete thicknesses, BuildupFit (Shin-Ishii double-exponential
+in 1D) extrapolated to 4 m. Cs-137 is a continuous source; the strength is
+supplied in photons per hour so the resulting dose is in Sv/hr.
 """
 
 import os
@@ -39,29 +39,26 @@ mc_results = rpk.compute_buildup(
 for t, r in zip(mc_thicknesses, mc_results):
     print(f"  {t} cm: B = {r.buildup['dose-AP']}")
 
-# BuildupTable
-table = rpk.BuildupTable(
+# BuildupFit (Shin-Ishii in 1D, RBF for multi-layer)
+fit = rpk.BuildupFit(
     points=[{"thickness": t} for t in mc_thicknesses],
     results=mc_results,
 )
 
 # Dose at all thicknesses
 all_geometries = [[rpk.Layer(thickness=t, material=concrete)] for t in all_thicknesses]
-pk_b_doses, pk_b_lo, pk_b_hi = [], [], []
+pk_b_doses = []
 
 for t, layers in zip(all_thicknesses, all_geometries):
-    bi = table.interpolate(thickness=t)
+    bi = fit.interpolate(thickness=t)
     pk = rpk.calculate_dose(layers=layers, source=source, geometry="AP").scale(
         strength=PARTICLES_PER_HOUR
     )
     pk_b_doses.append(pk.dose * bi.value)
-    pk_b_lo.append(pk.dose * (bi.value - bi.sigma))
-    pk_b_hi.append(pk.dose * (bi.value + bi.sigma))
 
 # Plot
 fig, ax = plt.subplots(figsize=(10, 7))
 ax.plot(all_thicknesses, pk_b_doses, "b-", linewidth=2, label="PK with buildup")
-ax.fill_between(all_thicknesses, pk_b_lo, pk_b_hi, color="blue", alpha=0.15)
 
 mc_scaled = [r.scale(strength=PARTICLES_PER_HOUR) for r in mc_results]
 mc_doses = [r.mc["dose-AP"] for r in mc_scaled]

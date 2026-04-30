@@ -1,24 +1,25 @@
 # Many thicknesses and extrapolation
 
-Running Monte Carlo at every thickness is expensive. A more practical approach is to run Monte Carlo at a few thin shields, then interpolate and extrapolate the build-up factor to all thicknesses.
+Running Monte Carlo at every thickness is expensive. A more practical approach is to run Monte Carlo at a few thin shields, then fit the build-up factor and predict it at all thicknesses.
 
-## Why Gaussian Processes?
+## Why analytical-form fits?
 
-Build-up factors don't follow a simple functional form; they depend on material, energy, geometry, and thickness in complex ways. Fitting a polynomial or exponential would impose assumptions about the shape that may not hold.
+`BuildupFit` fits the Monte Carlo data points with a closed-form parametric expression chosen to match the physics:
 
-A Gaussian Process (GP) makes **no assumption about the functional form**. Instead it:
+- **1D (single material)**: a Shin-Ishii / Taylor double-exponential
+  `B(μt) = A · exp(-α₁·μt) + (1-A) · exp(-α₂·μt)`. Three free parameters,
+  with `B(0) = 1` baked in. Captures growth (heavy multiplying materials),
+  decay below 1 (hydrogenous materials), peak-and-decay (beryllium), and
+  dip-and-recover all with the same form.
+- **Multi-D (multi-layer geometries)**: a thin-plate-spline radial-basis-function
+  with degree-1 polynomial augmentation. No hyperparameters, works on
+  scattered points.
 
-- **Learns the shape from the data**: whatever the Monte Carlo points show, the GP follows
-- **Gives uncertainty estimates**: tight near data, wider far away, honestly reflecting what we don't know
-- **Accounts for Monte Carlo noise**: each data point has a statistical uncertainty that the GP uses to avoid overfitting
-
-This makes it robust across different materials and geometries without needing to choose a fitting function.
-
-`BuildupTable` wraps the [inference-tools](https://github.com/C-bowman/inference-tools) GP with adaptive kernel length scales to prevent overfitting.
+Both forms are weighted by Monte Carlo statistical uncertainty (the fit gives more weight to points with smaller MC error bars).
 
 ## Basic example
 
-Run Monte Carlo at 4 thicknesses, then extrapolate to 10:
+Run Monte Carlo at 4 thicknesses, then fit and extrapolate to 10:
 
 ```python exec="true" source="material-block" result="text" session="extrapolation"
 import rad_point_kernel as rpk
@@ -51,8 +52,8 @@ mc_results = rpk.compute_buildup(
 for t, r in zip(mc_thicknesses, mc_results):
     print(f"  {t:>2d} cm: B = {r.buildup['dose-AP']}")
 
-# Step 2: Build interpolation table
-table = rpk.BuildupTable(
+# Step 2: Fit
+fit = rpk.BuildupFit(
     points=[{"thickness": t} for t in mc_thicknesses],
     results=mc_results,
 )
@@ -61,7 +62,7 @@ table = rpk.BuildupTable(
 all_thicknesses = mc_thicknesses + [30, 50, 75, 100, 150, 200]
 for t in all_thicknesses:
     layers = [rpk.Layer(thickness=t, material=concrete)]
-    bi = table.interpolate(thickness=t)
+    bi = fit.interpolate(thickness=t)
 
     result = rpk.calculate_dose(
         layers=layers,
@@ -72,33 +73,24 @@ for t in all_thicknesses:
 
     status = "EXTRAPOLATED" if bi.is_extrapolated else "interpolated"
     print(f"  {t} cm: dose = {result.dose} Sv/hr, "
-          f"B = {bi.value} +/- {bi.sigma} ({status})")
+          f"B = {bi.value} ({status})")
 ```
 
 ## InterpolationResult
 
-`table.interpolate()` returns an `InterpolationResult` with:
+`fit.interpolate()` returns an `InterpolationResult` with:
 
 - `value` - predicted build-up factor
-- `sigma` - GP uncertainty (1 standard deviation)
 - `is_extrapolated` - True if the query point is outside the range of Monte Carlo data
 - `extrapolated_axes` - dict showing which axes are extrapolated and by how much
-
-Uncertainty grows with distance from data points:
-
-```python exec="true" source="material-block" result="text" session="extrapolation"
-r_near = table.interpolate(thickness=15)
-r_far = table.interpolate(thickness=200)
-print(f"Near MC data (t=15):  sigma = {r_near.sigma}")
-print(f"Far from data (t=200): sigma = {r_far.sigma}")
-```
+- `sigma` - **not exposed** (NaN). Predictive uncertainty is on the roadmap; see the project TODO.
 
 ## Using InterpolationResult as build-up
 
 You can pass an `InterpolationResult` directly to any calculation function:
 
 ```python exec="true" source="material-block" result="text" session="extrapolation"
-bi = table.interpolate(thickness=50)
+bi = fit.interpolate(thickness=50)
 result = rpk.calculate_dose(
     layers=[rpk.Layer(thickness=50, material=concrete)],
     source=source,
@@ -110,7 +102,7 @@ print(f"Dose at 50 cm concrete: {result.dose} Sv/hr (B = {bi.value})")
 
 ## Using your own build-up values
 
-You don't have to use `BuildupTable` - if you have build-up factors from another source (literature, your own fitting, a different interpolation method), you can apply them directly:
+You don't have to use `BuildupFit` - if you have build-up factors from another source (literature, your own fitting, a different interpolation method), you can apply them directly:
 
 ```python exec="true" source="material-block" result="text" session="extrapolation"
 # Your own B value from any source
@@ -127,9 +119,9 @@ print(f"Dose with B={my_B}: {result.dose} Sv/hr")
 
 This means you can use any interpolation or fitting method you prefer (scipy, scikit-learn, a lookup table, or even a hand-drawn curve) and feed the result into the point-kernel calculation.
 
-## Multi-dimensional extrapolation
+## Multi-dimensional fits
 
-`BuildupTable` supports N-dimensional parameter spaces. For example, with water and concrete thicknesses as two axes:
+`BuildupFit` supports N-dimensional parameter spaces. For multi-layer geometries it switches automatically to a thin-plate-spline RBF interpolator. Example with water and concrete thicknesses as two axes:
 
 ```python exec="true" source="material-block" result="text" session="multidim"
 import rad_point_kernel as rpk
@@ -165,14 +157,14 @@ mc_results = rpk.compute_buildup(
     quantities=["dose-AP"],
 )
 
-table = rpk.BuildupTable(points=points, results=mc_results)
+fit = rpk.BuildupFit(points=points, results=mc_results)
 
 # Query at any (water, concrete) combination
-bi = table.interpolate(water=15, conc=25)
-print(f"B = {bi.value} +/- {bi.sigma}")
+bi = fit.interpolate(water=15, conc=25)
+print(f"B = {bi.value}")
 ```
 
-## Plotting build-up factors with uncertainty
+## Plotting build-up factors
 
 ```python exec="true" source="material-block" html="true" session="extrapolation"
 from io import StringIO
@@ -181,21 +173,12 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-# After running Monte Carlo and building a table (as above)
+# After running Monte Carlo and fitting (as above)
 thicknesses = np.linspace(5, 200, 100)
-b_values = []
-b_lo = []
-b_hi = []
-
-for t in thicknesses:
-    bi = table.interpolate(thickness=float(t), warn=False)
-    b_values.append(bi.value)
-    b_lo.append(bi.value - bi.sigma)
-    b_hi.append(bi.value + bi.sigma)
+b_values = [fit.interpolate(thickness=float(t), warn=False).value for t in thicknesses]
 
 fig, ax = plt.subplots()
-ax.plot(thicknesses, b_values, "b-", label="GP prediction")
-ax.fill_between(thicknesses, b_lo, b_hi, color="blue", alpha=0.15, label="1-sigma")
+ax.plot(thicknesses, b_values, "b-", label="Shin-Ishii fit")
 
 # Monte Carlo points
 mc_bs = [r.buildup["dose-AP"] for r in mc_results]
@@ -211,7 +194,7 @@ plt.close(fig)
 print(buf.getvalue())
 ```
 
-## Plotting dose with uncertainty
+## Plotting dose
 
 ```python exec="true" source="material-block" html="true" session="extrapolation"
 from io import StringIO
@@ -220,24 +203,19 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 doses = []
-doses_lo = []
-doses_hi = []
 
 for t in all_thicknesses:
     layers = [rpk.Layer(thickness=t, material=concrete)]
-    bi = table.interpolate(thickness=t, warn=False)
+    bi = fit.interpolate(thickness=t, warn=False)
     pk = rpk.calculate_dose(
         layers=layers,
         source=source,
         geometry="AP",
     ).scale(strength=PARTICLES_PER_HOUR)
     doses.append(pk.dose * bi.value)
-    doses_lo.append(pk.dose * (bi.value - bi.sigma))
-    doses_hi.append(pk.dose * (bi.value + bi.sigma))
 
 fig, ax = plt.subplots()
 ax.plot(all_thicknesses, doses, "b-", label="PK with build-up")
-ax.fill_between(all_thicknesses, doses_lo, doses_hi, color="blue", alpha=0.15)
 
 # Monte Carlo reference points
 mc_scaled = [r.scale(strength=PARTICLES_PER_HOUR) for r in mc_results]
