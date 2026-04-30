@@ -1,15 +1,23 @@
 """Build-up factor computation and interpolation.
 
-Quantity naming convention for compute_buildup:
-    flux                        Flux of the source particle
-    dose-AP                     Dose of the source particle at AP geometry
-    flux-coupled-photon         Secondary photon flux (neutron source only)
-    dose-AP-coupled-photon      Secondary photon dose at AP (neutron source only)
-    dose-AP-total               Neutron + secondary-photon dose. Accepted as
-                                input shorthand (expands to both halves) and
+Quantity naming convention for compute_buildup. Particle is part of the
+quantity string so a result dict's keys never depend on which Source produced
+them.
+
+    flux-neutron                Neutron flux  (requires neutron source)
+    flux-photon                 Photon flux   (requires photon source)
+    dose-AP-neutron             Neutron dose at AP geometry (neutron source)
+    dose-AP-photon              Photon dose at AP geometry  (photon source)
+    dose-AP-coupled-photon      Secondary-photon dose at AP (neutron source)
+    dose-AP-total               Neutron + secondary-photon dose at AP. Accepted
+                                as input shorthand (expands to both halves) and
                                 auto-added to the output. The buildup factor
                                 uses the neutron PK as reference. Same rule
                                 applies to PA, RLAT, LLAT, ROT, ISO.
+
+Older versions (<2.0) used `flux` and `dose-{geo}` and inferred the particle
+from the source. Those names are now rejected with an error pointing to the
+explicit replacement. See `tools/migrate_cache.py` to upgrade cached JSON.
 """
 
 import math
@@ -27,34 +35,100 @@ from rad_point_kernel_core import (
 )
 
 VALID_DOSE_GEOMETRIES = {"AP", "PA", "RLAT", "LLAT", "ROT", "ISO"}
+_VALID_PARTICLES = ("neutron", "photon")
 
 
 def _parse_quantity(q):
-    """Parse a quantity string. Source carries the particle type.
+    """Parse a quantity string. Particle is part of the string itself.
 
-    Returns (measure, geometry, coupled).
+    Returns ``(measure, geometry, particle, is_coupled)``:
+        measure    -- "flux" or "dose"
+        geometry   -- "AP" / "PA" / etc. for dose; None for flux
+        particle   -- the tally particle ("neutron" or "photon")
+        is_coupled -- True only for `dose-{geo}-coupled-photon`
+
+    Raises ``ValueError`` on bare `flux` / `dose-{geo}` (without a particle
+    suffix) with a hint at the new explicit form.
     """
-    coupled = q.endswith("-coupled-photon")
-    base = q[: -len("-coupled-photon")] if coupled else q
+    if q == "flux" or (
+        q.startswith("dose-")
+        and "-" not in q[5:]
+        and q[5:] in VALID_DOSE_GEOMETRIES
+    ):
+        raise ValueError(
+            f"quantity '{q}' is missing a particle: write '{q}-neutron' for "
+            f"neutron sources or '{q}-photon' for photon sources (and "
+            f"'{q}-coupled-photon' for secondary photons from a neutron "
+            f"source). See tools/migrate_cache.py to upgrade old caches."
+        )
 
-    if base == "flux":
-        return ("flux", None, coupled)
-
-    if base.startswith("dose-"):
+    is_coupled = q.endswith("-coupled-photon")
+    if is_coupled:
+        base = q[: -len("-coupled-photon")]
+        # `dose-{geo}-coupled-photon` is the only coupled form; tally particle
+        # is photon, source must be neutron (validated against the Source by
+        # the caller).
+        if not base.startswith("dose-"):
+            raise ValueError(
+                f"Invalid quantity '{q}': only `dose-{{geo}}-coupled-photon` "
+                f"is supported."
+            )
         geo = base[5:]
         if geo not in VALID_DOSE_GEOMETRIES:
             raise ValueError(
-                f"Invalid quantity '{q}': geometry must be one of {VALID_DOSE_GEOMETRIES}"
+                f"Invalid quantity '{q}': geometry must be one of "
+                f"{sorted(VALID_DOSE_GEOMETRIES)}"
             )
-        return ("dose", geo, coupled)
+        return ("dose", geo, "photon", True)
 
-    raise ValueError(f"Invalid quantity '{q}': must be 'flux' or 'dose-{{geometry}}'")
+    # Explicit `-neutron` or `-photon` suffix
+    for p in _VALID_PARTICLES:
+        suffix = f"-{p}"
+        if q.endswith(suffix):
+            base = q[: -len(suffix)]
+            if base == "flux":
+                return ("flux", None, p, False)
+            if base.startswith("dose-"):
+                geo = base[5:]
+                if geo not in VALID_DOSE_GEOMETRIES:
+                    raise ValueError(
+                        f"Invalid quantity '{q}': geometry must be one of "
+                        f"{sorted(VALID_DOSE_GEOMETRIES)}"
+                    )
+                return ("dose", geo, p, False)
+            raise ValueError(
+                f"Invalid quantity '{q}': must be 'flux-{{particle}}' or "
+                f"'dose-{{geometry}}-{{particle}}'."
+            )
+
+    raise ValueError(
+        f"Invalid quantity '{q}': must be 'flux-{{particle}}', "
+        f"'dose-{{geometry}}-{{particle}}', 'dose-{{geometry}}-coupled-photon', "
+        f"or 'dose-{{geometry}}-total'."
+    )
+
+
+def _check_quantity_against_source(parsed, source, q_name):
+    """Reject quantities whose particle is incompatible with the source."""
+    measure, _, particle, is_coupled = parsed
+    if is_coupled:
+        if source.particle != "neutron":
+            raise ValueError(
+                f"'{q_name}' requires a neutron source (secondary photons come "
+                f"from neutron transport); got source.particle={source.particle!r}."
+            )
+        return
+    if particle != source.particle:
+        raise ValueError(
+            f"'{q_name}' requires a {particle} source; got "
+            f"source.particle={source.particle!r}."
+        )
 
 
 def _expand_total_requests(quantities, source):
     """Expand 'dose-{geo}-total' shorthand into the two halves it implies:
-    'dose-{geo}' and 'dose-{geo}-coupled-photon'. The auto-synth on the
-    output side fills the total key back in, so the user can request and
+    'dose-{geo}-neutron' and 'dose-{geo}-coupled-photon'. The auto-synth on
+    the output side fills the total key back in, so the user can request and
     read the same string. Order-preserving and dedup'd.
     """
     out = []
@@ -78,7 +152,7 @@ def _expand_total_requests(quantities, source):
                     f"'{q}' requires a neutron source; got {source.particle!r}. "
                     f"Photon sources don't produce secondary photons in this tool."
                 )
-            add(f"dose-{geo}")
+            add(f"dose-{geo}-neutron")
             add(f"dose-{geo}-coupled-photon")
         else:
             add(q)
@@ -103,8 +177,9 @@ def compute_buildup(
         geometries: List of layer lists, each defining a shield geometry
             (Layer thicknesses in cm).
         source: Source object with particle type and energy (eV).
-        quantities: Required. List of quantity strings. Examples: "flux",
-            "dose-AP", "flux-coupled-photon", "dose-AP-coupled-photon".
+        quantities: Required. List of quantity strings. Particle is part
+            of the name. Examples: "flux-neutron", "dose-AP-neutron",
+            "dose-AP-coupled-photon", "dose-AP-photon".
             "dose-{geo}-total" is accepted as a shorthand for both halves
             (requires a neutron source); the result still carries all
             three keys. When both halves are present in the result a
@@ -160,11 +235,15 @@ def compute_buildup(
         prev_xs = openmc.config.get("cross_sections", sentinel)
         openmc.config["cross_sections"] = str(path)
 
-    # Parse quantities
-    parsed = [(q, _parse_quantity(q)) for q in quantities]
+    # Parse quantities and validate against source particle.
+    parsed = []
+    for q in quantities:
+        p = _parse_quantity(q)
+        _check_quantity_against_source(p, source, q)
+        parsed.append((q, p))
 
     # Determine transport mode
-    needs_coupled = any(p[2] for _, p in parsed)
+    needs_coupled = any(p[3] for _, p in parsed)
 
     results = []
     try:
@@ -201,7 +280,6 @@ def _run_mc(layers, source, coupled, quantities, particles_per_batch, batches, m
     """Run a single MC simulation. Returns dict: quantity_name -> (mean, std_dev)."""
     import openmc
 
-    source_particle = source.particle
     source_energy = source.energy  # float or list of (energy, weight) tuples
 
     # Materials
@@ -249,7 +327,7 @@ def _run_mc(layers, source, coupled, quantities, particles_per_batch, batches, m
     omc_source = openmc.IndependentSource()
     omc_source.space = openmc.stats.Point((0, 0, 0))
     omc_source.angle = openmc.stats.Isotropic()
-    omc_source.particle = source_particle
+    omc_source.particle = source.particle
 
     if isinstance(source_energy, (list, tuple)):
         energies = [e for e, _ in source_energy]
@@ -286,9 +364,8 @@ def _run_mc(layers, source, coupled, quantities, particles_per_batch, batches, m
     tallies_obj = openmc.Tallies()
     tally_map = {}
 
-    for q_name, (measure, geo, is_coupled) in quantities:
-        tally_particle = "photon" if is_coupled else source_particle
-
+    for q_name, (measure, geo, particle, _is_coupled) in quantities:
+        tally_particle = particle
         particle_filter = openmc.ParticleFilter([tally_particle])
 
         if measure == "flux":
@@ -325,7 +402,7 @@ def _run_mc(layers, source, coupled, quantities, particles_per_batch, batches, m
             mean = tally.mean.flatten()[0]
             std = tally.std_dev.flatten()[0]
 
-            _, (measure, geo, _coupled) = next(
+            _, (measure, _geo, _particle, _coupled) = next(
                 (qn, p) for qn, p in quantities if qn == q_name
             )
 
@@ -347,7 +424,7 @@ def _run_mc(layers, source, coupled, quantities, particles_per_batch, batches, m
 
 def _populate_result(result, layers, source, quantities, mc_data):
     """Fill a BuildupResult with MC data, PK references, and buildup factors."""
-    for q_name, (measure, geo, coupled) in quantities:
+    for q_name, (measure, geo, _particle, coupled) in quantities:
         mc_val, mc_std = mc_data[q_name]
         result.mc[q_name] = mc_val
         result.mc_std_dev[q_name] = mc_std

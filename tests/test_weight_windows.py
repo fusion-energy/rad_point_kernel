@@ -45,12 +45,12 @@ def photon_1mev():
 # ---- Basic structure --------------------------------------------------------
 
 def test_parse_quantity_flux():
-    q, coupled = _parse_quantity("flux")
+    q, coupled = _parse_quantity("flux-neutron")
     assert coupled is False
 
 
 def test_parse_quantity_dose_ap():
-    q, coupled = _parse_quantity("dose-AP")
+    q, coupled = _parse_quantity("dose-AP-neutron")
     assert coupled is False
 
 
@@ -63,7 +63,12 @@ def test_parse_quantity_invalid_raises():
     with pytest.raises(ValueError):
         _parse_quantity("nonsense")
     with pytest.raises(ValueError):
-        _parse_quantity("dose-BADGEOM")
+        _parse_quantity("dose-BADGEOM-neutron")
+    # Bare names without explicit particle are no longer valid.
+    with pytest.raises(ValueError, match="missing a particle"):
+        _parse_quantity("flux")
+    with pytest.raises(ValueError, match="missing a particle"):
+        _parse_quantity("dose-AP")
 
 
 # ---- Builder returns the right number of WW objects ------------------------
@@ -74,7 +79,7 @@ def test_returns_one_ww_for_neutron_flux(water, neutron_14mev):
     # above the skip-gate threshold of 3.0.
     layers = [rpk.Layer(70.0, water)]
     ww = rpk.build_weight_windows(
-        layers=layers, source=neutron_14mev, quantities=["flux"],
+        layers=layers, source=neutron_14mev, quantities=["flux-neutron"],
     )
     assert len(ww) == 1
     assert str(ww[0].particle_type) == "neutron"
@@ -84,7 +89,7 @@ def test_returns_one_ww_for_photon_dose(concrete, photon_1mev):
     pytest.importorskip("openmc")
     layers = [rpk.Layer(50.0, concrete)]
     ww = rpk.build_weight_windows(
-        layers=layers, source=photon_1mev, quantities=["dose-AP"],
+        layers=layers, source=photon_1mev, quantities=["dose-AP-photon"],
     )
     assert len(ww) == 1
     assert str(ww[0].particle_type) == "photon"
@@ -115,7 +120,7 @@ def test_skips_thin_shield(water, neutron_14mev):
     pytest.importorskip("openmc")
     layers = [rpk.Layer(5.0, water)]
     ww = rpk.build_weight_windows(
-        layers=layers, source=neutron_14mev, quantities=["flux"],
+        layers=layers, source=neutron_14mev, quantities=["flux-neutron"],
     )
     assert ww == []
 
@@ -124,7 +129,7 @@ def test_skips_all_void(neutron_14mev):
     pytest.importorskip("openmc")
     layers = [rpk.Layer(100.0, None)]
     ww = rpk.build_weight_windows(
-        layers=layers, source=neutron_14mev, quantities=["flux"],
+        layers=layers, source=neutron_14mev, quantities=["flux-neutron"],
     )
     assert ww == []
 
@@ -141,7 +146,7 @@ def test_layer_edges_present_in_grid(water, neutron_14mev):
         rpk.Layer(40.0, water),
     ]
     ww = rpk.build_weight_windows(
-        layers=layers, source=neutron_14mev, quantities=["flux"],
+        layers=layers, source=neutron_14mev, quantities=["flux-neutron"],
     )
     r_grid = list(ww[0].mesh.r_grid)
     for edge in (40.0, 80.0, 120.0):
@@ -157,7 +162,7 @@ def test_no_bins_inside_void(water, neutron_14mev):
         rpk.Layer(40.0, water),
     ]
     ww = rpk.build_weight_windows(
-        layers=layers, source=neutron_14mev, quantities=["flux"],
+        layers=layers, source=neutron_14mev, quantities=["flux-neutron"],
     )
     r_grid = list(ww[0].mesh.r_grid)
     for a, b in zip(r_grid, r_grid[1:]):
@@ -176,7 +181,7 @@ def test_lower_bounds_shape(water, neutron_14mev):
     pytest.importorskip("openmc")
     layers = [rpk.Layer(70.0, water)]
     ww = rpk.build_weight_windows(
-        layers=layers, source=neutron_14mev, quantities=["flux"],
+        layers=layers, source=neutron_14mev, quantities=["flux-neutron"],
     )
     lb = np.asarray(ww[0].lower_ww_bounds)
     # shape (nr, 1, 1, nE)
@@ -197,11 +202,11 @@ def test_driving_quantity_picks_steepest(water, neutron_14mev):
     # should be selected over flux when both are requested.
     layers = [rpk.Layer(50.0, water)]
     picked = _select_driving_quantity(
-        layers, neutron_14mev, ["flux", "dose-AP"]
+        layers, neutron_14mev, ["flux-neutron", "dose-AP-neutron"]
     )
     # Don't hard-code which one wins — just verify the selection returns one
     # of them and doesn't raise.
-    assert picked in ("flux", "dose-AP")
+    assert picked in ("flux-neutron", "dose-AP-neutron")
 
 
 # ---- Photon-source symmetry ------------------------------------------------
@@ -212,6 +217,6 @@ def test_photon_source_produces_photon_ww(concrete, photon_1mev):
     pytest.importorskip("openmc")
     layers = [rpk.Layer(30.0, concrete)]
     ww = rpk.build_weight_windows(
-        layers=layers, source=photon_1mev, quantities=["flux"],
+        layers=layers, source=photon_1mev, quantities=["flux-photon"],
     )
     assert str(ww[0].particle_type) == "photon"

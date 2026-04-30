@@ -14,7 +14,7 @@ iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 mc_results = rpk.compute_buildup(
     geometries=[[rpk.Layer(thickness=5, material=iron)]],
     source=rpk.Source(particle="photon", energy=1e6),
-    quantities=["dose-AP"],
+    quantities=["dose-AP-photon"],
 )
 
 # Save to JSON
@@ -58,13 +58,13 @@ else:
     mc_results = rpk.compute_buildup(
         geometries=geometries,
         source=source,
-        quantities=["dose-AP"],
+        quantities=["dose-AP-photon"],
     )
     rpk.BuildupResult.save(mc_results, CACHE)
     print(f"Saved to {CACHE}")
 
 for t, r in zip(mc_thicknesses, mc_results):
-    print(f"  {t:>2d} cm: B = {r.buildup['dose-AP']}")
+    print(f"  {t:>2d} cm: B = {r.buildup['dose-AP-photon']}")
 ```
 
 ## Incremental caching
@@ -105,7 +105,7 @@ if missing:
     new_results = rpk.compute_buildup(
         geometries=[[rpk.Layer(thickness=t, material=concrete)] for t in missing],
         source=rpk.Source(particle="photon", energy=1e6),
-        quantities=["dose-AP"],
+        quantities=["dose-AP-photon"],
     )
     cached.update(zip(missing, new_results))
 
@@ -118,7 +118,7 @@ else:
     print("All thicknesses already cached")
 
 for t in sorted(cached):
-    print(f"  {t:>2d} cm: B = {cached[t].buildup['dose-AP']}")
+    print(f"  {t:>2d} cm: B = {cached[t].buildup['dose-AP-photon']}")
 ```
 
 ## Caches and version upgrades
@@ -129,3 +129,17 @@ for t in sorted(cached):
 - Building a `BuildupFit` from an older cache produces a table whose `available_quantities` reflects only what was tallied at the time, so `interpolate()` may pick a different default than you expect.
 
 The simplest cure after a minor version bump is to **delete the cache JSON and re-run Monte Carlo**. The cache filename is yours to manage; if your workflow can tolerate it, namespacing by version (e.g. `mc_cache_v1.4.json`) lets old and new caches coexist while you transition.
+
+### Migrating <2.0 caches to 2.0+
+
+Version 2.0 made the source particle part of every quantity key. Old caches use bare names like `flux` and `dose-AP`; new caches use `flux-neutron` / `flux-photon` and `dose-AP-neutron` / `dose-AP-photon` so the cache is unambiguous on its own. Loading an old cache and asking for the new key name will `KeyError`.
+
+`tools/migrate_cache.py` rewrites a cache file in place (or to a new path) using the new names. The source particle is auto-detected when the cache contains any `*-coupled-photon` keys (only neutron sources produce secondary photons); otherwise pass `--particle neutron` or `--particle photon`:
+
+```
+python tools/migrate_cache.py path/to/cache.json
+python tools/migrate_cache.py path/to/cache.json --particle photon
+python tools/migrate_cache.py path/to/cache.json --output new_cache.json
+```
+
+The tool is a no-op on already-migrated caches, so it's safe to run unconditionally on a directory of mixed-version files. It handles both the canonical `BuildupResult.save()` format and study-style JSON envelopes that wrap each result in extra metadata.
