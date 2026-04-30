@@ -129,9 +129,3 @@ for t in sorted(cached):
 - Building a `BuildupFit` from an older cache produces a table whose `available_quantities` reflects only what was tallied at the time, so `interpolate()` may pick a different default than you expect.
 
 The simplest cure after a minor version bump is to **delete the cache JSON and re-run Monte Carlo**. The cache filename is yours to manage; if your workflow can tolerate it, namespacing by version (e.g. `mc_cache_v1.4.json`) lets old and new caches coexist while you transition.
-
-### Migrating <2.0 caches to 2.0+
-
-Version 2.0 made the source particle part of every quantity key. Old caches use bare names like `flux` and `dose-AP`; new caches use `flux-neutron` / `flux-photon` and `dose-AP-neutron` / `dose-AP-photon` so the cache is unambiguous on its own. Loading an old cache and asking for the new key name will `KeyError`.
-
-A standalone migration script for upgrading existing cache files in place is posted as a comment on [PR #20](https://github.com/fusion-energy/rad_point_kernel/pull/20). It auto-detects the source particle when the cache contains any `*-coupled-photon` keys (only neutron sources produce secondary photons); otherwise pass `--particle neutron` or `--particle photon`. The script is a no-op on already-migrated caches.
