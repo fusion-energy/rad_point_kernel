@@ -57,7 +57,7 @@ else:
     mc_results = rpk.compute_buildup(
         geometries=mc_geometries,
         source=source,
-        quantities=["flux", "dose-AP"],
+        quantities=["flux-photon", "dose-AP-photon"],
         particles_per_batch=10_000,
         max_batches=50,
         trigger_rel_err=0.05,
@@ -66,7 +66,7 @@ else:
     print(f"Saved cache to {CACHE_FILE.name}")
 
 for t, r in zip(mc_thicknesses, mc_results):
-    print(f"  {t:>3d} cm: B_flux={r.buildup['flux']}, B_dose={r.buildup['dose-AP']}")
+    print(f"  {t:>3d} cm: B_flux={r.buildup['flux-photon']}, B_dose={r.buildup['dose-AP-photon']}")
 
 
 def _build_curve(quantity: str):
@@ -77,14 +77,14 @@ def _build_curve(quantity: str):
     )
     pk_uncoll = []
     pk_b = []
-    if quantity == "flux":
+    if quantity == "flux-photon":
         strength = PARTICLES_PER_SECOND
     else:
         strength = PARTICLES_PER_HOUR
     for t in all_thicknesses:
         layers = [rpk.Layer(thickness=t, material=concrete)]
         bi = fit.interpolate(thickness=t, quantity=quantity, warn=False)
-        if quantity == "flux":
+        if quantity == "flux-photon":
             pk = rpk.calculate_flux(layers=layers, source=source).scale(
                 strength=strength,
             )
@@ -125,13 +125,13 @@ def _plot(quantity: str, ylabel: str, title: str, outfile: str):
 
 
 _plot(
-    quantity="dose-AP",
+    quantity="dose-AP-photon",
     ylabel="Dose rate (Sv/hr)",
     title="Effect of buildup on dose - 662 keV photon through concrete (AP)",
     outfile="dose_buildup_comparison.png",
 )
 _plot(
-    quantity="flux",
+    quantity="flux-photon",
     ylabel="Flux (photons/cm^2/s)",
     title="Effect of buildup on flux - 662 keV photon through concrete",
     outfile="flux_buildup_comparison.png",

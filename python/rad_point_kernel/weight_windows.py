@@ -31,7 +31,7 @@ def _parse_quantity(q: str) -> tuple[Quantity, bool]:
     Shares vocabulary with ``rad_point_kernel.buildup._parse_quantity`` so
     that string validation and the dose-geometry whitelist live in one place.
     """
-    measure, geo, coupled = _parse_quantity_str(q)
+    measure, geo, _particle, coupled = _parse_quantity_str(q)
     if measure == "flux":
         return Quantity.flux(), coupled
     return Quantity.dose(geo), coupled
@@ -39,7 +39,12 @@ def _parse_quantity(q: str) -> tuple[Quantity, bool]:
 
 def _geom_from(q: str) -> str:
     """Pull the dose geometry code out of a quantity string."""
-    base = q.removesuffix("-coupled-photon")
+    for suffix in ("-coupled-photon", "-neutron", "-photon"):
+        if q.endswith(suffix):
+            base = q[: -len(suffix)]
+            break
+    else:
+        base = q
     if not base.startswith("dose-"):
         raise ValueError(f"quantity '{q}' has no dose geometry")
     return base[5:]
@@ -118,8 +123,8 @@ def build_weight_windows(
         ``rad_point_kernel.Source`` — particle type and energy.
     quantities
         One or more tally-quantity strings, same vocabulary as
-        ``compute_buildup``: ``"flux"``, ``"dose-AP"``, etc., optionally with
-        ``"-coupled-photon"`` suffix.
+        ``compute_buildup``: ``"flux-neutron"``, ``"dose-AP-neutron"``,
+        ``"dose-AP-photon"``, ``"dose-AP-coupled-photon"``.
     log_ratio_per_bin
         Target log drop in importance between adjacent radial bins. Default
         1.0 (factor of e per bin, adjacent-bin ratio ≈ 2.7). Smaller values

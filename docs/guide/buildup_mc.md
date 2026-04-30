@@ -23,13 +23,13 @@ source = rpk.Source(particle="photon", energy=1e6)
 results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
-    quantities=["dose-AP"],
+    quantities=["dose-AP-photon"],
 )
 
 r = results[0]
-print(f"MC dose:     {r.mc['dose-AP']} (per source particle)")
-print(f"PK dose:     {r.pk['dose-AP']}")
-print(f"Build-up B:  {r.buildup['dose-AP']}")
+print(f"MC dose:     {r.mc['dose-AP-photon']} (per source particle)")
+print(f"PK dose:     {r.pk['dose-AP-photon']}")
+print(f"Build-up B:  {r.buildup['dose-AP-photon']}")
 ```
 
 ## Multiple thicknesses example
@@ -47,26 +47,29 @@ source = rpk.Source(particle="photon", energy=1e6)
 results = rpk.compute_buildup(
     geometries=geometries,
     source=source,
-    quantities=["dose-AP"],
+    quantities=["dose-AP-photon"],
 )
 
 for t, r in zip(thicknesses, results):
-    print(f"{t:>2d} cm: B = {r.buildup['dose-AP']}")
+    print(f"{t:>2d} cm: B = {r.buildup['dose-AP-photon']}")
 ```
 
 ## Quantity strings
 
-The `quantities` argument specifies what to tally. Since the `Source` object already carries the particle type, quantity names don't need to repeat it - `"flux"` means "flux of whatever particle the source emits" and `"dose-AP"` means "dose from the source particle at AP geometry."
-
-The only exception is when you want to tally **secondary photons** produced by neutron interactions. In that case, append `-coupled-photon` to indicate you want the secondary photon contribution rather than the primary particle:
+The `quantities` argument specifies what to tally. The particle is part of the
+quantity name so a result's keys never depend on which `Source` produced them:
 
 | Quantity string | Description |
 |---|---|
-| `"flux"` | Flux of the source particle |
-| `"dose-AP"` | Dose from the source particle, AP geometry |
-| `"dose-ISO"` | Dose from the source particle, ISO geometry |
-| `"flux-coupled-photon"` | Secondary photon flux (neutron source only) |
+| `"flux-neutron"` | Neutron flux (neutron source) |
+| `"flux-photon"` | Photon flux (photon source) |
+| `"dose-AP-neutron"` | Neutron dose, AP geometry (neutron source) |
+| `"dose-AP-photon"` | Photon dose, AP geometry (photon source) |
 | `"dose-AP-coupled-photon"` | Secondary photon dose, AP geometry (neutron source only) |
+| `"dose-AP-total"` | Neutron + secondary-photon dose at AP (neutron source only) |
+
+The same `-{particle}` / `-coupled-photon` suffix rules apply to all six dose
+geometries (`AP`, `PA`, `RLAT`, `LLAT`, `ROT`, `ISO`).
 
 You can request multiple quantities in a single call:
 
@@ -80,12 +83,12 @@ source = rpk.Source(particle="neutron", energy=14.1e6)
 results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
-    quantities=["dose-AP", "flux"],
+    quantities=["dose-AP-neutron", "flux-neutron"],
 )
 
 r = results[0]
-print(f"Dose B: {r.buildup['dose-AP']}")
-print(f"Flux B: {r.buildup['flux']}")
+print(f"Dose B: {r.buildup['dose-AP-neutron']}")
+print(f"Flux B: {r.buildup['flux-neutron']}")
 ```
 
 ## BuildupResult
@@ -116,7 +119,7 @@ source = rpk.Source(particle="photon", energy=1e6)
 results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
-    quantities=["dose-AP"],
+    quantities=["dose-AP-photon"],
 )
 r = results[0]
 
@@ -163,7 +166,7 @@ source = rpk.Source(particle="photon", energy=1e6)
 results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
-    quantities=["dose-AP"],
+    quantities=["dose-AP-photon"],
     cross_sections="/path/to/cross_sections.xml",
 )
 ```
@@ -186,12 +189,12 @@ results = rpk.compute_buildup(
 )
 
 r = results[0].scale(strength=1e16)  # neutrons per shot, dose in Sv/shot
-print(f"Neutron dose:    {r.mc['dose-AP']} Sv/shot")
+print(f"Neutron dose:    {r.mc['dose-AP-neutron']} Sv/shot")
 print(f"Secondary gamma: {r.mc['dose-AP-coupled-photon']} Sv/shot")
 print(f"Total dose:      {r.mc['dose-AP-total']} Sv/shot")
 ```
 
-When both `"dose-AP"` and `"dose-AP-coupled-photon"` are requested for the same geometry, a synthetic `"dose-AP-total"` quantity is added automatically (sum of the two; standard deviation combined in quadrature; buildup factor referenced to the neutron PK). The same rule applies to PA, RLAT, LLAT, ROT, and ISO.
+When both `"dose-AP-neutron"` and `"dose-AP-coupled-photon"` are requested for the same geometry, a synthetic `"dose-AP-total"` quantity is added automatically (sum of the two; standard deviation combined in quadrature; buildup factor referenced to the neutron PK). The same rule applies to PA, RLAT, LLAT, ROT, and ISO.
 
 Since you're already running Monte Carlo for neutron build-up, coupled transport adds some extra compute cost and gives the secondary photon dose.
 

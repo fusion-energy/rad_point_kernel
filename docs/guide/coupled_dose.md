@@ -46,12 +46,12 @@ results = rpk.compute_buildup(
     quantities=["dose-AP-total"],
 )
 r = results[0].scale(strength=1e16)
-print(f"Neutron dose:    {r.mc['dose-AP']} Sv/shot")
+print(f"Neutron dose:    {r.mc['dose-AP-neutron']} Sv/shot")
 print(f"Secondary gamma: {r.mc['dose-AP-coupled-photon']} Sv/shot")
 print(f"Total:           {r.mc['dose-AP-total']} Sv/shot")
 ```
 
-If you only ever want one of the components, you can also request it directly with `"dose-AP"` (neutron only) or `"dose-AP-coupled-photon"` (secondary photon only) - the latter still flips on coupled transport.
+If you only ever want one of the components, you can also request it directly with `"dose-AP-neutron"` (neutron only) or `"dose-AP-coupled-photon"` (secondary photon only) - the latter still flips on coupled transport.
 
 ## With a manual build-up factor
 

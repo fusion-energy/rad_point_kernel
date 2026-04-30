@@ -33,7 +33,7 @@ def test_compute_buildup_single_geometry(iron):
     results = rpk.compute_buildup(
         geometries=[layers],
         source=source,
-        quantities=["dose-AP"],
+        quantities=["dose-AP-photon"],
         particles_per_batch=2_000,
         max_batches=20,
         trigger_rel_err=0.1,
@@ -41,10 +41,10 @@ def test_compute_buildup_single_geometry(iron):
 
     assert len(results) == 1
     r = results[0]
-    assert r.buildup["dose-AP"] > 1.0
-    assert r.mc["dose-AP"] > 0.0
-    assert r.pk["dose-AP"] > 0.0
-    assert r.mc_std_dev["dose-AP"] >= 0.0
+    assert r.buildup["dose-AP-photon"] > 1.0
+    assert r.mc["dose-AP-photon"] > 0.0
+    assert r.pk["dose-AP-photon"] > 0.0
+    assert r.mc_std_dev["dose-AP-photon"] >= 0.0
 
 
 def test_compute_buildup_multiple_geometries(iron):
@@ -55,14 +55,14 @@ def test_compute_buildup_multiple_geometries(iron):
     results = rpk.compute_buildup(
         geometries=geometries,
         source=source,
-        quantities=["dose-AP"],
+        quantities=["dose-AP-photon"],
         particles_per_batch=2_000,
         max_batches=20,
         trigger_rel_err=0.1,
     )
 
     assert len(results) == len(thicknesses)
-    buildups = [r.buildup["dose-AP"] for r in results]
+    buildups = [r.buildup["dose-AP-photon"] for r in results]
     # Thicker shield should produce a larger build-up factor for photons.
     assert buildups[1] > buildups[0]
 
@@ -74,7 +74,7 @@ def test_buildup_result_applied_to_calculate_dose(iron):
     results = rpk.compute_buildup(
         geometries=[layers],
         source=source,
-        quantities=["dose-AP"],
+        quantities=["dose-AP-photon"],
         particles_per_batch=2_000,
         max_batches=20,
         trigger_rel_err=0.1,
@@ -94,19 +94,19 @@ def test_buildup_result_applied_to_calculate_dose(iron):
     ).scale(strength=1e12)
 
     assert corrected.dose > uncollided.dose
-    assert corrected.buildup_factor == pytest.approx(r.buildup["dose-AP"])
+    assert corrected.buildup_factor == pytest.approx(r.buildup["dose-AP-photon"])
 
 
 def test_compute_buildup_synthesizes_dose_total(iron):
-    """Requesting dose-AP + dose-AP-coupled-photon for a neutron source must
-    auto-add a dose-AP-total quantity that equals the sum of the two doses."""
+    """Requesting dose-AP-neutron + dose-AP-coupled-photon for a neutron source
+    must auto-add a dose-AP-total quantity that equals the sum of the two doses."""
     layers = [rpk.Layer(thickness=5, material=iron)]
     source = rpk.Source(particle="neutron", energy=14.06e6)
 
     results = rpk.compute_buildup(
         geometries=[layers],
         source=source,
-        quantities=["dose-AP", "dose-AP-coupled-photon"],
+        quantities=["dose-AP-neutron", "dose-AP-coupled-photon"],
         particles_per_batch=2_000,
         max_batches=20,
         trigger_rel_err=0.1,
@@ -116,17 +116,18 @@ def test_compute_buildup_synthesizes_dose_total(iron):
     assert "dose-AP-total" in r.mc
     assert "dose-AP-total" in r.mc_std_dev
     assert r.mc["dose-AP-total"] == pytest.approx(
-        r.mc["dose-AP"] + r.mc["dose-AP-coupled-photon"], rel=1e-12
+        r.mc["dose-AP-neutron"] + r.mc["dose-AP-coupled-photon"], rel=1e-12
     )
     # Variance combines in quadrature.
     expected_std = (
-        r.mc_std_dev["dose-AP"] ** 2 + r.mc_std_dev["dose-AP-coupled-photon"] ** 2
+        r.mc_std_dev["dose-AP-neutron"] ** 2
+        + r.mc_std_dev["dose-AP-coupled-photon"] ** 2
     ) ** 0.5
     assert r.mc_std_dev["dose-AP-total"] == pytest.approx(expected_std, rel=1e-12)
     # Buildup uses neutron PK as reference.
-    assert r.pk["dose-AP-total"] == pytest.approx(r.pk["dose-AP"])
+    assert r.pk["dose-AP-total"] == pytest.approx(r.pk["dose-AP-neutron"])
     assert r.buildup["dose-AP-total"] == pytest.approx(
-        r.mc["dose-AP-total"] / r.pk["dose-AP"], rel=1e-12
+        r.mc["dose-AP-total"] / r.pk["dose-AP-neutron"], rel=1e-12
     )
 
 
@@ -146,9 +147,9 @@ def test_compute_buildup_accepts_total_dose_shorthand(iron):
     )
 
     r = results[0]
-    assert "dose-AP" in r.mc
+    assert "dose-AP-neutron" in r.mc
     assert "dose-AP-coupled-photon" in r.mc
     assert "dose-AP-total" in r.mc
     assert r.mc["dose-AP-total"] == pytest.approx(
-        r.mc["dose-AP"] + r.mc["dose-AP-coupled-photon"], rel=1e-12
+        r.mc["dose-AP-neutron"] + r.mc["dose-AP-coupled-photon"], rel=1e-12
     )

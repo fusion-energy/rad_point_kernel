@@ -37,7 +37,7 @@ mc_geometries = [
 mc_results = rpk.compute_buildup(
     geometries=mc_geometries,
     source=source,
-    quantities=["dose-AP"],
+    quantities=["dose-AP-photon"],
 )
 
 # Fit
@@ -61,8 +61,8 @@ for t in all_thicknesses:
 
 # Monte Carlo reference points
 mc_scaled = [r.scale(strength=PARTICLES_PER_HOUR) for r in mc_results]
-mc_doses = [r.mc["dose-AP"] for r in mc_scaled]
-mc_errs = [r.mc_std_dev["dose-AP"] for r in mc_scaled]
+mc_doses = [r.mc["dose-AP-photon"] for r in mc_scaled]
+mc_errs = [r.mc_std_dev["dose-AP-photon"] for r in mc_scaled]
 
 # Plot
 fig, ax = plt.subplots(figsize=(10, 7))
