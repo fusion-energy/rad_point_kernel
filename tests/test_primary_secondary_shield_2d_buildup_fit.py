@@ -1,11 +1,14 @@
 """Regression test: 2D BuildupFit must keep B >= 0 in extrapolation.
 
-Polyethylene + Magnetite + 3% rebar igloo, 14.06 MeV neutrons, 25 m
-radial budget. The 2D thin-plate-spline RBF previously extrapolated
-linearly past the conc anchor at 150 cm, producing B < 0 around
-conc ~= 220 cm because the degree-1 polynomial term in TPS dominates
-past the convex hull and the least-squares slope is negative on
-attenuating data.
+Two-layer primary + secondary shield, 14.06 MeV neutrons. The primary
+layer is a hydrogenous moderator (e.g. polyethylene) and the secondary
+is an attenuator (e.g. Magnetite-rebar concrete); together they cover
+the (primary_cm, secondary_cm) plane scanned by the bulk-shielding study.
+
+The 2D thin-plate-spline RBF previously extrapolated linearly past the
+deepest secondary anchor (150 cm), producing B < 0 around 220 cm
+because the degree-1 polynomial term in TPS dominates past the convex
+hull and the least-squares slope is negative on attenuating data.
 
 Fix: log-space TPS RBF (`rad_point_kernel_core` 4.1.0+). Fitting
 `ln(B)` and exp()'ing on `predict` makes `B = exp(R) >= 0` by
@@ -14,13 +17,12 @@ exponential decay in B-space - the correct asymptote for shielding
 attenuation.
 
 This test pins the post-fix behaviour: the fit must stay non-negative
-everywhere within the (poly, conc) plotting range used by the
+everywhere within the (primary, secondary) plotting range used by the
 bulk-shielding study, and reproduce its training anchors within MC
 error.
 
-Anchor data and probe grid are from the downstream study cache
-(suggestion(1).md section 4.5; ENDF/B-VIII.1, weight windows on,
-MAX_BATCHES=12000).
+Anchor data and probe grid are real MC tally output from the downstream
+study (ENDF/B-VIII.1, weight windows on, MAX_BATCHES=12000).
 """
 
 from __future__ import annotations
@@ -34,12 +36,11 @@ _PHOTON = "dose-AP-coupled-photon"
 _TOTAL = "dose-AP-total"
 
 
-# (poly_cm, conc_cm) anchors and per-quantity MC values per source
+# (primary_cm, secondary_cm) anchors and per-quantity MC values per source
 # neutron. PK reference is the uncollided neutron point-kernel at the
-# 25 m outer surface for the matching geometry. Real MC tally output
-# from the bulk-shielding study cache.
+# 25 m outer surface for the matching geometry.
 _ANCHORS = [
-    # poly,conc,  mc_n,         mc_p,         mc_t,         pk_n,         std_n,        std_p,        std_t
+    # primary, secondary,  mc_n,         mc_p,         mc_t,         pk_n,         std_n,        std_p,        std_t
     (  0,  25, 1.366896e-18, 2.549312e-20, 1.392389e-18, 8.764754e-19, 1.969670e-20, 9.752700e-22, 1.972083e-20),
     (  0,  50, 1.723278e-19, 6.343617e-21, 1.786714e-19, 1.219195e-19, 7.267110e-21, 1.760459e-22, 7.269242e-21),
     (  0,  75, 1.632809e-20, 9.696655e-22, 1.729776e-20, 1.695925e-20, 8.138559e-22, 3.712701e-23, 8.147023e-22),
@@ -58,7 +59,7 @@ _ANCHORS = [
 ]
 
 
-def _build_result(poly, conc, mc_n, mc_p, mc_t, pk_n, std_n, std_p, std_t):
+def _build_result(primary, secondary, mc_n, mc_p, mc_t, pk_n, std_n, std_p, std_t):
     pk_t = pk_n  # PK reference is the uncollided neutron PK for both
     return {
         "mc":         {_NEUTRON: mc_n, _PHOTON: mc_p, _TOTAL: mc_t},
@@ -72,7 +73,7 @@ def _build_result(poly, conc, mc_n, mc_p, mc_t, pk_n, std_n, std_p, std_t):
 
 @pytest.fixture
 def fit():
-    points = [{"poly": p, "conc": c} for (p, c, *_) in _ANCHORS]
+    points = [{"primary": p, "secondary": s} for (p, s, *_) in _ANCHORS]
     results = [rpk.BuildupResult.from_dict(_build_result(*row)) for row in _ANCHORS]
     for r in results:
         if hasattr(r, "synthesize_dose_totals"):
@@ -80,20 +81,22 @@ def fit():
     return rpk.BuildupFit(points=points, results=results)
 
 
-# Probe points past the deepest concrete anchor (150 cm). Expected to
-# all be > 0 after the log-space TPS fix (rad_point_kernel_core 4.1+);
-# under earlier linear-space TPS these went negative around conc ~= 220.
-@pytest.mark.parametrize("poly, conc", [
+# Probe points past the deepest secondary-shield anchor (150 cm). Expected
+# to all be > 0 after the log-space TPS fix (rad_point_kernel_core 4.1+);
+# under earlier linear-space TPS these went negative around secondary ~= 220.
+@pytest.mark.parametrize("primary, secondary", [
     (0, 175), (0, 200), (0, 250), (0, 300), (0, 400),
     (50, 175), (50, 200), (50, 250), (50, 300), (50, 400),
     (100, 175), (100, 200), (100, 250), (100, 300), (100, 400),
 ])
-def test_2d_buildup_stays_nonneg_in_extrapolation(fit, poly, conc):
-    b = fit.interpolate(quantity=_TOTAL, poly=poly, conc=conc, warn=False).value
+def test_2d_buildup_stays_nonneg_in_extrapolation(fit, primary, secondary):
+    b = fit.interpolate(
+        quantity=_TOTAL, primary=primary, secondary=secondary, warn=False
+    ).value
     assert b > 0.0, (
-        f"B(poly={poly}, conc={conc}) = {b:.4e}; should stay positive "
-        "in extrapolation. Linear-space TPS RBF goes negative past "
-        "conc ~= 220 cm because the degree-1 polynomial term "
+        f"B(primary={primary}, secondary={secondary}) = {b:.4e}; should stay "
+        "positive in extrapolation. Linear-space TPS RBF goes negative past "
+        "secondary ~= 220 cm because the degree-1 polynomial term "
         "extrapolates linearly. Log-space TPS fixes this."
     )
 
@@ -101,15 +104,17 @@ def test_2d_buildup_stays_nonneg_in_extrapolation(fit, poly, conc):
 def test_2d_buildup_within_3sigma_at_anchors(fit):
     """The fit should reproduce its training anchors within MC error."""
     misses = []
-    for (poly, conc, _, _, mc_t, pk_n, _std_n, _std_p, std_t) in _ANCHORS:
+    for (primary, secondary, _, _, mc_t, pk_n, _std_n, _std_p, std_t) in _ANCHORS:
         b_mc = mc_t / pk_n
         rel = std_t / mc_t if mc_t > 0 else 0.05
-        b_fit = fit.interpolate(quantity=_TOTAL, poly=poly, conc=conc, warn=False).value
+        b_fit = fit.interpolate(
+            quantity=_TOTAL, primary=primary, secondary=secondary, warn=False
+        ).value
         rel_resid = abs(b_fit - b_mc) / b_mc
         tol = max(3.0 * rel, 0.05)
         if rel_resid > tol:
             misses.append(
-                f"  ({poly}, {conc}): B_mc={b_mc:.4e}, B_fit={b_fit:.4e}, "
+                f"  ({primary}, {secondary}): B_mc={b_mc:.4e}, B_fit={b_fit:.4e}, "
                 f"rel_resid={rel_resid:.1%} > tol={tol:.1%}"
             )
     assert not misses, "\n" + "\n".join(misses)
