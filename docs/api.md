@@ -219,7 +219,7 @@ Run OpenMC Monte Carlo simulations and compute build-up factors. Requires OpenMC
 
 - `geometries` - list of layer lists, each defining a shield geometry.
 - `source` - a `Source` object specifying the particle type and energy.
-- `quantities` - required. List of quantity strings (e.g. `["flux", "dose-AP"]`). `"dose-{geo}-total"` is accepted as a shorthand for `["dose-{geo}", "dose-{geo}-coupled-photon"]` (requires a neutron source); the result still carries all three keys so the components are recoverable. When both halves are present, a synthetic `"dose-{geo}-total"` is added to each result with MC value equal to the neutron + secondary-photon dose; its buildup factor uses the neutron PK as reference. Geometries: `AP`, `PA`, `RLAT`, `LLAT`, `ROT`, `ISO`.
+- `quantities` - required. List of quantity strings. The particle is part of the name (e.g. `["flux-neutron", "dose-AP-neutron"]` for a neutron source, or `["flux-photon", "dose-AP-photon"]` for a photon source). `"dose-{geo}-coupled-photon"` is the secondary-photon dose from a neutron source. `"dose-{geo}-total"` is accepted as a shorthand for `["dose-{geo}-neutron", "dose-{geo}-coupled-photon"]` (requires a neutron source); the result still carries all three keys so the components are recoverable. When both halves are present, a synthetic `"dose-{geo}-total"` is added to each result with MC value equal to the neutron + secondary-photon dose; its buildup factor uses the neutron PK as reference. Geometries: `AP`, `PA`, `RLAT`, `LLAT`, `ROT`, `ISO`.
 - `particles_per_batch` - particles per batch (default 10,000).
 - `max_batches` - maximum batches (default 100).
 - `trigger_rel_err` - target relative error (default 0.05).

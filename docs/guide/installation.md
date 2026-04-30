@@ -52,7 +52,7 @@ export OPENMC_CROSS_SECTIONS=/path/to/cross_sections.xml
 results = rpk.compute_buildup(
     geometries=[layers],
     source=source,
-    quantities=["dose-AP"],
+    quantities=["dose-AP-photon"],
     cross_sections="/path/to/cross_sections.xml",
 )
 ```

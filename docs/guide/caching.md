@@ -14,7 +14,7 @@ iron = rpk.Material(composition={"Fe": 1.0}, density=7.874)
 mc_results = rpk.compute_buildup(
     geometries=[[rpk.Layer(thickness=5, material=iron)]],
     source=rpk.Source(particle="photon", energy=1e6),
-    quantities=["dose-AP"],
+    quantities=["dose-AP-photon"],
 )
 
 # Save to JSON
@@ -58,13 +58,13 @@ else:
     mc_results = rpk.compute_buildup(
         geometries=geometries,
         source=source,
-        quantities=["dose-AP"],
+        quantities=["dose-AP-photon"],
     )
     rpk.BuildupResult.save(mc_results, CACHE)
     print(f"Saved to {CACHE}")
 
 for t, r in zip(mc_thicknesses, mc_results):
-    print(f"  {t:>2d} cm: B = {r.buildup['dose-AP']}")
+    print(f"  {t:>2d} cm: B = {r.buildup['dose-AP-photon']}")
 ```
 
 ## Incremental caching
@@ -105,7 +105,7 @@ if missing:
     new_results = rpk.compute_buildup(
         geometries=[[rpk.Layer(thickness=t, material=concrete)] for t in missing],
         source=rpk.Source(particle="photon", energy=1e6),
-        quantities=["dose-AP"],
+        quantities=["dose-AP-photon"],
     )
     cached.update(zip(missing, new_results))
 
@@ -118,7 +118,7 @@ else:
     print("All thicknesses already cached")
 
 for t in sorted(cached):
-    print(f"  {t:>2d} cm: B = {cached[t].buildup['dose-AP']}")
+    print(f"  {t:>2d} cm: B = {cached[t].buildup['dose-AP-photon']}")
 ```
 
 ## Caches and version upgrades

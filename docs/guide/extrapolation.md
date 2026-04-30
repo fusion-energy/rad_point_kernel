@@ -46,11 +46,11 @@ mc_geometries = [
 mc_results = rpk.compute_buildup(
     geometries=mc_geometries,
     source=source,
-    quantities=["dose-AP"],
+    quantities=["dose-AP-photon"],
 )
 
 for t, r in zip(mc_thicknesses, mc_results):
-    print(f"  {t:>2d} cm: B = {r.buildup['dose-AP']}")
+    print(f"  {t:>2d} cm: B = {r.buildup['dose-AP-photon']}")
 
 # Step 2: Fit
 fit = rpk.BuildupFit(
@@ -154,7 +154,7 @@ source = rpk.Source(particle="neutron", energy=14.06e6)
 mc_results = rpk.compute_buildup(
     geometries=geometries,
     source=source,
-    quantities=["dose-AP"],
+    quantities=["dose-AP-photon"],
 )
 
 fit = rpk.BuildupFit(points=points, results=mc_results)
@@ -182,8 +182,8 @@ ax.plot(thicknesses, b_values, "b-", label="Shin-Ishii fit")
 
 # Monte Carlo points with statistical error bars on B
 # sigma_B = mc_std_dev / pk (the same per-point sigma that weights the fit)
-mc_bs = [r.buildup["dose-AP"] for r in mc_results]
-mc_b_err = [r.mc_std_dev["dose-AP"] / r.pk["dose-AP"] for r in mc_results]
+mc_bs = [r.buildup["dose-AP-photon"] for r in mc_results]
+mc_b_err = [r.mc_std_dev["dose-AP-photon"] / r.pk["dose-AP-photon"] for r in mc_results]
 ax.errorbar(mc_thicknesses, mc_bs, yerr=mc_b_err,
             fmt="ko", markersize=7, capsize=3, label="Monte Carlo")
 
@@ -222,7 +222,7 @@ ax.plot(all_thicknesses, doses, "b-", label="PK with build-up")
 
 # Monte Carlo reference points
 mc_scaled = [r.scale(strength=PARTICLES_PER_HOUR) for r in mc_results]
-mc_doses = [r.mc["dose-AP"] for r in mc_scaled]
+mc_doses = [r.mc["dose-AP-photon"] for r in mc_scaled]
 ax.plot(mc_thicknesses, mc_doses, "ko", markersize=7, label="Monte Carlo")
 
 ax.set_xlabel("Thickness (cm)")
