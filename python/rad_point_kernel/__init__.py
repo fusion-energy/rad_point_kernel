@@ -1,6 +1,7 @@
 """Point-kernel neutron and photon transmission/dose calculator."""
 
 from rad_point_kernel_core import (
+    BuildupFit,
     BuildupModel,
     BuildupResult,
     CalcResult,
@@ -14,14 +15,14 @@ from rad_point_kernel_core import (
     calculate_secondary_photon_dose,
     calculate_transmission,
 )
-from rad_point_kernel.buildup import BuildupTable, compute_buildup
+from rad_point_kernel.buildup import compute_buildup
 from rad_point_kernel.weight_windows import build_weight_windows
 
 
 __all__ = [
+    "BuildupFit",
     "BuildupModel",
     "BuildupResult",
-    "BuildupTable",
     "CalcResult",
     "InterpolationResult",
     "Layer",
