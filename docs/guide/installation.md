@@ -6,7 +6,7 @@
 pip install rad_point_kernel
 ```
 
-This gives you everything for point-kernel calculations, build-up factor interpolation with Gaussian Process extrapolation ([inference-tools](https://github.com/C-bowman/inference-tools)), and plotting.
+This gives you everything for point-kernel calculations, build-up factor fitting (Shin-Ishii double-exponential in 1D, thin-plate-spline RBF for multi-layer), and plotting.
 
 ## OpenMC for Monte Carlo build-up factors
 

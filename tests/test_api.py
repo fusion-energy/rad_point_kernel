@@ -428,7 +428,7 @@ class TestBuildupResult:
             r.scale(strength=-1.0)
 
 
-# BuildupTable tests
+# BuildupFit tests
 
 
 def _make_results(b_values, quantity="dose-AP"):
@@ -443,35 +443,41 @@ def _make_results(b_values, quantity="dose-AP"):
     return results
 
 
-class TestBuildupTable:
+class TestBuildupFit:
     def test_1d_interpolation(self):
-        table = rpk.BuildupTable([{"t": 10}, {"t": 20}, {"t": 30}], _make_results([1.2, 1.3, 1.25]))
+        # Shin-Ishii is a smooth least-squares fit, not an interpolator;
+        # don't expect to pass through training points exactly. Sub-5%
+        # match on a smooth 3-point dataset is fine.
+        table = rpk.BuildupFit([{"t": 10}, {"t": 20}, {"t": 30}], _make_results([1.2, 1.3, 1.25]))
         r = table.interpolate(t=20)
-        assert r.value == pytest.approx(1.3, abs=0.01)
+        assert r.value == pytest.approx(1.3, abs=0.05)
         assert not r.is_extrapolated
 
     def test_1d_extrapolation_detected(self):
-        table = rpk.BuildupTable([{"t": 10}, {"t": 20}, {"t": 30}], _make_results([1.2, 1.3, 1.25]))
+        table = rpk.BuildupFit([{"t": 10}, {"t": 20}, {"t": 30}], _make_results([1.2, 1.3, 1.25]))
         r = table.interpolate(t=50, warn=False)
         assert r.is_extrapolated
         assert "t" in r.extrapolated_axes
 
-    def test_extrapolation_larger_sigma(self):
-        table = rpk.BuildupTable([{"t": 10}, {"t": 20}, {"t": 30}], _make_results([1.2, 1.3, 1.25]))
-        assert table.interpolate(t=100, warn=False).sigma > table.interpolate(t=20).sigma
+    def test_sigma_not_exposed(self):
+        # BuildupFit doesn't expose predictive sigma (NaN sentinel); see TODO.md.
+        import math
+        table = rpk.BuildupFit([{"t": 10}, {"t": 20}, {"t": 30}], _make_results([1.2, 1.3, 1.25]))
+        assert math.isnan(table.interpolate(t=20).sigma)
+        assert math.isnan(table.interpolate(t=100, warn=False).sigma)
 
     def test_2d(self):
         points = [{"a": 10, "b": 10}, {"a": 10, "b": 20}, {"a": 20, "b": 10}, {"a": 20, "b": 20}]
-        table = rpk.BuildupTable(points, _make_results([1.1, 1.2, 1.3, 1.4]))
+        table = rpk.BuildupFit(points, _make_results([1.1, 1.2, 1.3, 1.4]))
         r = table.interpolate(a=15, b=15)
         assert 1.0 < r.value < 1.5
 
     def test_available_quantities(self):
-        table = rpk.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3], "flux"))
+        table = rpk.BuildupFit([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3], "flux"))
         assert "flux" in table.available_quantities
 
     def test_default_quantity(self):
-        table = rpk.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
+        table = rpk.BuildupFit([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
         assert table.interpolate(t=15).value > 0
 
     def test_multi_quantity_default_raises(self):
@@ -483,7 +489,7 @@ class TestBuildupTable:
             r.pk = {"dose-AP": 1e-11, "dose-AP-total": 1e-11}
             r.buildup = {"dose-AP": b_neutron, "dose-AP-total": b_total}
             results.append(r)
-        table = rpk.BuildupTable([{"t": 10}, {"t": 20}], results)
+        table = rpk.BuildupFit([{"t": 10}, {"t": 20}], results)
 
         with pytest.raises(ValueError, match="multiple quantities"):
             table.interpolate(t=15)
@@ -492,34 +498,34 @@ class TestBuildupTable:
         assert table.interpolate(t=15, quantity="dose-AP-total").value > 0
 
     def test_invalid_quantity_raises(self):
-        table = rpk.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
+        table = rpk.BuildupFit([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
         with pytest.raises(ValueError, match="not available"):
             table.interpolate(t=15, quantity="flux")
 
     def test_wrong_axes_raises(self):
-        table = rpk.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
+        table = rpk.BuildupFit([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
         with pytest.raises(ValueError, match="Expected axes"):
             table.interpolate(wrong=15)
 
     def test_too_few_points_raises(self):
         with pytest.raises(ValueError, match="at least 2"):
-            rpk.BuildupTable([{"t": 10}], _make_results([1.2]))
+            rpk.BuildupFit([{"t": 10}], _make_results([1.2]))
 
     def test_mismatched_lengths_raises(self):
         with pytest.raises(ValueError, match="same length"):
-            rpk.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2]))
+            rpk.BuildupFit([{"t": 10}, {"t": 20}], _make_results([1.2]))
 
     def test_inconsistent_axes_raises(self):
         with pytest.raises(ValueError, match="same axes"):
-            rpk.BuildupTable([{"t": 10}, {"x": 20}], _make_results([1.2, 1.3]))
+            rpk.BuildupFit([{"t": 10}, {"x": 20}], _make_results([1.2, 1.3]))
 
     def test_axis_ranges(self):
-        table = rpk.BuildupTable([{"t": 10}, {"t": 30}], _make_results([1.2, 1.3]))
+        table = rpk.BuildupFit([{"t": 10}, {"t": 30}], _make_results([1.2, 1.3]))
         assert table.axis_ranges == {"t": (10.0, 30.0)}
 
     def test_repr(self):
-        table = rpk.BuildupTable([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
-        assert "BuildupTable" in repr(table)
+        table = rpk.BuildupFit([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
+        assert "BuildupFit" in repr(table)
 
 
 def _build_paired_result(geo, n_mc, p_mc, n_std, p_std, pk_n):
