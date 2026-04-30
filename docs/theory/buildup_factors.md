@@ -39,23 +39,32 @@ OpenMC runs full particle transport with pointwise cross sections (no energy bin
 - **Statistical uncertainty**: Each Monte Carlo result comes with a standard deviation, which propagates through to the final dose estimate
 - **Works for any material**: No need for pre-computed tables per element; any user-defined composition works
 
-## Gaussian Process extrapolation
+## Analytical-form fit and extrapolation
 
 Running Monte Carlo for every thickness is expensive. The workflow is:
 
-1. **Run Monte Carlo on a few thin shields** (e.g. 4 thicknesses) - these are cheap to simulate
-2. **Fit a Gaussian Process** to the $B$ values vs thickness
-3. **Predict $B$ at any thickness** with uncertainty bounds
+1. **Run Monte Carlo on a few thin shields** (e.g. 4-6 thicknesses) - these are cheap to simulate
+2. **Fit a closed-form expression** to the $B$ values vs thickness, weighted by the Monte Carlo statistical uncertainty
+3. **Predict $B$ at any thickness** by evaluating the fitted form
 
-The GP ([inference-tools](https://github.com/C-bowman/inference-tools)) has key properties:
+`BuildupFit` uses two forms depending on the input dimensionality:
 
-- **No assumed functional form**: Unlike fitting to a polynomial or empirical formula, the GP makes no assumption about how $B$ varies with thickness. It learns the shape from the data.
-- **Uncertainty grows with distance**: Near the Monte Carlo data points, predictions are tight. Far from data, uncertainty widens, honestly reflecting that we don't know.
-- **MC noise respected**: Each Monte Carlo data point has a statistical uncertainty ($\sigma_B$). The GP accounts for this, giving less weight to noisy points.
+- **1D (single material)**: Shin-Ishii / Taylor double-exponential
+  $B(\mu t) = A \cdot e^{-\alpha_1 \mu t} + (1 - A) \cdot e^{-\alpha_2 \mu t}$.
+  Three free parameters with $B(0) = 1$ baked in. Validated empirically
+  to capture growth, decay, peak-and-decay (light multipliers like
+  beryllium), and dip-and-recover all with one functional form. The
+  literature precedent is Shin & Ishii (1990s) for neutrons in concrete
+  and iron; the same form was Taylor's original photon expression.
+- **Multi-D (multi-layer geometries)**: thin-plate-spline RBF with
+  degree-1 polynomial augmentation. No hyperparameters; works on
+  scattered points.
+
+Each Monte Carlo data point has a statistical uncertainty $\sigma_B$ that the fit uses for weighted least squares: tight points pull the fit harder than noisy ones.
 
 ![Build-up factor example](../assets/buildup_example.png)
 
-*Build-up factor vs concrete thickness for different water thicknesses. Dots are Monte Carlo simulations with error bars. Lines are GP predictions with shaded uncertainty bands that widen beyond the Monte Carlo data range.*
+*Build-up factor vs concrete thickness for different water thicknesses. Dots are Monte Carlo simulations with error bars. Lines are the fitted forms.*
 
 ## Flux vs dose build-up
 

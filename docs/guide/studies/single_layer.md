@@ -1,6 +1,6 @@
 # Single-layer study
 
-Scans shield thickness from thin to thick for two concrete mixes (Portland + 3 % steel rebar, and Magnetite + 3 % steel rebar), computing total coupled dose (neutron + secondary photon) at each point. Monte Carlo is run only at a sparse set of thin shields and the resulting build-up factor is GP-extrapolated out to 400 cm.
+Scans shield thickness from thin to thick for two concrete mixes (Portland + 3 % steel rebar, and Magnetite + 3 % steel rebar), computing total coupled dose (neutron + secondary photon) at each point. Monte Carlo is run only at a sparse set of thin shields and the resulting build-up factor is fit-extrapolated out to 400 cm.
 
 ## Setup
 
@@ -95,7 +95,7 @@ for name, mat in materials.items():
         ]
         cache_file.write_text(json.dumps(cache_data, indent=2))
 
-    tables[name] = rpk.BuildupTable(
+    tables[name] = rpk.BuildupFit(
         points=[{"thickness": t} for t in mc_thicknesses],
         results=[cached[t] for t in mc_thicknesses],
     )
@@ -115,8 +115,8 @@ matplotlib.use("Agg")
 
 data = {}
 for name, mat in materials.items():
-    table = tables[name]
-    doses, doses_lo, doses_hi = [], [], []
+    fit = tables[name]
+    doses = []
     for t in all_thicknesses:
         layers = [
             rpk.Layer(thickness=VOID_THICKNESS),
@@ -127,15 +127,9 @@ for name, mat in materials.items():
             source=source,
             geometry=GEOMETRY,
         ).scale(strength=PARTICLES_PER_SHOT)
-        bi = table.interpolate(thickness=t, quantity=TOTAL_DOSE, warn=False)
+        bi = fit.interpolate(thickness=t, quantity=TOTAL_DOSE, warn=False)
         doses.append(pk.dose * bi.value)
-        doses_lo.append(pk.dose * (bi.value - bi.sigma))
-        doses_hi.append(pk.dose * (bi.value + bi.sigma))
-    data[name] = {
-        "doses": np.array(doses),
-        "doses_lo": np.array(doses_lo),
-        "doses_hi": np.array(doses_hi),
-    }
+    data[name] = {"doses": np.array(doses)}
 
 colors = {"Portland + 3% steel": "#1f77b4", "Magnetite + 3% steel": "#ff7f0e"}
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -146,10 +140,6 @@ for name in materials:
     valid = d["doses"] > 0
     ax.plot(np.array(all_thicknesses)[valid], d["doses"][valid],
             color=c, linewidth=2, label=name)
-    v2 = valid & (d["doses_lo"] > 0) & (d["doses_hi"] > 0)
-    ax.fill_between(np.array(all_thicknesses)[v2],
-                    d["doses_lo"][v2], d["doses_hi"][v2],
-                    color=c, alpha=0.15)
 
     mc_vals = [mc_cached[name][t].mc[TOTAL_DOSE] * PARTICLES_PER_SHOT for t in mc_thicknesses]
     mc_errs = [mc_cached[name][t].mc_std_dev[TOTAL_DOSE] * PARTICLES_PER_SHOT for t in mc_thicknesses]
@@ -172,4 +162,4 @@ plt.close(fig)
 print(buf.getvalue())
 ```
 
-Monte Carlo points (dots with error bars) are the six thin-shield simulations. Solid lines are PK dose multiplied by the GP-extrapolated build-up factor; shaded bands are the GP +/- one-sigma uncertainty.
+Monte Carlo points (dots with error bars) are the six thin-shield simulations. Solid lines are PK dose multiplied by the Shin-Ishii fitted build-up factor extrapolated to deeper shields.

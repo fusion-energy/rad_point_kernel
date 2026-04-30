@@ -185,9 +185,9 @@ Can be passed directly to any calculation function as the `buildup` argument.
 - `BuildupResult.save(results, path)` - save a list of results to JSON.
 - `BuildupResult.load(path)` - load a list of results from JSON.
 
-### `BuildupTable(points, results)`
+### `BuildupFit(points, results)`
 
-GP-based interpolation table for build-up factors.
+Analytical-form fit of build-up factor across a set of MC points. 1D inputs are fit with a Shin-Ishii / Taylor double-exponential (`B(μt) = A·exp(-α₁·μt) + (1-A)·exp(-α₂·μt)`, B(0)=1 by construction); multi-D inputs use a thin-plate-spline RBF with degree-1 polynomial augmentation.
 
 - `points` - list of dicts defining parameter values (e.g. `[{"thickness": 5}, {"thickness": 10}]`).
 - `results` - list of `BuildupResult`, one per point.
@@ -196,16 +196,16 @@ GP-based interpolation table for build-up factors.
 
 **Methods:**
 
-- `interpolate(quantity=None, warn=True, **kwargs)` - returns an `InterpolationResult` at the given parameter values. If the table has more than one available quantity (e.g. both `dose-AP` and `dose-AP-total`), `quantity=` is required to disambiguate; otherwise it defaults to the only one.
+- `interpolate(quantity=None, warn=True, **kwargs)` - returns an `InterpolationResult` at the given parameter values. If the fit has more than one available quantity (e.g. both `dose-AP` and `dose-AP-total`), `quantity=` is required to disambiguate; otherwise it defaults to the only one.
 
 ### `InterpolationResult`
 
-Result of a `BuildupTable.interpolate()` query.
+Result of a `BuildupFit.interpolate()` query.
 
 **Attributes:**
 
 - `value` - predicted build-up factor.
-- `sigma` - GP uncertainty (1-sigma standard deviation).
+- `sigma` - predictive uncertainty. **Not exposed** for `BuildupFit` (always NaN); see roadmap.
 - `is_extrapolated` - True if the query is outside the range of Monte Carlo data.
 - `extrapolated_axes` - dict of `{axis: (value, min, max)}` for extrapolated axes.
 
