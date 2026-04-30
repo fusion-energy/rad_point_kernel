@@ -9,7 +9,7 @@ description = "Point-kernel neutron and photon transmission/dose calculator"
 requires-python = ">=3.9"
 license = "MIT"
 dependencies = [
-    "rad_point_kernel_core>=3.2.0",
+    "rad_point_kernel_core>=3.5.0",
     "numpy",
 ]
 

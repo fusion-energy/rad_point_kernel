@@ -527,6 +527,42 @@ class TestBuildupFit:
         table = rpk.BuildupFit([{"t": 10}, {"t": 20}], _make_results([1.2, 1.3]))
         assert "BuildupFit" in repr(table)
 
+    def test_coupled_photon_dispatch(self):
+        # Build BuildupResults with both `dose-AP` (B(0)=1) and
+        # `dose-AP-coupled-photon` (B(0)=0). Verify BuildupFit fits both
+        # quantities and dispatches to the right form: Shin-Ishii for the
+        # primary dose, Power x saturator for the coupled photons.
+        thicks = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
+        # Construct synthetic curves matching the expected forms
+        results = []
+        for t in thicks:
+            B_n = 1.0 + 0.5 * t                         # rises from 1, B(0)=1
+            B_c = 0.04 * t ** 1.1 * (1 - 2.71828 ** (-0.6 * t))  # rises from 0
+            r = rpk.BuildupResult()
+            r.optical_thickness = t
+            r.mc = {"dose-AP": B_n * 1e-11, "dose-AP-coupled-photon": B_c * 1e-11}
+            r.mc_std_dev = {"dose-AP": 1e-13, "dose-AP-coupled-photon": 1e-13}
+            r.pk = {"dose-AP": 1e-11}
+            r.buildup = {"dose-AP": B_n}
+            r.synthesize_dose_totals()
+            # synthesize_dose_totals adds dose-AP-coupled-photon and
+            # dose-AP-total to pk and buildup using pk_neutron as reference.
+            results.append(r)
+
+        fit = rpk.BuildupFit([{"t": t} for t in thicks], results)
+        avail = sorted(fit.available_quantities)
+        assert "dose-AP" in avail
+        assert "dose-AP-coupled-photon" in avail
+        assert "dose-AP-total" in avail
+
+        # B(0) ~= 1 for primary (Shin-Ishii)
+        b_n = fit.interpolate(t=1e-6, quantity="dose-AP", warn=False).value
+        assert abs(b_n - 1.0) < 0.05
+
+        # B(0) ~= 0 for coupled photon (Power x saturator)
+        b_c = fit.interpolate(t=1e-6, quantity="dose-AP-coupled-photon", warn=False).value
+        assert abs(b_c) < 1e-3, f"expected B(0)~0, got {b_c}"
+
 
 def _build_paired_result(geo, n_mc, p_mc, n_std, p_std, pk_n):
     r = rpk.BuildupResult()
