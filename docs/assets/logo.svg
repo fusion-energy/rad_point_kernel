@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Rad Point Kernel logo">
+  <title>Rad Point Kernel</title>
+  <g stroke-linecap="round">
+    <g stroke="#ffc107" stroke-width="8">
+      <line x1="14" y1="128" x2="242" y2="128"/>
+      <line x1="128" y1="14" x2="128" y2="242"/>
+      <line x1="47.4" y1="47.4" x2="208.6" y2="208.6"/>
+      <line x1="208.6" y1="47.4" x2="47.4" y2="208.6"/>
+    </g>
+    <g fill="none" stroke="#ffffff" stroke-width="8">
+      <circle cx="128" cy="128" r="50"/>
+      <circle cx="128" cy="128" r="80" opacity="0.85"/>
+      <circle cx="128" cy="128" r="110" opacity="0.7"/>
+    </g>
+  </g>
+  <circle cx="128" cy="128" r="14" fill="#ffc107"/>
+</svg>

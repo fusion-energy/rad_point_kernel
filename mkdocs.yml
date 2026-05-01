@@ -5,6 +5,8 @@ repo_url: https://github.com/fusion-energy/rad_point_kernel
 
 theme:
   name: material
+  logo: assets/logo.svg
+  favicon: assets/favicon.svg
   palette:
     scheme: default
     primary: blue
