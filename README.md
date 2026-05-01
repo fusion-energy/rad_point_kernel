@@ -13,7 +13,7 @@ The software supports single-layer and multi-layer shielding simulations, enabli
 🧠 Advanced features include:
 
 - Monte Carlo build-up factor corrections for improved accuracy
-- Gaussian Process extrapolation for enhanced prediction capabilities
+- Analytical fits (Shin-Ishii, Power x saturator, thin-plate-spline RBF) for build-up factor interpolation and extrapolation
 
 These tools allow engineers and researchers to perform fast and reliable radiation shielding assessments. 🚀
 

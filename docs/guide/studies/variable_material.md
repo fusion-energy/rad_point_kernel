@@ -20,7 +20,7 @@ VOID_THICKNESS = 1000
 CONCRETE_THICKNESS = 50
 source = rpk.Source(particle="neutron", energy=14.1e6)
 
-N_DOSE = f"dose-{GEOMETRY}"
+N_DOSE = f"dose-{GEOMETRY}-neutron"
 P_DOSE = f"dose-{GEOMETRY}-coupled-photon"
 TOTAL_DOSE = f"dose-{GEOMETRY}-total"  # auto-synthesized by compute_buildup
 

@@ -45,6 +45,9 @@ nav:
     - Uncollided flux in void: vnv/uncollided_flux_in_void.md
     - Transmission in void: vnv/transmission_in_void.md
     - Beer-Lambert single slab: vnv/beer_lambert_single_slab.md
+    - Neutron fit form quality: vnv/neutron_fit_quality.md
+    - Primary-photon fit form quality: vnv/primary_photon_fit_quality.md
+    - Secondary-photon fit form quality: vnv/secondary_photon_fit_quality.md
 
 plugins:
   - search
