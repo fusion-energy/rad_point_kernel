@@ -24,6 +24,9 @@ folder of the repository.
 | [Uncollided flux in void](uncollided_flux_in_void.md) | $\Phi(r) = S / (4\pi r^2)$ | Analytic | Passing, machine precision |
 | [Transmission in void](transmission_in_void.md) | $T = 1$ | Analytic | Passing, exact |
 | [Beer-Lambert single slab](beer_lambert_single_slab.md) | $T(t) = e^{-\Sigma t}$ | Analytic (exponential law) | Passing, $< 10^{-15}$ |
+| [Neutron fit form quality](neutron_fit_quality.md) | $B_\mathrm{neutron}(\tau)$ across 19 neutron-source materials | MC anchor library (leave-one-out) | Mean holdout $z = 4.9$ |
+| [Primary-photon fit form quality](primary_photon_fit_quality.md) | $B_\mathrm{photon}(\tau)$ across 13 photon-source materials | MC anchor library (leave-one-out) | Mean holdout $z = 2.1$ |
+| [Secondary-photon fit form quality](secondary_photon_fit_quality.md) | $B_\mathrm{coupled-photon}(\tau)$ across 21 materials | MC anchor library (leave-one-out) | Mean holdout $z = 6.0$ |
 
 ## Validation status
 
@@ -45,7 +48,15 @@ All verification scripts are self-contained and runnable:
 python verification_and_validation/uncollided_flux_in_void.py
 python verification_and_validation/transmission_in_void.py
 python verification_and_validation/beer_lambert_single_slab.py
+python verification_and_validation/secondary_photon_fit_test_suite.py
+python verification_and_validation/neutron_fit_test_suite.py
+python verification_and_validation/primary_photon_fit_test_suite.py
 ```
 
 Each prints a table of cases and exits with code 0 if all checks pass,
-non-zero otherwise. They are suitable for running in CI.
+non-zero otherwise. They are suitable for running in CI. The
+`secondary_photon_fit_test_suite.py` script doubles as a regression harness when
+choosing or tuning a coupled-photon fit form: it loads
+`secondary_photon_fit_cache.json` (21-material MC anchor library), fits the
+candidate forms in `CANDIDATES`, scores each per-material on the
+held-out anchor, and writes a CSV plus a multi-panel comparison plot.
