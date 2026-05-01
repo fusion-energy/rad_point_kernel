@@ -30,15 +30,13 @@ folder of the repository.
 
 ## Validation status
 
-| Case | Reference | Status |
-|------|-----------|--------|
-| Photon transmission vs shielding experiments | SINBAD measurements | **Planned** |
-| Neutron transmission vs shielding experiments | ORNL / SINBAD benchmarks | **Planned** |
-
-Note: comparison to published buildup-factor tables (ANS-6.4.3 / Harima)
-is *verification*, not validation, because those tables are themselves
-derived from calculation (moments method, discrete ordinates, MC fits).
-They belong in the verification table above once added.
+No validation cases have been added yet — validation requires
+comparison to **experimental measurements** (reactor / shielding
+benchmarks), and those have not been wired into this section.
+Published buildup-factor tables (ANS-6.4.3 / Harima) are themselves
+*verification* artifacts (derived from moments method, discrete
+ordinates, or MC fits) and would be added under the verification
+section above if/when included.
 
 ## Running the scripts
 
