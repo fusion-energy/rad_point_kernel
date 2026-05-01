@@ -154,13 +154,13 @@ source = rpk.Source(particle="neutron", energy=14.06e6)
 mc_results = rpk.compute_buildup(
     geometries=geometries,
     source=source,
-    quantities=["dose-AP-photon"],
+    quantities=["dose-AP-neutron"],
 )
 
 fit = rpk.BuildupFit(points=points, results=mc_results)
 
 # Query at any (water, concrete) combination
-bi = fit.interpolate(water=15, conc=25)
+bi = fit.interpolate(water=15, conc=25, quantity="dose-AP-neutron")
 print(f"B = {bi.value}")
 ```
 
