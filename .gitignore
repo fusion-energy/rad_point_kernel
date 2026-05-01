@@ -9,3 +9,6 @@ site
 /buildup_cache.json
 /mc_cache.json
 /mc_incremental.json
+/photon_fit_dataset.csv
+/secondary_photon_fit_dataset.csv
+/outputs/
