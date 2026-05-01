@@ -196,7 +196,7 @@ Analytical-form fit of build-up factor across a set of MC points. 1D inputs are 
 
 **Methods:**
 
-- `interpolate(quantity=None, warn=True, **kwargs)` - returns an `InterpolationResult` at the given parameter values. If the fit has more than one available quantity (e.g. both `dose-AP` and `dose-AP-total`), `quantity=` is required to disambiguate; otherwise it defaults to the only one.
+- `interpolate(quantity=None, warn=True, **kwargs)` - returns an `InterpolationResult` at the given parameter values. If the fit has more than one available quantity (e.g. both `dose-AP-neutron` and `dose-AP-total`), `quantity=` is required to disambiguate; otherwise it defaults to the only one.
 
 ### `InterpolationResult`
 
