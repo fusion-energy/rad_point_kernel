@@ -1,0 +1,164 @@
+[
+  {
+    "thickness": 10,
+    "result": {
+      "mc": {
+        "dose-AP-neutron": 2.4792653438509768e-17,
+        "dose-AP-coupled-photon": 2.252955667523324e-19,
+        "dose-AP-total": 2.50179490052621e-17
+      },
+      "mc_std_dev": {
+        "dose-AP-neutron": 6.61560999305816e-20,
+        "dose-AP-coupled-photon": 1.321445987042388e-21,
+        "dose-AP-total": 6.616929633539841e-20
+      },
+      "pk": {
+        "dose-AP-neutron": 1.7531721622815704e-17,
+        "dose-AP-total": 1.7531721622815704e-17,
+        "dose-AP-coupled-photon": 1.7531721622815704e-17
+      },
+      "buildup": {
+        "dose-AP-neutron": 1.4141596571009158,
+        "dose-AP-total": 1.4270103954139821,
+        "dose-AP-coupled-photon": 0.0128507383130664
+      },
+      "optical_thickness": 0.7892032877297812,
+      "source_strength": 1.0
+    }
+  },
+  {
+    "thickness": 20,
+    "result": {
+      "mc": {
+        "dose-AP-neutron": 1.2167747164472094e-17,
+        "dose-AP-coupled-photon": 1.8723899092568113e-19,
+        "dose-AP-total": 1.2354986155397776e-17
+      },
+      "mc_std_dev": {
+        "dose-AP-neutron": 5.1791304201013894e-20,
+        "dose-AP-coupled-photon": 1.2058333985751173e-21,
+        "dose-AP-total": 5.1805339734694136e-20
+      },
+      "pk": {
+        "dose-AP-neutron": 7.807650010111649e-18,
+        "dose-AP-total": 7.807650010111649e-18,
+        "dose-AP-coupled-photon": 7.807650010111649e-18
+      },
+      "buildup": {
+        "dose-AP-neutron": 1.5584391140373488,
+        "dose-AP-total": 1.5824205925466555,
+        "dose-AP-coupled-photon": 0.02398147850930675
+      },
+      "optical_thickness": 1.5784065754595624,
+      "source_strength": 1.0
+    }
+  },
+  {
+    "thickness": 30,
+    "result": {
+      "mc": {
+        "dose-AP-neutron": 5.433897920196801e-18,
+        "dose-AP-coupled-photon": 1.1893462103661904e-19,
+        "dose-AP-total": 5.55283254123342e-18
+      },
+      "mc_std_dev": {
+        "dose-AP-neutron": 4.1007316317014177e-20,
+        "dose-AP-coupled-photon": 1.0116146252893947e-21,
+        "dose-AP-total": 4.1019792243181296e-20
+      },
+      "pk": {
+        "dose-AP-neutron": 3.4777599220469135e-18,
+        "dose-AP-total": 3.4777599220469135e-18,
+        "dose-AP-coupled-photon": 3.4777599220469135e-18
+      },
+      "buildup": {
+        "dose-AP-neutron": 1.562470682852242,
+        "dose-AP-total": 1.5966693117692772,
+        "dose-AP-coupled-photon": 0.03419862891703502
+      },
+      "optical_thickness": 2.367609863189344,
+      "source_strength": 1.0
+    }
+  },
+  {
+    "thickness": 40,
+    "result": {
+      "mc": {
+        "dose-AP-neutron": 2.375023274509967e-18,
+        "dose-AP-coupled-photon": 6.795109845912642e-20,
+        "dose-AP-total": 2.4429743729690934e-18
+      },
+      "mc_std_dev": {
+        "dose-AP-neutron": 2.443078513628742e-20,
+        "dose-AP-coupled-photon": 4.2275700865979777e-22,
+        "dose-AP-total": 2.4434442614142302e-20
+      },
+      "pk": {
+        "dose-AP-neutron": 1.5493899555699616e-18,
+        "dose-AP-total": 1.5493899555699616e-18,
+        "dose-AP-coupled-photon": 1.5493899555699616e-18
+      },
+      "buildup": {
+        "dose-AP-neutron": 1.5328763852972613,
+        "dose-AP-total": 1.5767330646405384,
+        "dose-AP-coupled-photon": 0.04385667934327727
+      },
+      "optical_thickness": 3.156813150919125,
+      "source_strength": 1.0
+    }
+  },
+  {
+    "thickness": 50,
+    "result": {
+      "mc": {
+        "dose-AP-neutron": 9.89898948555368e-19,
+        "dose-AP-coupled-photon": 3.5781283674038056e-20,
+        "dose-AP-total": 1.025680232229406e-18
+      },
+      "mc_std_dev": {
+        "dose-AP-neutron": 1.1688500596696517e-20,
+        "dose-AP-coupled-photon": 2.396110815883324e-22,
+        "dose-AP-total": 1.1690956319711179e-20
+      },
+      "pk": {
+        "dose-AP-neutron": 6.90402227136354e-19,
+        "dose-AP-total": 6.90402227136354e-19,
+        "dose-AP-coupled-photon": 6.90402227136354e-19
+      },
+      "buildup": {
+        "dose-AP-neutron": 1.4338003407973705,
+        "dose-AP-total": 1.485627061899432,
+        "dose-AP-coupled-photon": 0.05182672110206167
+      },
+      "optical_thickness": 3.9460164386489063,
+      "source_strength": 1.0
+    }
+  },
+  {
+    "thickness": 60,
+    "result": {
+      "mc": {
+        "dose-AP-neutron": 3.971795896769315e-19,
+        "dose-AP-coupled-photon": 1.7863246370159634e-20,
+        "dose-AP-total": 4.150428360470911e-19
+      },
+      "mc_std_dev": {
+        "dose-AP-neutron": 5.979110005091039e-21,
+        "dose-AP-coupled-photon": 1.7576768207626231e-22,
+        "dose-AP-total": 5.98169296529354e-21
+      },
+      "pk": {
+        "dose-AP-neutron": 3.076964022883012e-19,
+        "dose-AP-total": 3.076964022883012e-19,
+        "dose-AP-coupled-photon": 3.076964022883012e-19
+      },
+      "buildup": {
+        "dose-AP-neutron": 1.2908164889909488,
+        "dose-AP-total": 1.3488712671336662,
+        "dose-AP-coupled-photon": 0.05805477814271736
+      },
+      "optical_thickness": 4.735219726378688,
+      "source_strength": 1.0
+    }
+  }
+]
