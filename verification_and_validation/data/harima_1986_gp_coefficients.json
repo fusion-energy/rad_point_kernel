@@ -1,0 +1,15 @@
+{
+  "_schema": {
+    "_doc": "Geometric Progression (GP) buildup-factor coefficients tabulated in Harima, Sakamoto, Tanaka & Kawai, 'Validity of the Geometric Progression Formula in Approximating Gamma-Ray Buildup Factors', Nuclear Science and Engineering 94 (1986). One entry per (material, energy_MeV) pair.",
+    "_format": {
+      "name": "human-readable material label (matches `materials[name]` below)",
+      "energies_MeV": "list of photon energies in MeV at which coefficients are tabulated",
+      "coefficients": "object keyed by `<energy_MeV>` (string) -> {a, b, c, d, xi} where K(mut) = c*mut^a + d*[tanh(mut/xi - 2) - tanh(-2)] / [1 - tanh(-2)] and B(mut) = 1 + (b-1)*(K^mut - 1)/(K - 1) for K != 1, else 1 + (b-1)*mut",
+      "valid_range_mfp": "optional [low, high] mfp range over which the GP fit is considered valid (Harima 1986 fits go to 40 mfp by default)"
+    },
+    "_units": "Energies in MeV. Coefficients are dimensionless. mut is dimensionless mean-free-paths (mfp).",
+    "_quantity": "Dose buildup factor for a point isotropic source in an infinite homogeneous medium. Use AP geometry dose-AP-photon to compare against this.",
+    "_population_status": "EMPTY -- coefficients must be entered from Harima 1986 NSE 94 (Tables I-VI). The script will report 'no entries to compare' until at least one (material, energy) is filled in."
+  },
+  "materials": {}
+}

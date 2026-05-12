@@ -27,6 +27,7 @@ folder of the repository.
 | [Neutron fit form quality](neutron_fit_quality.md) | $B_\mathrm{neutron}(\tau)$ across 19 neutron-source materials | MC anchor library (leave-one-out) | Mean holdout $z = 4.9$ |
 | [Primary-photon fit form quality](primary_photon_fit_quality.md) | $B_\mathrm{photon}(\tau)$ across 13 photon-source materials | MC anchor library (leave-one-out) | Mean holdout $z = 2.1$ |
 | [Secondary-photon fit form quality](secondary_photon_fit_quality.md) | $B_\mathrm{coupled-photon}(\tau)$ across 21 materials | MC anchor library (leave-one-out) | Mean holdout $z = 6.0$ |
+| [Harima / ANS-6.4.3 buildup](harima_buildup_comparison.md) | $B_\mathrm{photon}(\mu t)$ across 23 elements + air/water/concrete | Harima 1986 GP fits | Scaffolded; coefficient table not yet populated |
 
 ## Validation status
 
@@ -49,6 +50,7 @@ python verification_and_validation/beer_lambert_single_slab.py
 python verification_and_validation/secondary_photon_fit_test_suite.py
 python verification_and_validation/neutron_fit_test_suite.py
 python verification_and_validation/primary_photon_fit_test_suite.py
+python verification_and_validation/harima_buildup_comparison.py
 ```
 
 Each prints a table of cases and exits with code 0 if all checks pass,
